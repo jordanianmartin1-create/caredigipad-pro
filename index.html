@@ -210,6 +210,7 @@ let showSummary = false;
 let curBed = '';
 let curSec = 'obs';
 let isNight = false;
+let alertTimerId = null;
 
 const i18n = {
   en: { setup:'Shift Setup', start:'Start / Update Shift', summary:'Handover Summary', share:'Share Care Digipad with a Colleague', obs:'Vitals', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Bowels', amy:'Skin & Dressings', food:'Diet', turn:'Turning', mh:'Mental Health', events:'Narrative Notes', reminders:'Tasks', admit:'Admissions' },
@@ -541,12 +542,21 @@ function editBeds() { document.getElementById('mainView').classList.add('hidden'
 
 function getActiveSections() { return activeMods.filter(m => m.on && (!m.pro || isPro)); }
 
-function tRow(b, s, i) { db[b].td[`${s}_${i}`] = !db[b].td[`${s}_${i}`]; saveDB(); renderContent(); }
+function tRow(b, s, i) {
+  if (db[b][s] && typeof db[b][s][i] === 'object' && db[b][s][i] !== null) {
+    db[b][s][i].done = !db[b][s][i].done;
+  } else {
+    db[b].td[`${s}_${i}`] = !db[b].td[`${s}_${i}`];
+  }
+  saveDB();
+  renderContent();
+}
 function tFlat(b, s) { db[b].td[s] = !db[b].td[s]; saveDB(); renderContent(); }
 function tFluid(b) { db[b].fluid.forEach((f,i)=>{ if(f.i||f.o) db[b].td[`fl_${i}`]=true; }); saveDB(); renderContent(); }
 
 function rowUI(txt, b, s, i) {
-  const done = db[b].td[`${s}_${i}`];
+  const item = db[b][s] && db[b][s][i];
+  const done = (typeof item === 'object' && item !== null) ? !!item.done : !!db[b].td[`${s}_${i}`];
   const style = done ? 'opacity:0.4; filter:grayscale(100%);' : '';
   const btn = `<button onclick="tRow('${b}','${s}',${i})" style="margin-left:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1px solid var(--border);'}">${done?'Done':'Mark Done'}</button>`;
   return `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); transition:0.3s; ${style}"><div style="flex:1;">${txt}</div>${btn}</div>`;
@@ -674,7 +684,7 @@ function renderContent() {
     });
     area.innerHTML = h || '<p style="text-align:center; padding:20px; color:var(--text-sub);">No active patients.</p>';
     return;
-  }
+}
     if (!db[curBed]) return;
   const d = db[curBed];
   let h = '';
@@ -766,14 +776,15 @@ function renderContent() {
   }
 
   if (curSec === 'amy') {
-    h += `<div class="card"><button class="btn btn-primary" style="margin-bottom:16px; background:var(--teal);" onclick="markSkinFine()">Mark All Intact / Fine</button>
+    const sOpts = ['','Intact','Red','Broken'];
+    h += `<div class="card"><button class="btn btn-primary" style="margin-bottom:16px; background:var(--teal);" onclick="markSkinIntact()">Mark All Intact</button>
     <div class="row">
-      <div><label>Sacrum</label><select onchange="updateField('${curBed}','amy',null,'sac',this.value)">${opts(['','Fine','Red','Broken'], d.amy.sac)}</select></div>
-      <div><label>Groin</label><select onchange="updateField('${curBed}','amy',null,'groin',this.value)">${opts(['','Fine','Red','Broken'], d.amy.groin)}</select></div>
+      <div><label>Sacrum</label><select onchange="updateField('${curBed}','amy',null,'sac',this.value)">${opts(sOpts, d.amy.sac === 'Fine' ? 'Intact' : d.amy.sac)}</select></div>
+      <div><label>Groin</label><select onchange="updateField('${curBed}','amy',null,'groin',this.value)">${opts(sOpts, d.amy.groin === 'Fine' ? 'Intact' : d.amy.groin)}</select></div>
     </div>
     <div class="row">
-      <div><label>Heels</label><select onchange="updateField('${curBed}','amy',null,'heels',this.value)">${opts(['','Fine','Red','Broken'], d.amy.heels)}</select></div>
-      <div><label>Elbows</label><select onchange="updateField('${curBed}','amy',null,'elbows',this.value)">${opts(['','Fine','Red','Broken'], d.amy.elbows)}</select></div>
+      <div><label>Heels</label><select onchange="updateField('${curBed}','amy',null,'heels',this.value)">${opts(sOpts, d.amy.heels === 'Fine' ? 'Intact' : d.amy.heels)}</select></div>
+      <div><label>Elbows</label><select onchange="updateField('${curBed}','amy',null,'elbows',this.value)">${opts(sOpts, d.amy.elbows === 'Fine' ? 'Intact' : d.amy.elbows)}</select></div>
     </div>
     </div>
     <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('dressings')">+ Add Dressing</button>`;
@@ -786,10 +797,10 @@ function renderContent() {
           <div><label>Location / Notes</label><input type="text" placeholder="e.g. Sacrum" value="${r.val||''}" oninput="updateField('${curBed}','dressings',${i},'val',this.value)"></div>
         </div>
         <div class="row" style="align-items:center;">
-          <div><label>Written Date</label><input type="date" value="${r.date||''}" onchange="updateField('${curBed}','dressings',${i},'date',this.value); renderContent()"></div>
+          <div><label>Written Date</label><input type="date" id="dress-date-${i}" value="${r.date||''}" onchange="updateField('${curBed}','dressings',${i},'date',this.value); refreshDressDue(${i})"></div>
           <div style="flex:0 0 auto;"><button class="btn btn-sm" style="border:1px solid var(--border);" onclick="setNoDateArr(${i})">Today</button></div>
         </div>
-        <div style="font-size:0.85rem; color:var(--text-sub);">Next Due (+3 days): <b>${calcDue(r.date)}</b></div>
+        <div style="font-size:0.85rem; color:var(--text-sub);">Next Due (+3 days): <b id="dress-due-${i}">${calcDue(r.date)}</b></div>
       </div>`;
     });
   }
@@ -857,16 +868,16 @@ function renderContent() {
     h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('reminders')">+ Add ${t('reminders')}</button>`;
     d.reminders.forEach((r, i) => {
       let isOverdue = (!r.outcome && r.time && r.time <= tNow());
-      h += `<div class="card ${isOverdue ? 'task-alert' : ''}">
+      h += `<div id="task-card-${i}" class="card ${isOverdue ? 'task-alert' : ''}">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
           <b>Task</b><button class="btn btn-danger btn-sm" onclick="rmArr('reminders', ${i})">X</button>
         </div>
         <div class="row">
-          <div><label>Due Time</label><select onchange="updateField('${curBed}','reminders',${i},'time',this.value); renderContent()">${generateTimeOpts(r.time)}</select></div>
+          <div><label>Due Time</label><select onchange="updateField('${curBed}','reminders',${i},'time',this.value); refreshTask(${i})">${generateTimeOpts(r.time)}</select></div>
           <div><label>Task</label><input type="text" placeholder="e.g. Bloods, ECG" value="${r.task||''}" oninput="updateField('${curBed}','reminders',${i},'task',this.value)"></div>
         </div>
         <div class="row">
-          <div><label>Outcome</label><input type="text" placeholder="Pending / Done..." value="${r.outcome||''}" oninput="updateField('${curBed}','reminders',${i},'outcome',this.value); renderContent()"></div>
+          <div><label>Outcome</label><input type="text" placeholder="Pending / Done..." value="${r.outcome||''}" oninput="updateField('${curBed}','reminders',${i},'outcome',this.value); refreshTask(${i})"></div>
         </div>
       </div>`;
     });
@@ -893,6 +904,21 @@ function updateField(bed, sec, idx, prop, val) {
   saveDB();
 }
 
+function refreshTask(idx) {
+  const r = db[curBed].reminders[idx];
+  const card = document.getElementById(`task-card-${idx}`);
+  if (card && r) {
+    const isOverdue = (!r.outcome && r.time && r.time <= tNow());
+    card.classList.toggle('task-alert', Boolean(isOverdue));
+  }
+}
+
+function refreshDressDue(idx) {
+  const r = db[curBed].dressings[idx];
+  const el = document.getElementById(`dress-due-${idx}`);
+  if (el && r) el.textContent = calcDue(r.date);
+}
+
 function refreshFluid() {
   let inT=0, outT=0; db[curBed].fluid.forEach(f=>{ inT+=parseFloat(f.i)||0; outT+=parseFloat(f.o)||0; });
   const el = document.getElementById('fluid-totals');
@@ -900,9 +926,9 @@ function refreshFluid() {
 }
 
 function startAlertTimer() {
-  if (!isPro) return;
+  if (!isPro || alertTimerId) return;
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  setInterval(() => {
+  alertTimerId = setInterval(() => {
     const now = tNow(); let trigger = false;
     alloc.forEach(b => { if(db[b] && db[b].reminders) { db[b].reminders.forEach(r => { if(r.time && r.time <= now && !r.outcome) trigger = true; }); }});
     if(trigger) {
@@ -913,7 +939,9 @@ function startAlertTimer() {
         osc.type = 'sine'; osc.frequency.value = 880; gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
         osc.start(); osc.stop(audioCtx.currentTime + 0.3);
       }
-      if(curSec === 'reminders') renderContent();
+      if(curSec === 'reminders' && !showSummary) {
+        db[curBed].reminders.forEach((_, idx) => refreshTask(idx));
+      }
     }
   }, 60000);
 }
@@ -922,13 +950,21 @@ function opts(arr, sel) { return arr.map(a => `<option value="${a}" ${a===sel?'s
 function tNow() { const d = new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function addArr(k) { 
   const defaultTime = k === 'reminders' ? '' : tNow();
-  db[curBed][k].unshift({time: defaultTime, val: ''}); 
+  db[curBed][k].unshift({time: defaultTime, val: '', done: false}); 
   saveDB(); 
   renderContent(); 
 }
 function rmArr(k, i) { db[curBed][k].splice(i, 1); saveDB(); renderContent(); }
-function markSkinFine() { db[curBed].amy.sac = 'Fine'; db[curBed].amy.groin = 'Fine'; db[curBed].amy.heels = 'Fine'; db[curBed].amy.elbows = 'Fine'; saveDB(); renderContent(); }
-function setNoDateArr(i) { const d = new Date(); db[curBed].dressings[i].date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; saveDB(); renderContent(); }
+function markSkinIntact() { db[curBed].amy.sac = 'Intact'; db[curBed].amy.groin = 'Intact'; db[curBed].amy.heels = 'Intact'; db[curBed].amy.elbows = 'Intact'; saveDB(); renderContent(); }
+function setNoDateArr(i) { 
+  const d = new Date(); 
+  const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  db[curBed].dressings[i].date = dateStr; 
+  saveDB(); 
+  const input = document.getElementById(`dress-date-${i}`);
+  if (input) input.value = dateStr;
+  refreshDressDue(i);
+}
 function calcDue(val) { if (!val) return '-'; const d = new Date(val); d.setDate(d.getDate() + 3); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; }
 function clearShift() { if (confirm("Clear all shift data and return to setup?")) { localStorage.removeItem('cdu_alloc'); localStorage.removeItem('cdu_db'); localStorage.removeItem('cdu_start'); localStorage.removeItem('cdu_ward'); localStorage.removeItem('cdu_mods'); location.reload(); } }
 function handleSwipe() { 
