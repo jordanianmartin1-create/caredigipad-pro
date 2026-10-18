@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<title>Care Digipad</title>
+<style>
+  :root {
+    --bg: #f4f6f8; --card: #ffffff; --text: #1e293b; --text-sub: #64748b;
+    --border: #cbd5e1; --teal: #0d9488; --amber: #d97706; --slate: #475569;
+    --red: #dc2626; --green: #16a34a; --tab-bg: #e2e8f0; --navy: #1f4e79;
+  }
+  [data-color="blue"] { --navy: #1e3a8a; --teal: #2563eb; --slate: #3b82f6; }
+  [data-color="green"] { --navy: #14532d; --teal: #16a34a; --slate: #15803d; }
+  [data-color="berry"] { --navy: #4a044e; --teal: #db2777; --slate: #be185d; }
+  [data-color="slate"] { --navy: #0f172a; --teal: #475569; --slate: #334155; }
+  [data-color="coral"] { --navy: #431407; --teal: #ea580c; --slate: #c2410c; }
+
+  [data-theme="night"] {
+    --bg: #000000; --card: #121212; --text: #e2e8f0; --text-sub: #94a3b8;
+    --border: #334155; --amber: #f59e0b; --red: #ef4444; --green: #22c55e; --tab-bg: #1e293b;
+  }
+  * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); padding-bottom: 70px; }
+  .hidden { display: none !important; }
+  #dimmer { position: fixed; inset: 0; background: rgba(0,0,0,0); pointer-events: none; z-index: 9998; }
+  [data-theme="night"] #dimmer { background: rgba(0,0,0,0.35); }
+  #blurOverlay { position: fixed; inset: 0; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); background: rgba(15, 23, 42, 0.75); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; padding: 24px; cursor: pointer; }
+  .setup-container { padding: 20px; max-width: 600px; margin: 0 auto; }
+  .bed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .bed-pill { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-weight: 600; text-align: center; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .bed-pill.selected { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .del-btn { background: transparent; color: inherit; border: none; font-weight: bold; padding: 0 8px; cursor: pointer; }
+  .sticky-nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+  header { background: var(--navy); color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+  header h1 { font-size: 1.05rem; }
+  .scroll-row { display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px; scrollbar-width: none; scroll-behavior: smooth; }
+  .scroll-row::-webkit-scrollbar { display: none; }
+  .tab-btn { padding: 8px 14px; border-radius: 20px; font-weight: 600; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 0.9rem; white-space: nowrap; cursor: pointer; }
+  .tab-btn.active-bed { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .tab-btn.active-sec { background: var(--slate); color: #fff; border-color: var(--slate); }
+  .tab-btn.active-summary { background: var(--amber); color: #fff; border-color: var(--amber); }
+  .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+  .card { background: var(--card); padding: 16px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px; transition: 0.3s; }
+  h2 { font-size: 1.1rem; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; color: var(--text); }
+  .row { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-end; }
+  .row > div { flex: 1; }
+  label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-sub); margin-bottom: 4px; }
+  input[type="text"], input[type="number"], input[type="time"], input[type="date"], select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); font-size: 0.95rem; }
+  .bp-pair { display: flex; align-items: center; gap: 4px; }
+  .bp-pair span { font-weight: bold; color: var(--text-sub); }
+  .btn { width: 100%; padding: 12px; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; font-size: 1rem; }
+  .btn-primary { background: var(--slate); color: #fff; margin-top: 8px; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-subtle { background: transparent; color: var(--text-sub); border: 1px solid var(--border); font-size: 0.9rem; padding: 10px; }
+  .btn-sm { width: auto; padding: 6px 12px; font-size: 0.85rem; }
+  .pro-tag { background: var(--amber); color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
+  .summary-sec { border-bottom: 1px dashed var(--border); padding-bottom: 12px; margin-bottom: 12px; font-size: 0.95rem; line-height: 1.5; }
+  .summary-sec:last-child { border-bottom: none; }
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); padding: 10px 16px; z-index: 100; text-align: center; }
+  .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.3); border-radius: 24px; transition: .4s; }
+  .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .4s; }
+  input:checked + .slider { background-color: var(--teal); }
+  input:checked + .slider:before { transform: translateX(18px); }
+  .shift-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 500; }
+  .task-alert { border: 2px solid var(--red) !important; animation: pulse 2s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+  .mod-item { display:flex; align-items:center; padding:10px; border-bottom:1px solid var(--border); background:var(--bg); }
+  .mod-item:last-child { border-bottom:none; }
+</style>
+</head>
+<body>
+<div id="dimmer"></div>
+<div id="blurOverlay" class="hidden" onclick="toggleBlur(false)">
+  <h2 style="color:#fff; margin-bottom:8px;">Screen Hidden</h2>
+  <p style="font-size:0.95rem; opacity:0.85;">Tap anywhere to return to shift notes</p>
+</div>
+
+<div id="setupView" class="setup-container">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+    <h2 style="margin:0;" id="lblSetupTitle">Shift Setup</h2>
+    <span id="tierBadge" class="pro-tag" style="font-size:0.8rem; padding:4px 8px;">FREE TIER</span>
+  </div>
+  <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:16px;" id="lblSetupSub">100% offline digital shift notepad. Data never leaves your device.</p>
+
+  <div id="proBox" class="card" style="border: 2px solid var(--amber);">
+    <label style="color:var(--amber); font-size:0.9rem;">Unlock Care Digipad Pro (£9.99 Lifetime)</label>
+    <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:10px;">Unlocks unlimited beds, saved ward layouts, custom themes, task alarms and all specialist modules.</p>
+    <div style="display:flex; gap:8px; margin-bottom:8px;">
+      <input type="text" id="proKeyInput" placeholder="Enter licence key" style="flex:1;">
+      <button class="btn btn-primary" style="margin-top:0; width:auto; padding:0 16px; background:var(--amber);" onclick="unlockPro()">Unlock</button>
+    </div>
+    <a href="https://yourwebsite.app/buy" target="_blank" style="font-size:0.8rem; color:var(--teal); font-weight:600; text-decoration:none;">Get a Lifetime Licence Key &rarr;</a>
+  </div>
+
+  <div class="card">
+    <label style="margin-bottom:10px; font-size:0.9rem; color:var(--text);" id="lblPrefs">App Preferences & Units</label>
+    <div class="row">
+      <div>
+        <label id="lblLang">Language</label>
+        <select id="prefLang" onchange="savePrefs()">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="pt">Português</option>
+          <option value="tl">Tagalog</option>
+        </select>
+      </div>
+      <div>
+        <label id="lblTheme">Theme <span id="themeProTag" class="pro-tag">PRO</span></label>
+        <select id="prefTheme" onchange="changeTheme(this.value)">
+          <option value="teal">Clinical Teal</option>
+          <option value="blue">Healthcare Blue</option>
+          <option value="green">Scrub Green</option>
+          <option value="berry">Plum & Berry</option>
+          <option value="slate">Midnight Slate</option>
+          <option value="coral">Warm Coral</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:0;">
+      <div>
+        <label id="lblBmUnit">Glucose Unit</label>
+        <select id="prefBm" onchange="savePrefs()">
+          <option value="mmol/L">mmol/L (UK/AU/CA)</option>
+          <option value="mg/dL">mg/dL (US/EU)</option>
+        </select>
+      </div>
+      <div>
+        <label id="lblTempUnit">Temp Unit</label>
+        <select id="prefTemp" onchange="savePrefs()">
+          <option value="°C">Celsius (°C)</option>
+          <option value="°F">Fahrenheit (°F)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <label><span id="lblSavedLayouts">Load Saved Layout</span> <span id="layoutProTag" class="pro-tag">PRO</span></label>
+    <div style="display:flex; gap:8px;">
+      <select id="savedLayoutsDropdown" style="flex:1;" onchange="loadLayout(this.value)"></select>
+      <button class="btn btn-danger" style="margin-top:0; width:auto; padding:0 15px;" onclick="deleteLayout()">Del</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label id="lblAddBed">1. Add Bed / Initials (Max 4 chars for privacy)</label>
+    <div style="display:flex; gap:8px;">
+      <input type="text" id="newBedInput" maxlength="4" placeholder="e.g. B5B1" style="flex:1; text-transform:uppercase;">
+      <button class="btn btn-primary" style="margin-top:0; width:auto; padding:0 20px;" onclick="addNewBed()">Add</button>
+    </div>
+  </div>
+
+  <div id="activeBedsList"></div>
+  <div id="bedGrid" class="bed-grid"></div>
+
+  <div class="card">
+    <label style="margin-bottom:12px;" id="lblActiveMods">2. Active Modules & Order</label>
+    <div id="moduleSetupList" style="border:1px solid var(--border); border-radius:6px; overflow:hidden;"></div>
+  </div>
+
+  <div class="card">
+    <label><span id="lblSaveLayout">3. Save Layout As (Optional)</span> <span id="saveProTag" class="pro-tag">PRO</span></label>
+    <div style="display:flex; gap:8px;">
+      <input type="text" id="layoutNameInput" placeholder="e.g. Bay 1" style="flex:1;">
+      <button class="btn btn-primary" style="margin-top:0; width:auto; padding:0 15px;" onclick="saveLayout()">Save</button>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" style="background:var(--teal); margin-bottom:16px;" onclick="startShift()" id="btnStartShift">Start / Update Shift</button>
+  <button class="btn btn-subtle" onclick="shareApp()" id="btnShare">Share Care Digipad with a Colleague</button>
+</div>
+
+<div id="mainView" class="hidden">
+  <div class="sticky-nav">
+    <header>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <h1>Care Digipad</h1>
+        <button class="btn-sm" style="background:var(--teal); color:#fff; border:none; border-radius:4px; padding:4px 8px; font-weight:bold; cursor:pointer;" onclick="editBeds()">Edit</button>
+        <button class="btn-sm" style="background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:4px; padding:4px 8px; font-weight:bold; cursor:pointer;" onclick="toggleBlur(true)">Hide</button>
+      </div>
+      <div class="shift-toggle">
+        <span>Day</span>
+        <label class="switch"><input type="checkbox" id="shiftToggle" onchange="toggleNight(this.checked)"><span class="slider"></span></label>
+        <span>Night</span>
+      </div>
+    </header>
+    <div class="scroll-row" id="bedTabs" style="background:var(--card);"></div>
+    <div class="scroll-row" id="subNav"></div>
+  </div>
+  <div class="container" id="contentArea"></div>
+  <div class="footer">
+    <button class="btn btn-subtle" onclick="clearShift()">End Shift / Clear Data</button>
+  </div>
+</div>
+<script>
+let isPro = false;
+let prefs = { lang: 'en', theme: 'teal', bmUnit: 'mmol/L', tempUnit: '°C' };
+let savedLayouts = {};
+let currentLayoutBeds = [];
+let alloc = [];
+let db = {};
+let showSummary = false;
+let curBed = '';
+let curSec = 'obs';
+let isNight = false;
+
+const i18n = {
+  en: { setup:'Shift Setup', start:'Start / Update Shift', summary:'Handover Summary', share:'Share Care Digipad with a Colleague', obs:'Vitals', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Bowels', amy:'Skin & Dressings', food:'Diet', turn:'Turning', mh:'Mental Health', events:'Narrative Notes', reminders:'Tasks', admit:'Admissions' },
+  es: { setup:'Configuración de Turno', start:'Iniciar / Actualizar Turno', summary:'Resumen de Relevos', share:'Compartir con un Colega', obs:'Signos Vitales', bm:'Glucosa', bp:'PA Acostado/De Pie', fluid:'Balance Hídrico', bowel:'Deposiciones', amy:'Piel y Apósito', food:'Dieta', turn:'Cambios Posturales', mh:'Salud Mental', events:'Notas', reminders:'Tareas', admit:'Admisiones' },
+  fr: { setup:'Configuration de Garde', start:'Démarrer / Mettre à Jour', summary:'Résumé de Transmission', share:'Partager avec un Collègue', obs:'Constantes', bm:'Glycémie', bp:'TA Couché/Debout', fluid:'Bilan Hydrique', bowel:'Selles', amy:'Peau et Pansements', food:'Alimentation', turn:'Positionnement', mh:'Santé Mentale', events:'Notes', reminders:'Tâches', admit:'Admissions' },
+  de: { setup:'Schicht-Einstellungen', start:'Schicht Starten / Aktualisieren', summary:'Übergabe-Übersicht', share:'Mit Kollegen Teilen', obs:'Vitalzeichen', bm:'Blutzucker', bp:'RR Liegen/Stehen', fluid:'Bilanzierung', bowel:'Stuhlgang', amy:'Haut & Verbände', food:'Ernährung', turn:'Lagerung', mh:'Psychische Gesundheit', events:'Verlaufsnotizen', reminders:'Aufgaben', admit:'Aufnahme' },
+  pt: { setup:'Configuração de Plantão', start:'Iniciar / Atualizar Plantão', summary:'Resumo de Passagem', share:'Compartilhar com Colega', obs:'Sinais Vitais', bm:'Glicemia', bp:'PA Deitado/Em Pé', fluid:'Balanço Hídrico', bowel:'Evacuação', amy:'Pele e Curativos', food:'Dieta', turn:'Mudança de Decúbito', mh:'Saúde Mental', events:'Anotações', reminders:'Tarefas', admit:'Admissão' },
+  tl: { setup:'Setup ng Shift', start:'Simulan / I-update ang Shift', summary:'Buod ng Handover', share:'Ibahagi sa Katrabaho', obs:'Vital Signs', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Pagdumi', amy:'Balat at Dressing', food:'Pagkain', turn:'Pagpihit', mh:'Mental Health', events:'Mga Tala', reminders:'Mga Gawain', admit:'Admissions' }
+};
+
+let defaultMods = [
+  {id:'obs', lbl:'Vitals', on:true, pro:false},
+  {id:'bm', lbl:'Glucose', on:true, pro:false},
+  {id:'bp', lbl:'L/S BP', on:true, pro:false},
+  {id:'fluid', lbl:'Fluids', on:true, pro:false},
+  {id:'food', lbl:'Diet', on:true, pro:false},
+  {id:'events', lbl:'Narrative Notes', on:true, pro:false},
+  {id:'reminders', lbl:'Tasks', on:false, pro:true},
+  {id:'bowel', lbl:'Bowels', on:false, pro:true},
+  {id:'amy', lbl:'Skin & Dressings', on:false, pro:true},
+  {id:'turn', lbl:'Turning', on:false, pro:true},
+  {id:'mh', lbl:'Mental Health', on:false, pro:true},
+  {id:'admit', lbl:'Admissions', on:false, pro:true}
+];
+let activeMods = JSON.parse(JSON.stringify(defaultMods));
+
+let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
+let isSwipeAllowed = true;
+
+document.addEventListener('touchstart', e => { 
+  touchStartX = e.changedTouches[0].screenX; 
+  touchStartY = e.changedTouches[0].screenY; 
+  isSwipeAllowed = !e.target.closest('.scroll-row') && !e.target.closest('input, select, textarea');
+}, {passive: true});
+
+document.addEventListener('touchend', e => { 
+  touchEndX = e.changedTouches[0].screenX; 
+  touchEndY = e.changedTouches[0].screenY; 
+  if(isSwipeAllowed) handleSwipe(); 
+}, {passive: true});
+
+try {
+  if (localStorage.getItem('cdu_pro') === 'true') isPro = true;
+  const sPrefs = localStorage.getItem('cdu_prefs');
+  if (sPrefs) prefs = { ...prefs, ...JSON.parse(sPrefs) };
+  
+  const sLayouts = localStorage.getItem('cdu_layouts');
+  if (sLayouts) savedLayouts = JSON.parse(sLayouts);
+  
+  const savedAlloc = localStorage.getItem('cdu_alloc');
+  if (savedAlloc) alloc = JSON.parse(savedAlloc);
+  
+  const savedWard = localStorage.getItem('cdu_ward');
+  if (savedWard) currentLayoutBeds = JSON.parse(savedWard);
+  
+  const savedMods = localStorage.getItem('cdu_mods');
+  if (savedMods) activeMods = JSON.parse(savedMods);
+  
+  const savedDb = localStorage.getItem('cdu_db');
+  if (savedDb) db = JSON.parse(savedDb);
+  
+  const shiftLimit = 14 * 60 * 60 * 1000;
+  let shiftStart = localStorage.getItem('cdu_start');
+  if (shiftStart && (Date.now() - parseInt(shiftStart)) > shiftLimit) {
+    localStorage.removeItem('cdu_alloc');
+    localStorage.removeItem('cdu_db');
+    localStorage.removeItem('cdu_start');
+    localStorage.removeItem('cdu_ward');
+    localStorage.removeItem('cdu_mods');
+    alloc = []; db = {}; currentLayoutBeds = [];
+  }
+} catch(e) { alloc = []; db = {}; currentLayoutBeds = []; }
+
+if (alloc.length > 0) curBed = alloc[0];
+
+function t(key) {
+  const dict = i18n[prefs.lang] || i18n.en;
+  return dict[key] || i18n.en[key] || key;
+}
+
+function applyPrefsUI() {
+  document.getElementById('prefLang').value = prefs.lang;
+  document.getElementById('prefTheme').value = isPro ? prefs.theme : 'teal';
+  document.getElementById('prefBm').value = prefs.bmUnit;
+  document.getElementById('prefTemp').value = prefs.tempUnit;
+  document.body.setAttribute('data-color', isPro ? prefs.theme : 'teal');
+  document.getElementById('lblSetupTitle').textContent = t('setup');
+  document.getElementById('btnStartShift').textContent = t('start');
+  document.getElementById('btnShare').textContent = t('share');
+
+  if (isPro) {
+    document.getElementById('proBox').classList.add('hidden');
+    const badge = document.getElementById('tierBadge');
+    badge.textContent = 'PRO UNLOCKED';
+    badge.style.background = 'var(--teal)';
+    ['themeProTag', 'layoutProTag', 'saveProTag'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  }
+}
+
+function savePrefs() {
+  prefs.lang = document.getElementById('prefLang').value;
+  prefs.bmUnit = document.getElementById('prefBm').value;
+  prefs.tempUnit = document.getElementById('prefTemp').value;
+  localStorage.setItem('cdu_prefs', JSON.stringify(prefs));
+  applyPrefsUI();
+  renderMods();
+}
+
+function changeTheme(val) {
+  if (!isPro && val !== 'teal') {
+    alert('Custom colour themes are a Care Digipad Pro feature. Unlock Pro for £9.99 to personalise your app.');
+    document.getElementById('prefTheme').value = 'teal';
+    return;
+  }
+  prefs.theme = val;
+  savePrefs();
+}
+
+function unlockPro() {
+  const key = document.getElementById('proKeyInput').value.trim().toUpperCase();
+  if (!key) return alert('Please enter a licence key.');
+  if (key === 'CARE-PRO-2026' || (key.startsWith('CDP-') && key.length >= 12)) {
+    isPro = true;
+    localStorage.setItem('cdu_pro', 'true');
+    activeMods.forEach(m => { if (['reminders','bowel','amy','turn'].includes(m.id)) m.on = true; });
+    applyPrefsUI();
+    renderMods();
+    alert('Care Digipad Pro unlocked! All features are now active.');
+  } else {
+    alert('Invalid licence key. Please check your purchase email and try again.');
+  }
+}
+
+function toggleBlur(show) {
+  const el = document.getElementById('blurOverlay');
+  if (show) el.classList.remove('hidden');
+  else el.classList.add('hidden');
+}
+
+function shareApp() {
+  const shareUrl = window.location.origin + window.location.pathname;
+  const shareText = `I have been using Care Digipad as an offline shift notepad instead of scrap paper. Try it here: ${shareUrl}`;
+  if (navigator.share) {
+    navigator.share({ title: 'Care Digipad', text: shareText, url: shareUrl }).catch(() => {});
+  } else {
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+  }
+}
+
+function generateTimeOpts(sel) {
+  let opts = '<option value="">--:--</option>';
+  for(let h=0; h<24; h++) {
+    for(let m=0; m<60; m+=15) {
+      const tStr = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+      opts += `<option value="${tStr}" ${sel===tStr?'selected':''}>${tStr}</option>`;
+    }
+  }
+  return opts;
+}
+
+function initSetup() {
+  applyPrefsUI();
+  updateLayoutDropdown();
+  if (localStorage.getItem('cdu_alloc')) {
+    renderSetupGrid();
+    renderMods();
+    startShift(true);
+  } else {
+    if (isPro && Object.keys(savedLayouts).length > 0) {
+      loadLayout(Object.keys(savedLayouts)[0]);
+    }
+    renderSetupGrid();
+    renderMods();
+  }
+}
+
+function renderMods() {
+  const mList = document.getElementById('moduleSetupList');
+  mList.innerHTML = activeMods.map((m, i) => {
+    const locked = m.pro && !isPro;
+    return `
+    <div class="mod-item" style="${locked?'opacity:0.65;':''}">
+      <input type="checkbox" ${m.on && !locked?'checked':''} onchange="toggleMod(${i}, this)" style="width:20px; height:20px; margin-right:12px;">
+      <span style="flex:1; font-weight:600; color:var(--text);">${t(m.id)} ${locked?'<span class="pro-tag">PRO</span>':''}</span>
+      <button class="btn btn-subtle btn-sm" style="padding:4px 10px;" onclick="moveMod(${i}, -1)">Up</button>
+      <button class="btn btn-subtle btn-sm" style="padding:4px 10px; margin-left:4px;" onclick="moveMod(${i}, 1)">Down</button>
+    </div>`;
+  }).join('');
+}
+
+function toggleMod(i, el) {
+  if (activeMods[i].pro && !isPro) {
+    el.checked = false;
+    alert('This specialist module is part of Care Digipad Pro (£9.99 lifetime unlock).');
+    return;
+  }
+  activeMods[i].on = el.checked;
+}
+
+function moveMod(i, dir) {
+  if (i+dir < 0 || i+dir >= activeMods.length) return;
+  const temp = activeMods[i];
+  activeMods[i] = activeMods[i+dir];
+  activeMods[i+dir] = temp;
+  renderMods();
+}
+
+function updateLayoutDropdown() {
+  const sel = document.getElementById('savedLayoutsDropdown');
+  sel.innerHTML = Object.keys(savedLayouts).map(k => `<option value="${k}">${k}</option>`).join('');
+  if(Object.keys(savedLayouts).length === 0) sel.innerHTML = '<option value="">No saved layouts</option>';
+}
+
+function saveLayout() {
+  if (!isPro) return alert('Saving ward layouts for one-tap loading is a Care Digipad Pro feature (£9.99 lifetime unlock).');
+  const name = document.getElementById('layoutNameInput').value.trim();
+  if(!name) return alert('Enter a layout name.');
+  savedLayouts[name] = { beds: [...currentLayoutBeds], mods: [...activeMods] };
+  localStorage.setItem('cdu_layouts', JSON.stringify(savedLayouts));
+  updateLayoutDropdown();
+  document.getElementById('savedLayoutsDropdown').value = name;
+  document.getElementById('layoutNameInput').value = '';
+}
+
+function loadLayout(name) {
+  if (!isPro) return alert('Loading saved layouts is a Care Digipad Pro feature.');
+  if(!savedLayouts[name]) return;
+  if(Array.isArray(savedLayouts[name])) {
+    currentLayoutBeds = [...savedLayouts[name]];
+    activeMods = JSON.parse(JSON.stringify(defaultMods));
+  } else {
+    currentLayoutBeds = [...savedLayouts[name].beds];
+    activeMods = JSON.parse(JSON.stringify(savedLayouts[name].mods));
+  }
+  alloc = [...currentLayoutBeds]; 
+  renderSetupGrid();
+  renderMods();
+}
+
+function deleteLayout() {
+  const name = document.getElementById('savedLayoutsDropdown').value;
+  if(!name || !confirm(`Delete layout ${name}?`)) return;
+  delete savedLayouts[name];
+  localStorage.setItem('cdu_layouts', JSON.stringify(savedLayouts));
+  currentLayoutBeds = []; alloc = [];
+  updateLayoutDropdown(); renderSetupGrid(); renderMods();
+}
+
+function addNewBed() {
+  if (!isPro && currentLayoutBeds.length >= 4) {
+    return alert('Free tier includes up to 4 beds per shift. Unlock Care Digipad Pro (£9.99 one-off) for unlimited beds.');
+  }
+  const input = document.getElementById('newBedInput');
+  const val = input.value.trim().toUpperCase().substring(0, 4);
+  if (val && !currentLayoutBeds.includes(val)) {
+    currentLayoutBeds.push(val); alloc.push(val);
+    input.value = ''; renderSetupGrid();
+  }
+}
+
+function removeBedFromLayout(bed) {
+  currentLayoutBeds = currentLayoutBeds.filter(b => b !== bed);
+  alloc = alloc.filter(b => b !== bed);
+  renderSetupGrid();
+}
+
+function renderSetupGrid() {
+  const grid = document.getElementById('bedGrid');
+  grid.innerHTML = currentLayoutBeds.map(b => 
+    `<div class="bed-pill ${alloc.includes(b)?'selected':''}" onclick="toggleAlloc('${b}')">
+      <span>${b}</span>
+      <button class="del-btn" onclick="event.stopPropagation(); removeBedFromLayout('${b}')">X</button>
+    </div>`
+  ).join('');
+}
+
+function toggleAlloc(bed) {
+  if (!alloc.includes(bed) && !isPro && alloc.length >= 4) {
+    return alert('Free tier allows up to 4 active beds. Unlock Pro for unlimited beds.');
+  }
+  if(alloc.includes(bed)) alloc = alloc.filter(b => b !== bed);
+  else alloc.push(bed);
+  renderSetupGrid();
+}
+
+function startShift(auto = false) {
+  if (!auto) {
+    if (alloc.length === 0) return alert('Select at least one bed.');
+    currentLayoutBeds.sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
+    alloc.sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
+    localStorage.setItem('cdu_alloc', JSON.stringify(alloc));
+    localStorage.setItem('cdu_ward', JSON.stringify(currentLayoutBeds));
+    localStorage.setItem('cdu_mods', JSON.stringify(activeMods));
+    if (!localStorage.getItem('cdu_start')) localStorage.setItem('cdu_start', Date.now().toString());
+  }
+  
+  alloc.forEach(b => {
+    if(!db[b]) db[b] = {};
+    if(!db[b].obs) db[b].obs = [];
+    if(!db[b].bm) db[b].bm = [];
+    if(!db[b].events) db[b].events = [];
+    if(!db[b].admit) db[b].admit = [];
+    if(!db[b].bowel) db[b].bowel = [];
+    if(!db[b].dressings) db[b].dressings = [];
+    if(!db[b].bp) db[b].bp = {lsys:'', ldia:'', ssys:'', sdia:''};
+    if(!db[b].amy) db[b].amy = {sac:'', groin:'', heels:'', elbows:''};
+    if(!db[b].food) db[b].food = {b:'', l:'', d:''};
+    if(!db[b].turn) db[b].turn = Array(6).fill('');
+    if(!db[b].fluid) db[b].fluid = Array(13).fill(null).map(()=>({i:'', o:''}));
+    if(!db[b].reminders) db[b].reminders = [];
+    if(!db[b].mh) db[b].mh = [];
+    if(!db[b].mhLevel) db[b].mhLevel = '';
+    if(!db[b].td) db[b].td = {};
+  });
+  saveDB();
+  
+  if (!alloc.includes(curBed)) curBed = alloc[0];
+  document.getElementById('setupView').classList.add('hidden');
+  document.getElementById('mainView').classList.remove('hidden');
+  renderUI();
+  startAlertTimer();
+}
+  function saveDB() { localStorage.setItem('cdu_db', JSON.stringify(db)); }
+function toggleNight(val) { isNight = val; document.body.setAttribute('data-theme', isNight ? 'night' : 'day'); renderUI(); }
+function setBed(b) { curBed = b; showSummary = false; renderUI(); }
+function setSec(s) { curSec = s; showSummary = false; renderUI(); }
+function toggleSummary() { showSummary = true; renderUI(); }
+function editBeds() { document.getElementById('mainView').classList.add('hidden'); document.getElementById('setupView').classList.remove('hidden'); applyPrefsUI(); renderSetupGrid(); renderMods(); }
+
+function getActiveSections() { return activeMods.filter(m => m.on && (!m.pro || isPro)); }
+
+function tRow(b, s, i) { db[b].td[`${s}_${i}`] = !db[b].td[`${s}_${i}`]; saveDB(); renderContent(); }
+function tFlat(b, s) { db[b].td[s] = !db[b].td[s]; saveDB(); renderContent(); }
+function tFluid(b) { db[b].fluid.forEach((f,i)=>{ if(f.i||f.o) db[b].td[`fl_${i}`]=true; }); saveDB(); renderContent(); }
+
+function rowUI(txt, b, s, i) {
+  const done = db[b].td[`${s}_${i}`];
+  const style = done ? 'opacity:0.4; filter:grayscale(100%);' : '';
+  const btn = `<button onclick="tRow('${b}','${s}',${i})" style="margin-left:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1px solid var(--border);'}">${done?'Done':'Mark Done'}</button>`;
+  return `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); transition:0.3s; ${style}"><div style="flex:1;">${txt}</div>${btn}</div>`;
+}
+
+function flatUI(txt, b, s) {
+  const done = db[b].td[s];
+  const style = done ? 'opacity:0.4; filter:grayscale(100%);' : '';
+  const btn = `<button onclick="tFlat('${b}','${s}')" style="margin-left:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1px solid var(--border);'}">${done?'Done':'Mark Done'}</button>`;
+  return `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); transition:0.3s; ${style}"><div style="flex:1;">${txt}</div>${btn}</div>`;
+}
+
+function renderUI() {
+  let tabsHtml = `<button class="tab-btn ${showSummary ? 'active-summary' : ''}" onclick="toggleSummary()">${t('summary')}</button>`;
+  tabsHtml += alloc.map(b => `<button class="tab-btn ${b===curBed && !showSummary ?'active-bed':''}" onclick="setBed('${b}')">${b}</button>`).join('');
+  document.getElementById('bedTabs').innerHTML = tabsHtml;
+  
+  const secOpts = getActiveSections();
+  if(secOpts.length > 0 && !secOpts.find(x => x.id === curSec)) curSec = secOpts[0].id;
+  document.getElementById('subNav').innerHTML = showSummary ? '' : secOpts.map(s => `<button class="tab-btn ${s.id===curSec?'active-sec':''}" onclick="setSec('${s.id}')">${t(s.id)}</button>`).join('');
+  
+  setTimeout(() => {
+    const actTab = document.querySelector('.tab-btn.active-bed') || document.querySelector('.tab-btn.active-summary');
+    if(actTab) actTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, 50);
+
+  renderContent();
+}
+
+function renderContent() {
+  const area = document.getElementById('contentArea');
+  if (showSummary) {
+    let h = '';
+    alloc.forEach(b => {
+      const d = db[b];
+      if (!d) return;
+      if (!d.td) d.td = {};
+      let sectionsHtml = '';
+      const sOn = id => getActiveSections().find(m => m.id === id);
+      
+      if (sOn('obs') && d.obs && d.obs.length > 0) {
+        sectionsHtml += `<div class="summary-sec"><b>${t('obs')}:</b><br>` + d.obs.map((l,i) => {
+          return rowUI(`${l.time||'--:--'} - RR ${l.rr||'-'}, SpO2 ${l.spo2||'-'}% (${l.o2||'Air'}), BP ${l.sys||'-'}/${l.dia||'-'}, HR ${l.hr||'-'}, ${l.acvpu||'Alert'}, Temp ${l.t||'-'}${prefs.tempUnit}`, b, 'obs', i);
+        }).join('') + `</div>`;
+      }
+      
+      if (sOn('bm') && d.bm && d.bm.length > 0) {
+        sectionsHtml += `<div class="summary-sec"><b>${t('bm')}:</b><br>` + d.bm.map((l,i) => rowUI(`${l.time||'--:--'} - ${l.val||'-'} ${prefs.bmUnit} (${l.meal||'Unspecified'})`, b, 'bm', i)).join('') + `</div>`;
+      }
+
+      if (sOn('bp') && d.bp && (d.bp.lsys || d.bp.ldia || d.bp.ssys || d.bp.sdia)) {
+        let txt = `Lying: ${d.bp.lsys||'-'}/${d.bp.ldia||'-'} | Standing: ${d.bp.ssys||'-'}/${d.bp.sdia||'-'}`;
+        const lsys = parseFloat(d.bp.lsys)||0, ssys = parseFloat(d.bp.ssys)||0;
+        if (lsys && ssys) txt += `<br>Difference: ${lsys - ssys}`;
+        sectionsHtml += `<div class="summary-sec"><b>${t('bp')}:</b><br>` + flatUI(txt, b, 'bp') + `</div>`;
+      }
+      
+      let pIn=0, pOut=0, tIn=0, tOut=0;
+      if (d.fluid) {
+        d.fluid.forEach((f, i) => {
+          let In = parseFloat(f.i)||0; let Out = parseFloat(f.o)||0;
+          if(d.td[`fl_${i}`]) { tIn+=In; tOut+=Out; } else { pIn+=In; pOut+=Out; }
+        });
+      }
+      if (sOn('fluid') && (tIn||tOut||pIn||pOut)) {
+        let fHtml = '';
+        if(tIn||tOut) fHtml += `<div style="opacity:0.5; margin-bottom:8px;"><b>Transcribed:</b> In ${tIn}ml | Out ${tOut}ml | Net ${tIn-tOut}ml</div>`;
+        if(pIn||pOut) fHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);"><span><b>Pending:</b> In ${pIn}ml | Out ${pOut}ml | Net ${pIn-pOut}ml</span> <button onclick="tFluid('${b}')" style="padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:transparent; border:1px solid var(--border); color:var(--text-sub);">Mark Done</button></div>`;
+        fHtml += `<div style="font-weight:bold;">Shift Total: In ${tIn+pIn}ml | Out ${tOut+pOut}ml | Net ${(tIn+pIn)-(tOut+pOut)}ml</div>`;
+        sectionsHtml += `<div class="summary-sec"><b>${t('fluid')}:</b><br>${fHtml}</div>`;
+      }
+      
+      let dietParts = [];
+      if (d.food && d.food.b) dietParts.push(`Breakfast: ${d.food.b}`);
+      if (d.food && d.food.l) dietParts.push(`Lunch: ${d.food.l}`);
+      if (d.food && d.food.d) dietParts.push(`Dinner: ${d.food.d}`);
+      if (sOn('food') && dietParts.length > 0) sectionsHtml += `<div class="summary-sec"><b>${t('food')}:</b><br>` + flatUI(dietParts.join(' | '), b, 'food') + `</div>`;
+
+      if (sOn('bowel') && d.bowel && d.bowel.length > 0) {
+        sectionsHtml += `<div class="summary-sec"><b>${t('bowel')}:</b><br>` + d.bowel.map((r,i) => rowUI(`${r.time||'--:--'} - ${r.amt||'-'} (${r.type||'-'})`, b, 'bowel', i)).join('') + `</div>`;
+      }
+      
+      let skinP = [];
+      if (d.amy && d.amy.sac) skinP.push(`Sacrum (${d.amy.sac})`);
+      if (d.amy && d.amy.groin) skinP.push(`Groin (${d.amy.groin})`);
+      if (d.amy && d.amy.heels) skinP.push(`Heels (${d.amy.heels})`);
+      if (d.amy && d.amy.elbows) skinP.push(`Elbows (${d.amy.elbows})`);
+      if (sOn('amy') && skinP.length > 0) sectionsHtml += `<div class="summary-sec"><b>${t('amy')}:</b><br>` + flatUI(skinP.join(', '), b, 'amy') + `</div>`;
+      
+      if (sOn('amy') && d.dressings && d.dressings.length > 0) {
+        sectionsHtml += `<div class="summary-sec"><b>Dressings:</b><br>` + d.dressings.map((dr,i) => rowUI(`${dr.val || 'Unnamed'} (Due: <b>${calcDue(dr.date)}</b>)`, b, 'dressings', i)).join('') + `</div>`;
+      }
+
+      const tTimes = isNight ? ['20:00','22:00','00:00','02:00','04:00','06:00'] : ['08:00','10:00','12:00','14:00','16:00','18:00'];
+      let hasTurn = d.turn && d.turn.some(t => t !== '');
+      if (sOn('turn') && hasTurn) {
+        sectionsHtml += `<div class="summary-sec"><b>${t('turn')}:</b><br>` + d.turn.map((tr,i) => tr !== '' ? rowUI(`${tTimes[i]} - ${tr}`, b, 'turn', i) : '').join('') + `</div>`;
+      }
+
+      if (sOn('mh') && (d.mhLevel || (d.mh && d.mh.length > 0))) {
+         sectionsHtml += `<div class="summary-sec"><b>${t('mh')}:</b><br>`;
+         if(d.mhLevel) sectionsHtml += flatUI(`<b>Current Level: ${d.mhLevel}</b>`, b, 'mhLevel');
+         if(d.mh && d.mh.length > 0) {
+           sectionsHtml += d.mh.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - Mood: ${r.mood||'-'} | Sleep: ${r.sleep||'-'}<br>Risks: ${r.risks||'None'}<br>Notes: ${r.note||'-'}`, b, 'mh', i)).join('');
+         }
+         sectionsHtml += `</div>`;
+      }
+
+      if (sOn('events') && d.events && d.events.length > 0) {
+        sectionsHtml += `<div class="summary-sec"><b>${t('events')}:</b><br>` + d.events.map((r,i) => rowUI(`${r.time||'--:--'} - ${r.val||''}`, b, 'events', i)).join('') + `</div>`;
+      }
+
+      if (sOn('reminders') && d.reminders && d.reminders.length > 0) {
+        sectionsHtml += `<div class="summary-sec"><b>${t('reminders')}:</b><br>` + d.reminders.map((r,i) => rowUI(`<b>${r.time||'--:--'} - ${r.task||'Unnamed Task'}:</b> ${r.outcome||'Pending'}`, b, 'reminders', i)).join('') + `</div>`;
+      }
+      
+      if (sOn('admit') && d.admit && d.admit.length > 0) {
+        sectionsHtml += `<div class="summary-sec"><b>${t('admit')}:</b><br>` + d.admit.map((r,i) => rowUI(`- ${r.val||''}`, b, 'admit', i)).join('') + `</div>`;
+      }
+
+      h += `<div class="card">
+        <h2 style="color:var(--text); margin-bottom:12px; font-size:1.2rem;">${b}</h2>
+        ${sectionsHtml || `<p style="color:var(--text-sub); font-size:0.9rem;">No data recorded yet.</p>`}
+      </div>`;
+    });
+    area.innerHTML = h || '<p style="text-align:center; padding:20px; color:var(--text-sub);">No active patients.</p>';
+    return;
+  }
+    if (!db[curBed]) return;
+  const d = db[curBed];
+  let h = '';
+
+  if (curSec === 'obs') {
+    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('obs')">+ Add ${t('obs')}</button>`;
+    d.obs.forEach((r, i) => {
+      h += `<div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <b style="color:var(--text);">${t('obs')}</b>
+          <button class="btn btn-danger btn-sm" onclick="rmArr('obs', ${i})">X</button>
+        </div>
+        <div class="row">
+          <div><label>Time</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','obs',${i},'time',this.value)"></div>
+          <div><label>RR</label><input type="number" min="0" max="60" value="${r.rr||''}" oninput="updateField('${curBed}','obs',${i},'rr',this.value)"></div>
+          <div><label>SpO2%</label><input type="number" min="0" max="100" value="${r.spo2||''}" oninput="updateField('${curBed}','obs',${i},'spo2',this.value)"></div>
+        </div>
+        <div class="row">
+          <div><label>Air/O2</label><select onchange="updateField('${curBed}','obs',${i},'o2',this.value)"><option>Air</option><option ${r.o2==='O2'?'selected':''}>O2</option></select></div>
+          <div><label>BP (Sys/Dia)</label><div class="bp-pair"><input type="number" value="${r.sys||''}" oninput="updateField('${curBed}','obs',${i},'sys',this.value)"><span>/</span><input type="number" value="${r.dia||''}" oninput="updateField('${curBed}','obs',${i},'dia',this.value)"></div></div>
+        </div>
+        <div class="row">
+          <div><label>HR</label><input type="number" value="${r.hr||''}" oninput="updateField('${curBed}','obs',${i},'hr',this.value)"></div>
+          <div><label>ACVPU</label><select onchange="updateField('${curBed}','obs',${i},'acvpu',this.value)"><option>Alert</option><option ${r.acvpu==='CVPU'?'selected':''}>CVPU</option></select></div>
+          <div><label>Temp (${prefs.tempUnit})</label><input type="number" step="0.1" value="${r.t||''}" oninput="updateField('${curBed}','obs',${i},'t',this.value)"></div>
+        </div>
+      </div>`;
+    });
+  }
+
+  if (curSec === 'bm') {
+    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('bm')">+ Add ${t('bm')}</button>`;
+    d.bm.forEach((r, i) => {
+      h += `<div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <b style="color:var(--text);">${t('bm')}</b>
+          <button class="btn btn-danger btn-sm" onclick="rmArr('bm', ${i})">X</button>
+        </div>
+        <div class="row">
+          <div><label>Time</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','bm',${i},'time',this.value)"></div>
+          <div><label>Context</label><select onchange="updateField('${curBed}','bm',${i},'meal',this.value)">${opts(['','Pre-Breakfast','Post-Breakfast','Pre-Lunch','Post-Lunch','Pre-Dinner','Post-Dinner','Night'], r.meal)}</select></div>
+          <div><label>${prefs.bmUnit}</label><input type="number" step="0.1" value="${r.val||''}" oninput="updateField('${curBed}','bm',${i},'val',this.value)"></div>
+        </div>
+      </div>`;
+    });
+  }
+
+  if (curSec === 'bp') {
+    h += `<div class="card">
+      <div class="row">
+        <div><label>Lying BP (Sys/Dia)</label><div class="bp-pair"><input type="number" value="${d.bp.lsys}" oninput="updateField('${curBed}','bp',null,'lsys',this.value)"><span>/</span><input type="number" value="${d.bp.ldia}" oninput="updateField('${curBed}','bp',null,'ldia',this.value)"></div></div>
+      </div>
+      <div class="row">
+        <div><label>Standing BP (Sys/Dia)</label><div class="bp-pair"><input type="number" value="${d.bp.ssys}" oninput="updateField('${curBed}','bp',null,'ssys',this.value)"><span>/</span><input type="number" value="${d.bp.sdia}" oninput="updateField('${curBed}','bp',null,'sdia',this.value)"></div></div>
+      </div>
+    </div>`;
+  }
+
+  if (curSec === 'fluid') {
+    const times = isNight ? ['19:00','20:00','21:00','22:00','23:00','00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00'] : ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
+    let inT=0, outT=0; d.fluid.forEach(f=>{ inT+=parseFloat(f.i)||0; outT+=parseFloat(f.o)||0; });
+    h += `<div id="fluid-totals" class="card" style="display:flex; justify-content:space-between; font-weight:600; padding:12px;"><span>In: ${inT}ml</span><span>Out: ${outT}ml</span><span>Net: ${inT-outT}ml</span></div><div class="card">`;
+    times.forEach((tStr, i) => {
+      h += `<div class="row" style="align-items:center; margin-bottom:6px;">
+        <span style="width:45px; font-weight:600; font-size:0.9rem;">${tStr}</span>
+        <input type="number" placeholder="In (ml)" value="${d.fluid[i].i}" oninput="updateField('${curBed}','fluid',${i},'i',this.value); refreshFluid()">
+        <input type="number" placeholder="Out (ml)" value="${d.fluid[i].o}" oninput="updateField('${curBed}','fluid',${i},'o',this.value); refreshFluid()">
+      </div>`;
+    });
+    h += `</div>`;
+  }
+
+  if (curSec === 'bowel') {
+    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('bowel')">+ Add ${t('bowel')}</button>`;
+    d.bowel.forEach((r, i) => {
+      h += `<div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <b>Entry</b><button class="btn btn-danger btn-sm" onclick="rmArr('bowel', ${i})">X</button>
+        </div>
+        <div class="row">
+          <div><label>Time</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','bowel',${i},'time',this.value)"></div>
+          <div><label>Amount</label><select onchange="updateField('${curBed}','bowel',${i},'amt',this.value)">${opts(['','Small','Medium','Large','Smear'], r.amt)}</select></div>
+        </div>
+        <div class="row">
+          <div><label>Type / Consistency</label><select onchange="updateField('${curBed}','bowel',${i},'type',this.value)">${opts(['','Type 1','Type 2','Type 3','Type 4','Type 5','Type 6','Type 7','BNO'], r.type)}</select></div>
+        </div>
+      </div>`;
+    });
+  }
+
+  if (curSec === 'amy') {
+    h += `<div class="card"><button class="btn btn-primary" style="margin-bottom:16px; background:var(--teal);" onclick="markSkinFine()">Mark All Intact / Fine</button>
+    <div class="row">
+      <div><label>Sacrum</label><select onchange="updateField('${curBed}','amy',null,'sac',this.value)">${opts(['','Fine','Red','Broken'], d.amy.sac)}</select></div>
+      <div><label>Groin</label><select onchange="updateField('${curBed}','amy',null,'groin',this.value)">${opts(['','Fine','Red','Broken'], d.amy.groin)}</select></div>
+    </div>
+    <div class="row">
+      <div><label>Heels</label><select onchange="updateField('${curBed}','amy',null,'heels',this.value)">${opts(['','Fine','Red','Broken'], d.amy.heels)}</select></div>
+      <div><label>Elbows</label><select onchange="updateField('${curBed}','amy',null,'elbows',this.value)">${opts(['','Fine','Red','Broken'], d.amy.elbows)}</select></div>
+    </div>
+    </div>
+    <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('dressings')">+ Add Dressing</button>`;
+    d.dressings.forEach((r, i) => {
+      h += `<div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <b>Dressing</b><button class="btn btn-danger btn-sm" onclick="rmArr('dressings', ${i})">X</button>
+        </div>
+        <div class="row">
+          <div><label>Location / Notes</label><input type="text" placeholder="e.g. Sacrum" value="${r.val||''}" oninput="updateField('${curBed}','dressings',${i},'val',this.value)"></div>
+        </div>
+        <div class="row" style="align-items:center;">
+          <div><label>Written Date</label><input type="date" value="${r.date||''}" onchange="updateField('${curBed}','dressings',${i},'date',this.value); renderContent()"></div>
+          <div style="flex:0 0 auto;"><button class="btn btn-sm" style="border:1px solid var(--border);" onclick="setNoDateArr(${i})">Today</button></div>
+        </div>
+        <div style="font-size:0.85rem; color:var(--text-sub);">Next Due (+3 days): <b>${calcDue(r.date)}</b></div>
+      </div>`;
+    });
+  }
+
+  if (curSec === 'food') {
+    const fOps = ['','100%','75%','50%','25%','0%','Refused','NBM'];
+    h += `<div class="card">
+      <div class="row"><div><label>Breakfast</label><select onchange="updateField('${curBed}','food',null,'b',this.value)">${opts(fOps, d.food.b)}</select></div></div>
+      <div class="row"><div><label>Lunch</label><select onchange="updateField('${curBed}','food',null,'l',this.value)">${opts(fOps, d.food.l)}</select></div></div>
+      <div class="row"><div><label>Dinner</label><select onchange="updateField('${curBed}','food',null,'d',this.value)">${opts(fOps, d.food.d)}</select></div></div>
+    </div>`;
+  }
+
+  if (curSec === 'turn') {
+    const tTimes = isNight ? ['20:00','22:00','00:00','02:00','04:00','06:00'] : ['08:00','10:00','12:00','14:00','16:00','18:00'];
+    h += `<div class="card">`;
+    tTimes.forEach((tStr, i) => {
+      h += `<div class="row" style="align-items:center; margin-bottom:8px;">
+        <span style="width:45px; font-weight:600; font-size:0.9rem;">${tStr}</span>
+        <select onchange="updateField('${curBed}','turn',${i},null,this.value)">${opts(['', 'Back', 'Left', 'Right', 'Chair', 'Walking', 'Refused'], d.turn[i])}</select>
+      </div>`;
+    });
+    h += `</div>`;
+  }
+    if (curSec === 'mh') {
+    h += `<div class="card" style="border: 2px solid var(--teal);">
+            <label style="color:var(--teal); font-size:0.95rem;">Current Observation Level</label>
+            <select style="font-weight:bold; font-size:1.05rem;" onchange="updateField('${curBed}', 'mhLevel', null, null, this.value)">
+              ${opts(['', 'Level 1: General', 'Level 2: Intermittent', 'Level 3: Eyesight', "Level 4: Arm's Length"], d.mhLevel)}
+            </select>
+          </div>
+          <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('mh')">+ Add ${t('mh')}</button>`;
+    d.mh.forEach((r, i) => {
+      h += `<div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <b>Entry</b><button class="btn btn-danger btn-sm" onclick="rmArr('mh', ${i})">X</button>
+        </div>
+        <div class="row">
+          <div><label>Time</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','mh',${i},'time',this.value)"></div>
+          <div><label>Presentation</label><select onchange="updateField('${curBed}','mh',${i},'mood',this.value)">${opts(['','Calm','Anxious','Agitated','Low','Elevated','Hostile'], r.mood)}</select></div>
+        </div>
+        <div class="row">
+          <div><label>Rest Status</label><select onchange="updateField('${curBed}','mh',${i},'sleep',this.value)">${opts(['','Asleep','Settled','Restless','Out of Bed'], r.sleep)}</select></div>
+          <div><label>Notes / Context</label><input type="text" placeholder="Details" value="${r.risks||''}" oninput="updateField('${curBed}','mh',${i},'risks',this.value)"></div>
+        </div>
+        <div class="row">
+          <div><label>Narrative</label><textarea rows="2" oninput="updateField('${curBed}','mh',${i},'note',this.value)">${r.note||''}</textarea></div>
+        </div>
+      </div>`;
+    });
+  }
+
+  if (curSec === 'events') {
+    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('events')">+ Add ${t('events')}</button>`;
+    d.events.forEach((r, i) => {
+      h += `<div class="card row" style="align-items:center;">
+        <input type="time" style="width:110px; flex:0 0 auto;" value="${r.time||''}" oninput="updateField('${curBed}','events',${i},'time',this.value)">
+        <input type="text" placeholder="Details" value="${r.val||''}" oninput="updateField('${curBed}','events',${i},'val',this.value)">
+        <button class="btn btn-danger btn-sm" style="flex:0 0 auto;" onclick="rmArr('events', ${i})">X</button>
+      </div>`;
+    });
+  }
+
+  if (curSec === 'reminders') {
+    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('reminders')">+ Add ${t('reminders')}</button>`;
+    d.reminders.forEach((r, i) => {
+      let isOverdue = (!r.outcome && r.time && r.time <= tNow());
+      h += `<div class="card ${isOverdue ? 'task-alert' : ''}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <b>Task</b><button class="btn btn-danger btn-sm" onclick="rmArr('reminders', ${i})">X</button>
+        </div>
+        <div class="row">
+          <div><label>Due Time</label><select onchange="updateField('${curBed}','reminders',${i},'time',this.value); renderContent()">${generateTimeOpts(r.time)}</select></div>
+          <div><label>Task</label><input type="text" placeholder="e.g. Bloods, ECG" value="${r.task||''}" oninput="updateField('${curBed}','reminders',${i},'task',this.value)"></div>
+        </div>
+        <div class="row">
+          <div><label>Outcome</label><input type="text" placeholder="Pending / Done..." value="${r.outcome||''}" oninput="updateField('${curBed}','reminders',${i},'outcome',this.value); renderContent()"></div>
+        </div>
+      </div>`;
+    });
+  }
+
+  if (curSec === 'admit') {
+    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('admit')">+ Add Property Item</button>`;
+    d.admit.forEach((r, i) => {
+      h += `<div class="card row" style="align-items:center;">
+        <input type="text" placeholder="Item description" value="${r.val||''}" oninput="updateField('${curBed}','admit',${i},'val',this.value)">
+        <button class="btn btn-danger btn-sm" style="flex:0 0 auto;" onclick="rmArr('admit', ${i})">X</button>
+      </div>`;
+    });
+  }
+
+  area.innerHTML = h;
+}
+
+function updateField(bed, sec, idx, prop, val) {
+  if (idx !== null && prop !== null) db[bed][sec][idx][prop] = val;
+  else if (idx !== null) db[bed][sec][idx] = val;
+  else if (prop !== null) db[bed][sec][prop] = val;
+  else db[bed][sec] = val;
+  saveDB();
+}
+
+function refreshFluid() {
+  let inT=0, outT=0; db[curBed].fluid.forEach(f=>{ inT+=parseFloat(f.i)||0; outT+=parseFloat(f.o)||0; });
+  const el = document.getElementById('fluid-totals');
+  if (el) el.innerHTML = `<span>In: ${inT}ml</span><span>Out: ${outT}ml</span><span>Net: ${inT-outT}ml</span>`;
+}
+
+function startAlertTimer() {
+  if (!isPro) return;
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  setInterval(() => {
+    const now = tNow(); let trigger = false;
+    alloc.forEach(b => { if(db[b] && db[b].reminders) { db[b].reminders.forEach(r => { if(r.time && r.time <= now && !r.outcome) trigger = true; }); }});
+    if(trigger) {
+      if(navigator.vibrate) navigator.vibrate([300, 100, 300]);
+      if(audioCtx.state === 'running') {
+        const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.type = 'sine'; osc.frequency.value = 880; gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+      }
+      if(curSec === 'reminders') renderContent();
+    }
+  }, 60000);
+}
+
+function opts(arr, sel) { return arr.map(a => `<option value="${a}" ${a===sel?'selected':''}>${a}</option>`).join(''); }
+function tNow() { const d = new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function addArr(k) { 
+  const defaultTime = k === 'reminders' ? '' : tNow();
+  db[curBed][k].unshift({time: defaultTime, val: ''}); 
+  saveDB(); 
+  renderContent(); 
+}
+function rmArr(k, i) { db[curBed][k].splice(i, 1); saveDB(); renderContent(); }
+function markSkinFine() { db[curBed].amy.sac = 'Fine'; db[curBed].amy.groin = 'Fine'; db[curBed].amy.heels = 'Fine'; db[curBed].amy.elbows = 'Fine'; saveDB(); renderContent(); }
+function setNoDateArr(i) { const d = new Date(); db[curBed].dressings[i].date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; saveDB(); renderContent(); }
+function calcDue(val) { if (!val) return '-'; const d = new Date(val); d.setDate(d.getDate() + 3); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; }
+function clearShift() { if (confirm("Clear all shift data and return to setup?")) { localStorage.removeItem('cdu_alloc'); localStorage.removeItem('cdu_db'); localStorage.removeItem('cdu_start'); localStorage.removeItem('cdu_ward'); localStorage.removeItem('cdu_mods'); location.reload(); } }
+function handleSwipe() { 
+  if (showSummary || alloc.length <= 1) return; 
+  const diffX = touchEndX - touchStartX; 
+  const diffY = touchEndY - touchStartY; 
+  if (Math.abs(diffX) > Math.abs(diffY) * 2 && Math.abs(diffX) > 100) { 
+    let idx = alloc.indexOf(curBed); 
+    idx += (diffX < 0) ? 1 : -1; 
+    if (idx >= alloc.length) idx = 0; 
+    if (idx < 0) idx = alloc.length - 1; 
+    setBed(alloc[idx]); 
+  } 
+}
+
+initSetup();
+</script>
+</body>
+</html>
