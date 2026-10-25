@@ -49,6 +49,7 @@
   .row > div { flex: 1; }
   label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-sub); margin-bottom: 4px; }
   input[type="text"], input[type="number"], input[type="time"], input[type="date"], select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); font-size: 0.95rem; }
+  textarea.auto-expand { resize: none; overflow-y: hidden; line-height: 1.4; }
   .bp-pair { display: flex; align-items: center; gap: 4px; }
   .bp-pair span { font-weight: bold; color: var(--text-sub); }
   .btn { width: 100%; padding: 12px; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; font-size: 1rem; }
@@ -213,11 +214,11 @@ let isNight = false;
 let alertTimerId = null;
 
 const i18n = {
-  en: { setup:'Shift Setup', start:'Start / Update Shift', summary:'Handover Summary', share:'Share Care Digipad with a Colleague', obs:'Vitals', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Bowels', amy:'Skin & Dressings', food:'Diet', turn:'Turning', mh:'Mental Health', events:'Narrative Notes', reminders:'Tasks', admit:'Admissions' },
+  en: { setup:'Shift Setup', start:'Start / Update Shift', summary:'Handover Summary', share:'Share Care Digipad with a Colleague', obs:'Vitals', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Bowels', amy:'Skin & Dressings', food:'Diet', turn:'Turning', mh:'Mental Health', events:'Notes', reminders:'Tasks', admit:'Admissions' },
   es: { setup:'Configuración de Turno', start:'Iniciar / Actualizar Turno', summary:'Resumen de Relevos', share:'Compartir con un Colega', obs:'Signos Vitales', bm:'Glucosa', bp:'PA Acostado/De Pie', fluid:'Balance Hídrico', bowel:'Deposiciones', amy:'Piel y Apósito', food:'Dieta', turn:'Cambios Posturales', mh:'Salud Mental', events:'Notas', reminders:'Tareas', admit:'Admisiones' },
   fr: { setup:'Configuration de Garde', start:'Démarrer / Mettre à Jour', summary:'Résumé de Transmission', share:'Partager avec un Collègue', obs:'Constantes', bm:'Glycémie', bp:'TA Couché/Debout', fluid:'Bilan Hydrique', bowel:'Selles', amy:'Peau et Pansements', food:'Alimentation', turn:'Positionnement', mh:'Santé Mentale', events:'Notes', reminders:'Tâches', admit:'Admissions' },
-  de: { setup:'Schicht-Einstellungen', start:'Schicht Starten / Aktualisieren', summary:'Übergabe-Übersicht', share:'Mit Kollegen Teilen', obs:'Vitalzeichen', bm:'Blutzucker', bp:'RR Liegen/Stehen', fluid:'Bilanzierung', bowel:'Stuhlgang', amy:'Haut & Verbände', food:'Ernährung', turn:'Lagerung', mh:'Psychische Gesundheit', events:'Verlaufsnotizen', reminders:'Aufgaben', admit:'Aufnahme' },
-  pt: { setup:'Configuração de Plantão', start:'Iniciar / Atualizar Plantão', summary:'Resumo de Passagem', share:'Compartilhar com Colega', obs:'Sinais Vitais', bm:'Glicemia', bp:'PA Deitado/Em Pé', fluid:'Balanço Hídrico', bowel:'Evacuação', amy:'Pele e Curativos', food:'Dieta', turn:'Mudança de Decúbito', mh:'Saúde Mental', events:'Anotações', reminders:'Tarefas', admit:'Admissão' },
+  de: { setup:'Schicht-Einstellungen', start:'Schicht Starten / Aktualisieren', summary:'Übergabe-Übersicht', share:'Mit Kollegen Teilen', obs:'Vitalzeichen', bm:'Blutzucker', bp:'RR Liegen/Stehen', fluid:'Bilanzierung', bowel:'Stuhlgang', amy:'Haut & Verbände', food:'Ernährung', turn:'Lagerung', mh:'Psychische Gesundheit', events:'Notizen', reminders:'Aufgaben', admit:'Aufnahme' },
+  pt: { setup:'Configuração de Plantão', start:'Iniciar / Atualizar Plantão', summary:'Resumo de Passagem', share:'Compartilhar com Colega', obs:'Sinais Vitais', bm:'Glicemia', bp:'PA Deitado/Em Pé', fluid:'Balanço Hídrico', bowel:'Evacuação', amy:'Pele e Curativos', food:'Dieta', turn:'Mudança de Decúbito', mh:'Saúde Mental', events:'Notas', reminders:'Tarefas', admit:'Admissão' },
   tl: { setup:'Setup ng Shift', start:'Simulan / I-update ang Shift', summary:'Buod ng Handover', share:'Ibahagi sa Katrabaho', obs:'Vital Signs', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Pagdumi', amy:'Balat at Dressing', food:'Pagkain', turn:'Pagpihit', mh:'Mental Health', events:'Mga Tala', reminders:'Mga Gawain', admit:'Admissions' }
 };
 
@@ -227,7 +228,7 @@ let defaultMods = [
   {id:'bp', lbl:'L/S BP', on:true, pro:false},
   {id:'fluid', lbl:'Fluids', on:true, pro:false},
   {id:'food', lbl:'Diet', on:true, pro:false},
-  {id:'events', lbl:'Narrative Notes', on:true, pro:false},
+  {id:'events', lbl:'Notes', on:true, pro:false},
   {id:'reminders', lbl:'Tasks', on:false, pro:true},
   {id:'bowel', lbl:'Bowels', on:false, pro:true},
   {id:'amy', lbl:'Skin & Dressings', on:false, pro:true},
@@ -533,7 +534,7 @@ function startShift(auto = false) {
   renderUI();
   startAlertTimer();
 }
-  function saveDB() { localStorage.setItem('cdu_db', JSON.stringify(db)); }
+function saveDB() { localStorage.setItem('cdu_db', JSON.stringify(db)); }
 function toggleNight(val) { isNight = val; document.body.setAttribute('data-theme', isNight ? 'night' : 'day'); renderUI(); }
 function setBed(b) { curBed = b; showSummary = false; renderUI(); }
 function setSec(s) { curSec = s; showSummary = false; renderUI(); }
@@ -599,18 +600,18 @@ function renderContent() {
       
       if (sOn('obs') && d.obs && d.obs.length > 0) {
         sectionsHtml += `<div class="summary-sec"><b>${t('obs')}:</b><br>` + d.obs.map((l,i) => {
-          return rowUI(`${l.time||'--:--'} - RR ${l.rr||'-'}, SpO2 ${l.spo2||'-'}% (${l.o2||'Air'}), BP ${l.sys||'-'}/${l.dia||'-'}, HR ${l.hr||'-'}, ${l.acvpu||'Alert'}, Temp ${l.t||'-'}${prefs.tempUnit}`, b, 'obs', i);
+          return rowUI(`<b>${l.time||'--:--'}</b> - RR <b>${l.rr||'-'}</b>, SpO2 <b>${l.spo2||'-'}%</b> (<b>${l.o2||'Air'}</b>), BP <b>${l.sys||'-'}/${l.dia||'-'}</b>, HR <b>${l.hr||'-'}</b>, <b>${l.acvpu||'Alert'}</b>, Temp <b>${l.t||'-'}${prefs.tempUnit}</b>`, b, 'obs', i);
         }).join('') + `</div>`;
       }
       
       if (sOn('bm') && d.bm && d.bm.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('bm')}:</b><br>` + d.bm.map((l,i) => rowUI(`${l.time||'--:--'} - ${l.val||'-'} ${prefs.bmUnit} (${l.meal||'Unspecified'})`, b, 'bm', i)).join('') + `</div>`;
+        sectionsHtml += `<div class="summary-sec"><b>${t('bm')}:</b><br>` + d.bm.map((l,i) => rowUI(`<b>${l.time||'--:--'}</b> - <b>${l.val||'-'} ${prefs.bmUnit}</b> (<b>${l.meal||'Unspecified'}</b>)`, b, 'bm', i)).join('') + `</div>`;
       }
 
       if (sOn('bp') && d.bp && (d.bp.lsys || d.bp.ldia || d.bp.ssys || d.bp.sdia)) {
-        let txt = `Lying: ${d.bp.lsys||'-'}/${d.bp.ldia||'-'} | Standing: ${d.bp.ssys||'-'}/${d.bp.sdia||'-'}`;
+        let txt = `Lying: <b>${d.bp.lsys||'-'}/${d.bp.ldia||'-'}</b> | Standing: <b>${d.bp.ssys||'-'}/${d.bp.sdia||'-'}</b>`;
         const lsys = parseFloat(d.bp.lsys)||0, ssys = parseFloat(d.bp.ssys)||0;
-        if (lsys && ssys) txt += `<br>Difference: ${lsys - ssys}`;
+        if (lsys && ssys) txt += `<br>Difference: <b>${lsys - ssys}</b>`;
         sectionsHtml += `<div class="summary-sec"><b>${t('bp')}:</b><br>` + flatUI(txt, b, 'bp') + `</div>`;
       }
       
@@ -623,58 +624,58 @@ function renderContent() {
       }
       if (sOn('fluid') && (tIn||tOut||pIn||pOut)) {
         let fHtml = '';
-        if(tIn||tOut) fHtml += `<div style="opacity:0.5; margin-bottom:8px;"><b>Transcribed:</b> In ${tIn}ml | Out ${tOut}ml | Net ${tIn-tOut}ml</div>`;
-        if(pIn||pOut) fHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);"><span><b>Pending:</b> In ${pIn}ml | Out ${pOut}ml | Net ${pIn-pOut}ml</span> <button onclick="tFluid('${b}')" style="padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:transparent; border:1px solid var(--border); color:var(--text-sub);">Mark Done</button></div>`;
-        fHtml += `<div style="font-weight:bold;">Shift Total: In ${tIn+pIn}ml | Out ${tOut+pOut}ml | Net ${(tIn+pIn)-(tOut+pOut)}ml</div>`;
+        if(tIn||tOut) fHtml += `<div style="opacity:0.5; margin-bottom:8px;">Transcribed: In <b>${tIn}ml</b> | Out <b>${tOut}ml</b> | Net <b>${tIn-tOut}ml</b></div>`;
+        if(pIn||pOut) fHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);"><span>Pending: In <b>${pIn}ml</b> | Out <b>${pOut}ml</b> | Net <b>${pIn-pOut}ml</b></span> <button onclick="tFluid('${b}')" style="padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:transparent; border:1px solid var(--border); color:var(--text-sub);">Mark Done</button></div>`;
+        fHtml += `<div>Shift Total: In <b>${tIn+pIn}ml</b> | Out <b>${tOut+pOut}ml</b> | Net <b>${(tIn+pIn)-(tOut+pOut)}ml</b></div>`;
         sectionsHtml += `<div class="summary-sec"><b>${t('fluid')}:</b><br>${fHtml}</div>`;
       }
       
       let dietParts = [];
-      if (d.food && d.food.b) dietParts.push(`Breakfast: ${d.food.b}`);
-      if (d.food && d.food.l) dietParts.push(`Lunch: ${d.food.l}`);
-      if (d.food && d.food.d) dietParts.push(`Dinner: ${d.food.d}`);
+      if (d.food && d.food.b) dietParts.push(`Breakfast: <b>${d.food.b}</b>`);
+      if (d.food && d.food.l) dietParts.push(`Lunch: <b>${d.food.l}</b>`);
+      if (d.food && d.food.d) dietParts.push(`Dinner: <b>${d.food.d}</b>`);
       if (sOn('food') && dietParts.length > 0) sectionsHtml += `<div class="summary-sec"><b>${t('food')}:</b><br>` + flatUI(dietParts.join(' | '), b, 'food') + `</div>`;
 
       if (sOn('bowel') && d.bowel && d.bowel.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('bowel')}:</b><br>` + d.bowel.map((r,i) => rowUI(`${r.time||'--:--'} - ${r.amt||'-'} (${r.type||'-'})`, b, 'bowel', i)).join('') + `</div>`;
+        sectionsHtml += `<div class="summary-sec"><b>${t('bowel')}:</b><br>` + d.bowel.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.amt||'-'}</b> (<b>${r.type||'-'}</b>)`, b, 'bowel', i)).join('') + `</div>`;
       }
       
       let skinP = [];
-      if (d.amy && d.amy.sac) skinP.push(`Sacrum (${d.amy.sac})`);
-      if (d.amy && d.amy.groin) skinP.push(`Groin (${d.amy.groin})`);
-      if (d.amy && d.amy.heels) skinP.push(`Heels (${d.amy.heels})`);
-      if (d.amy && d.amy.elbows) skinP.push(`Elbows (${d.amy.elbows})`);
+      if (d.amy && d.amy.sac) skinP.push(`Sacrum (<b>${d.amy.sac === 'Fine' ? 'Intact' : d.amy.sac}</b>)`);
+      if (d.amy && d.amy.groin) skinP.push(`Groin (<b>${d.amy.groin === 'Fine' ? 'Intact' : d.amy.groin}</b>)`);
+      if (d.amy && d.amy.heels) skinP.push(`Heels (<b>${d.amy.heels === 'Fine' ? 'Intact' : d.amy.heels}</b>)`);
+      if (d.amy && d.amy.elbows) skinP.push(`Elbows (<b>${d.amy.elbows === 'Fine' ? 'Intact' : d.amy.elbows}</b>)`);
       if (sOn('amy') && skinP.length > 0) sectionsHtml += `<div class="summary-sec"><b>${t('amy')}:</b><br>` + flatUI(skinP.join(', '), b, 'amy') + `</div>`;
       
       if (sOn('amy') && d.dressings && d.dressings.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>Dressings:</b><br>` + d.dressings.map((dr,i) => rowUI(`${dr.val || 'Unnamed'} (Due: <b>${calcDue(dr.date)}</b>)`, b, 'dressings', i)).join('') + `</div>`;
+        sectionsHtml += `<div class="summary-sec"><b>Dressings:</b><br>` + d.dressings.map((dr,i) => rowUI(`<b>${dr.val || 'Unnamed'}</b> (Due: <b>${calcDue(dr.date)}</b>)`, b, 'dressings', i)).join('') + `</div>`;
       }
 
       const tTimes = isNight ? ['20:00','22:00','00:00','02:00','04:00','06:00'] : ['08:00','10:00','12:00','14:00','16:00','18:00'];
       let hasTurn = d.turn && d.turn.some(t => t !== '');
       if (sOn('turn') && hasTurn) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('turn')}:</b><br>` + d.turn.map((tr,i) => tr !== '' ? rowUI(`${tTimes[i]} - ${tr}`, b, 'turn', i) : '').join('') + `</div>`;
+        sectionsHtml += `<div class="summary-sec"><b>${t('turn')}:</b><br>` + d.turn.map((tr,i) => tr !== '' ? rowUI(`<b>${tTimes[i]}</b> - <b>${tr}</b>`, b, 'turn', i) : '').join('') + `</div>`;
       }
 
       if (sOn('mh') && (d.mhLevel || (d.mh && d.mh.length > 0))) {
          sectionsHtml += `<div class="summary-sec"><b>${t('mh')}:</b><br>`;
-         if(d.mhLevel) sectionsHtml += flatUI(`<b>Current Level: ${d.mhLevel}</b>`, b, 'mhLevel');
+         if(d.mhLevel) sectionsHtml += flatUI(`Current Level: <b>${d.mhLevel}</b>`, b, 'mhLevel');
          if(d.mh && d.mh.length > 0) {
-           sectionsHtml += d.mh.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - Mood: ${r.mood||'-'} | Sleep: ${r.sleep||'-'}<br>Risks: ${r.risks||'None'}<br>Notes: ${r.note||'-'}`, b, 'mh', i)).join('');
+           sectionsHtml += d.mh.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - Mood: <b>${r.mood||'-'}</b> | Sleep: <b>${r.sleep||'-'}</b><br>Risks: <b>${r.risks||'None'}</b><br>Notes: <span style="white-space:pre-wrap;"><b>${r.note||'-'}</b></span>`, b, 'mh', i)).join('');
          }
          sectionsHtml += `</div>`;
       }
 
       if (sOn('events') && d.events && d.events.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('events')}:</b><br>` + d.events.map((r,i) => rowUI(`${r.time||'--:--'} - ${r.val||''}`, b, 'events', i)).join('') + `</div>`;
+        sectionsHtml += `<div class="summary-sec"><b>${t('events')}:</b><br>` + d.events.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <span style="white-space:pre-wrap;"><b>${r.val||''}</b></span>`, b, 'events', i)).join('') + `</div>`;
       }
 
       if (sOn('reminders') && d.reminders && d.reminders.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('reminders')}:</b><br>` + d.reminders.map((r,i) => rowUI(`<b>${r.time||'--:--'} - ${r.task||'Unnamed Task'}:</b> ${r.outcome||'Pending'}`, b, 'reminders', i)).join('') + `</div>`;
+        sectionsHtml += `<div class="summary-sec"><b>${t('reminders')}:</b><br>` + d.reminders.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.task||'Unnamed Task'}</b>: <b>${r.outcome||'Pending'}</b>`, b, 'reminders', i)).join('') + `</div>`;
       }
       
       if (sOn('admit') && d.admit && d.admit.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('admit')}:</b><br>` + d.admit.map((r,i) => rowUI(`- ${r.val||''}`, b, 'admit', i)).join('') + `</div>`;
+        sectionsHtml += `<div class="summary-sec"><b>${t('admit')}:</b><br>` + d.admit.map((r,i) => rowUI(`- <b>${r.val||''}</b>`, b, 'admit', i)).join('') + `</div>`;
       }
 
       h += `<div class="card">
@@ -684,8 +685,8 @@ function renderContent() {
     });
     area.innerHTML = h || '<p style="text-align:center; padding:20px; color:var(--text-sub);">No active patients.</p>';
     return;
-}
-    if (!db[curBed]) return;
+  }
+  if (!db[curBed]) return;
   const d = db[curBed];
   let h = '';
 
@@ -825,7 +826,7 @@ function renderContent() {
     });
     h += `</div>`;
   }
-    if (curSec === 'mh') {
+  if (curSec === 'mh') {
     h += `<div class="card" style="border: 2px solid var(--teal);">
             <label style="color:var(--teal); font-size:0.95rem;">Current Observation Level</label>
             <select style="font-weight:bold; font-size:1.05rem;" onchange="updateField('${curBed}', 'mhLevel', null, null, this.value)">
@@ -846,8 +847,8 @@ function renderContent() {
           <div><label>Rest Status</label><select onchange="updateField('${curBed}','mh',${i},'sleep',this.value)">${opts(['','Asleep','Settled','Restless','Out of Bed'], r.sleep)}</select></div>
           <div><label>Notes / Context</label><input type="text" placeholder="Details" value="${r.risks||''}" oninput="updateField('${curBed}','mh',${i},'risks',this.value)"></div>
         </div>
-        <div class="row">
-          <div><label>Narrative</label><textarea rows="2" oninput="updateField('${curBed}','mh',${i},'note',this.value)">${r.note||''}</textarea></div>
+        <div class="row" style="margin-bottom:0;">
+          <div><label>Notes</label><textarea class="auto-expand" rows="3" oninput="autoGrow(this); updateField('${curBed}','mh',${i},'note',this.value)">${r.note||''}</textarea></div>
         </div>
       </div>`;
     });
@@ -856,10 +857,15 @@ function renderContent() {
   if (curSec === 'events') {
     h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('events')">+ Add ${t('events')}</button>`;
     d.events.forEach((r, i) => {
-      h += `<div class="card row" style="align-items:center;">
-        <input type="time" style="width:110px; flex:0 0 auto;" value="${r.time||''}" oninput="updateField('${curBed}','events',${i},'time',this.value)">
-        <input type="text" placeholder="Details" value="${r.val||''}" oninput="updateField('${curBed}','events',${i},'val',this.value)">
-        <button class="btn btn-danger btn-sm" style="flex:0 0 auto;" onclick="rmArr('events', ${i})">X</button>
+      h += `<div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label style="margin:0;">Time</label>
+            <input type="time" style="width:120px; padding:6px 10px;" value="${r.time||''}" oninput="updateField('${curBed}','events',${i},'time',this.value)">
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="rmArr('events', ${i})">X</button>
+        </div>
+        <textarea class="auto-expand" rows="3" placeholder="Enter shift notes..." oninput="autoGrow(this); updateField('${curBed}','events',${i},'val',this.value)">${r.val||''}</textarea>
       </div>`;
     });
   }
@@ -894,6 +900,12 @@ function renderContent() {
   }
 
   area.innerHTML = h;
+  document.querySelectorAll('textarea.auto-expand').forEach(el => autoGrow(el));
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
 }
 
 function updateField(bed, sec, idx, prop, val) {
