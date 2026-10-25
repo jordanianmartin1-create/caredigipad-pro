@@ -59,7 +59,15 @@
   .btn-sm { width: auto; padding: 6px 12px; font-size: 0.85rem; }
   .pro-tag { background: var(--amber); color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
   .summary-sec { border-bottom: 1px dashed var(--border); padding-bottom: 12px; margin-bottom: 12px; font-size: 0.95rem; line-height: 1.5; }
-  .summary-sec:last-child { border-bottom: none; }
+  .summary-sec:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .summary-toolbar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 16px; }
+  .tool-btn { padding: 8px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 0.8rem; font-weight: 600; cursor: pointer; text-align: center; }
+  .tool-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chip { padding: 5px 10px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+  .chip:active { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .quick-fluid-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--teal); background: transparent; color: var(--teal); font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+  .quick-fluid-btn:active { background: var(--teal); color: #fff; }
   .footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); padding: 10px 16px; z-index: 100; text-align: center; }
   .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
   .switch input { opacity: 0; width: 0; height: 0; }
@@ -208,18 +216,32 @@ let currentLayoutBeds = [];
 let alloc = [];
 let db = {};
 let showSummary = false;
+let summaryMode = 'bed';
+let hideDone = false;
+let keepAwake = false;
+let wakeLock = null;
+let activeFluidIdx = null;
 let curBed = '';
 let curSec = 'obs';
 let isNight = false;
 let alertTimerId = null;
 
+const quickPhrases = [
+  'Personal care given',
+  'Washed & dressed',
+  'Pressure areas intact',
+  'Mobilised to chair',
+  'Escalated to RN',
+  'Family updated'
+];
+
 const i18n = {
-  en: { setup:'Shift Setup', start:'Start / Update Shift', summary:'Handover Summary', share:'Share Care Digipad with a Colleague', obs:'Vitals', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Bowels', amy:'Skin & Dressings', food:'Diet', turn:'Turning', mh:'Mental Health', events:'Notes', reminders:'Tasks', admit:'Admissions' },
-  es: { setup:'Configuración de Turno', start:'Iniciar / Actualizar Turno', summary:'Resumen de Relevos', share:'Compartir con un Colega', obs:'Signos Vitales', bm:'Glucosa', bp:'PA Acostado/De Pie', fluid:'Balance Hídrico', bowel:'Deposiciones', amy:'Piel y Apósito', food:'Dieta', turn:'Cambios Posturales', mh:'Salud Mental', events:'Notas', reminders:'Tareas', admit:'Admisiones' },
-  fr: { setup:'Configuration de Garde', start:'Démarrer / Mettre à Jour', summary:'Résumé de Transmission', share:'Partager avec un Collègue', obs:'Constantes', bm:'Glycémie', bp:'TA Couché/Debout', fluid:'Bilan Hydrique', bowel:'Selles', amy:'Peau et Pansements', food:'Alimentation', turn:'Positionnement', mh:'Santé Mentale', events:'Notes', reminders:'Tâches', admit:'Admissions' },
-  de: { setup:'Schicht-Einstellungen', start:'Schicht Starten / Aktualisieren', summary:'Übergabe-Übersicht', share:'Mit Kollegen Teilen', obs:'Vitalzeichen', bm:'Blutzucker', bp:'RR Liegen/Stehen', fluid:'Bilanzierung', bowel:'Stuhlgang', amy:'Haut & Verbände', food:'Ernährung', turn:'Lagerung', mh:'Psychische Gesundheit', events:'Notizen', reminders:'Aufgaben', admit:'Aufnahme' },
-  pt: { setup:'Configuração de Plantão', start:'Iniciar / Atualizar Plantão', summary:'Resumo de Passagem', share:'Compartilhar com Colega', obs:'Sinais Vitais', bm:'Glicemia', bp:'PA Deitado/Em Pé', fluid:'Balanço Hídrico', bowel:'Evacuação', amy:'Pele e Curativos', food:'Dieta', turn:'Mudança de Decúbito', mh:'Saúde Mental', events:'Notas', reminders:'Tarefas', admit:'Admissão' },
-  tl: { setup:'Setup ng Shift', start:'Simulan / I-update ang Shift', summary:'Buod ng Handover', share:'Ibahagi sa Katrabaho', obs:'Vital Signs', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Pagdumi', amy:'Balat at Dressing', food:'Pagkain', turn:'Pagpihit', mh:'Mental Health', events:'Mga Tala', reminders:'Mga Gawain', admit:'Admissions' }
+  en: { setup:'Shift Setup', start:'Start / Update Shift', summary:'Transcribe', share:'Share Care Digipad with a Colleague', obs:'Vitals', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Bowels', amy:'Skin & Dressings', food:'Diet', turn:'Turning', mh:'Mental Health', events:'Notes', reminders:'Tasks', admit:'Admissions' },
+  es: { setup:'Configuración de Turno', start:'Iniciar / Actualizar Turno', summary:'Transcribir', share:'Compartir con un Colega', obs:'Signos Vitales', bm:'Glucosa', bp:'PA Acostado/De Pie', fluid:'Balance Hídrico', bowel:'Deposiciones', amy:'Piel y Apósito', food:'Dieta', turn:'Cambios Posturales', mh:'Salud Mental', events:'Notas', reminders:'Tareas', admit:'Admisiones' },
+  fr: { setup:'Configuration de Garde', start:'Démarrer / Mettre à Jour', summary:'Transcrire', share:'Partager avec un Collègue', obs:'Constantes', bm:'Glycémie', bp:'TA Couché/Debout', fluid:'Bilan Hydrique', bowel:'Selles', amy:'Peau et Pansements', food:'Alimentation', turn:'Positionnement', mh:'Santé Mentale', events:'Notes', reminders:'Tâches', admit:'Admissions' },
+  de: { setup:'Schicht-Einstellungen', start:'Schicht Starten / Aktualisieren', summary:'Übertragen', share:'Mit Kollegen Teilen', obs:'Vitalzeichen', bm:'Blutzucker', bp:'RR Liegen/Stehen', fluid:'Bilanzierung', bowel:'Stuhlgang', amy:'Haut & Verbände', food:'Ernährung', turn:'Lagerung', mh:'Psychische Gesundheit', events:'Notizen', reminders:'Aufgaben', admit:'Aufnahme' },
+  pt: { setup:'Configuração de Plantão', start:'Iniciar / Atualizar Plantão', summary:'Transcrever', share:'Compartilhar com Colega', obs:'Sinais Vitais', bm:'Glicemia', bp:'PA Deitado/Em Pé', fluid:'Balanço Hídrico', bowel:'Evacuação', amy:'Pele e Curativos', food:'Dieta', turn:'Mudança de Decúbito', mh:'Saúde Mental', events:'Notas', reminders:'Tarefas', admit:'Admissão' },
+  tl: { setup:'Setup ng Shift', start:'Simulan / I-update ang Shift', summary:'I-transcribe', share:'Ibahagi sa Katrabaho', obs:'Vital Signs', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Pagdumi', amy:'Balat at Dressing', food:'Pagkain', turn:'Pagpihit', mh:'Mental Health', events:'Mga Tala', reminders:'Mga Gawain', admit:'Admissions' }
 };
 
 let defaultMods = [
@@ -252,6 +274,12 @@ document.addEventListener('touchend', e => {
   touchEndY = e.changedTouches[0].screenY; 
   if(isSwipeAllowed) handleSwipe(); 
 }, {passive: true});
+
+document.addEventListener('visibilitychange', () => {
+  if ( document.visibilityState === 'visible' && keepAwake && showSummary ) {
+    requestWakeLock();
+  }
+});
 
 try {
   if (localStorage.getItem('cdu_pro') === 'true') isPro = true;
@@ -536,10 +564,65 @@ function startShift(auto = false) {
 }
 function saveDB() { localStorage.setItem('cdu_db', JSON.stringify(db)); }
 function toggleNight(val) { isNight = val; document.body.setAttribute('data-theme', isNight ? 'night' : 'day'); renderUI(); }
-function setBed(b) { curBed = b; showSummary = false; renderUI(); }
-function setSec(s) { curSec = s; showSummary = false; renderUI(); }
+function setBed(b) { curBed = b; showSummary = false; releaseWakeLock(); renderUI(); }
+function setSec(s) { curSec = s; showSummary = false; releaseWakeLock(); renderUI(); }
 function toggleSummary() { showSummary = true; renderUI(); }
-function editBeds() { document.getElementById('mainView').classList.add('hidden'); document.getElementById('setupView').classList.remove('hidden'); applyPrefsUI(); renderSetupGrid(); renderMods(); }
+function editBeds() { releaseWakeLock(); document.getElementById('mainView').classList.add('hidden'); document.getElementById('setupView').classList.remove('hidden'); applyPrefsUI(); renderSetupGrid(); renderMods(); }
+
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      keepAwake = true;
+    } catch (e) {
+      keepAwake = false;
+    }
+  } else {
+    alert('Screen Wake Lock is not supported on this browser.');
+    keepAwake = false;
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock !== null) {
+    wakeLock.release().catch(() => {});
+    wakeLock = null;
+  }
+  keepAwake = false;
+}
+
+async function toggleKeepAwake() {
+  if (keepAwake) {
+    releaseWakeLock();
+  } else {
+    await requestWakeLock();
+  }
+  renderContent();
+}
+
+function toggleSummaryMode() {
+  summaryMode = summaryMode === 'bed' ? 'mod' : 'bed';
+  renderContent();
+}
+
+function toggleHideDone() {
+  hideDone = !hideDone;
+  renderContent();
+}
+
+function markBedDone(b) {
+  const d = db[b];
+  if (!d) return;
+  if (!d.td) d.td = {};
+  ['obs', 'bm', 'bowel', 'dressings', 'mh', 'events', 'reminders', 'admit'].forEach(k => {
+    if (d[k]) d[k].forEach(item => { if (typeof item === 'object' && item !== null) item.done = true; });
+  });
+  ['bp', 'food', 'amy', 'mhLevel'].forEach(k => { d.td[k] = true; });
+  if (d.turn) d.turn.forEach((tr, i) => { if (tr !== '') d.td[`turn_${i}`] = true; });
+  if (d.fluid) d.fluid.forEach((f, i) => { if (f.i || f.o) d.td[`fl_${i}`] = true; });
+  saveDB();
+  renderContent();
+}
 
 function getActiveSections() { return activeMods.filter(m => m.on && (!m.pro || isPro)); }
 
@@ -558,16 +641,96 @@ function tFluid(b) { db[b].fluid.forEach((f,i)=>{ if(f.i||f.o) db[b].td[`fl_${i}
 function rowUI(txt, b, s, i) {
   const item = db[b][s] && db[b][s][i];
   const done = (typeof item === 'object' && item !== null) ? !!item.done : !!db[b].td[`${s}_${i}`];
+  if (hideDone && done) return '';
   const style = done ? 'opacity:0.4; filter:grayscale(100%);' : '';
   const btn = `<button onclick="tRow('${b}','${s}',${i})" style="margin-left:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1px solid var(--border);'}">${done?'Done':'Mark Done'}</button>`;
   return `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); transition:0.3s; ${style}"><div style="flex:1;">${txt}</div>${btn}</div>`;
 }
 
 function flatUI(txt, b, s) {
-  const done = db[b].td[s];
+  const done = !!db[b].td[s];
+  if (hideDone && done) return '';
   const style = done ? 'opacity:0.4; filter:grayscale(100%);' : '';
   const btn = `<button onclick="tFlat('${b}','${s}')" style="margin-left:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1px solid var(--border);'}">${done?'Done':'Mark Done'}</button>`;
   return `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); transition:0.3s; ${style}"><div style="flex:1;">${txt}</div>${btn}</div>`;
+}
+
+function getBedSectionHtml(b, secId) {
+  const d = db[b];
+  if (!d) return '';
+  if (!d.td) d.td = {};
+
+  if (secId === 'obs' && d.obs && d.obs.length > 0) {
+    return d.obs.map((l,i) => rowUI(`<b>${l.time||'--:--'}</b> - RR <b>${l.rr||'-'}</b>, SpO2 <b>${l.spo2||'-'}%</b> (<b>${l.o2||'Air'}</b>), BP <b>${l.sys||'-'}/${l.dia||'-'}</b>, HR <b>${l.hr||'-'}</b>, <b>${l.acvpu||'Alert'}</b>, Temp <b>${l.t||'-'}${prefs.tempUnit}</b>`, b, 'obs', i)).filter(Boolean).join('');
+  }
+  if (secId === 'bm' && d.bm && d.bm.length > 0) {
+    return d.bm.map((l,i) => rowUI(`<b>${l.time||'--:--'}</b> - <b>${l.val||'-'} ${prefs.bmUnit}</b> (<b>${l.meal||'Unspecified'}</b>)`, b, 'bm', i)).filter(Boolean).join('');
+  }
+  if (secId === 'bp' && d.bp && (d.bp.lsys || d.bp.ldia || d.bp.ssys || d.bp.sdia)) {
+    let txt = `Lying: <b>${d.bp.lsys||'-'}/${d.bp.ldia||'-'}</b> | Standing: <b>${d.bp.ssys||'-'}/${d.bp.sdia||'-'}</b>`;
+    const lsys = parseFloat(d.bp.lsys)||0, ssys = parseFloat(d.bp.ssys)||0;
+    if (lsys && ssys) txt += `<br>Difference: <b>${lsys - ssys}</b>`;
+    return flatUI(txt, b, 'bp');
+  }
+  if (secId === 'fluid' && d.fluid) {
+    let pIn=0, pOut=0, tIn=0, tOut=0;
+    d.fluid.forEach((f, i) => {
+      let In = parseFloat(f.i)||0; let Out = parseFloat(f.o)||0;
+      if(d.td[`fl_${i}`]) { tIn+=In; tOut+=Out; } else { pIn+=In; pOut+=Out; }
+    });
+    if (!tIn && !tOut && !pIn && !pOut) return '';
+    if (hideDone && !pIn && !pOut) return '';
+    let fHtml = '';
+    if(!hideDone && (tIn||tOut)) fHtml += `<div style="opacity:0.5; margin-bottom:8px;">Transcribed: In <b>${tIn}ml</b> | Out <b>${tOut}ml</b> | Net <b>${tIn-tOut}ml</b></div>`;
+    if(pIn||pOut) fHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);"><span>Pending: In <b>${pIn}ml</b> | Out <b>${pOut}ml</b> | Net <b>${pIn-pOut}ml</b></span> <button onclick="tFluid('${b}')" style="padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:transparent; border:1px solid var(--border); color:var(--text-sub);">Mark Done</button></div>`;
+    fHtml += `<div>Shift Total: In <b>${tIn+pIn}ml</b> | Out <b>${tOut+pOut}ml</b> | Net <b>${(tIn+pIn)-(tOut+pOut)}ml</b></div>`;
+    return fHtml;
+  }
+  if (secId === 'food' && d.food) {
+    let dietParts = [];
+    if (d.food.b) dietParts.push(`Breakfast: <b>${d.food.b}</b>`);
+    if (d.food.l) dietParts.push(`Lunch: <b>${d.food.l}</b>`);
+    if (d.food.d) dietParts.push(`Dinner: <b>${d.food.d}</b>`);
+    return dietParts.length > 0 ? flatUI(dietParts.join(' | '), b, 'food') : '';
+  }
+  if (secId === 'bowel' && d.bowel && d.bowel.length > 0) {
+    return d.bowel.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.amt||'-'}</b> (<b>${r.type||'-'}</b>)`, b, 'bowel', i)).filter(Boolean).join('');
+  }
+  if (secId === 'amy') {
+    let out = '';
+    let skinP = [];
+    if (d.amy && d.amy.sac) skinP.push(`Sacrum (<b>${d.amy.sac === 'Fine' ? 'Intact' : d.amy.sac}</b>)`);
+    if (d.amy && d.amy.groin) skinP.push(`Groin (<b>${d.amy.groin === 'Fine' ? 'Intact' : d.amy.groin}</b>)`);
+    if (d.amy && d.amy.heels) skinP.push(`Heels (<b>${d.amy.heels === 'Fine' ? 'Intact' : d.amy.heels}</b>)`);
+    if (d.amy && d.amy.elbows) skinP.push(`Elbows (<b>${d.amy.elbows === 'Fine' ? 'Intact' : d.amy.elbows}</b>)`);
+    if (skinP.length > 0) out += flatUI(skinP.join(', '), b, 'amy');
+    if (d.dressings && d.dressings.length > 0) {
+      out += d.dressings.map((dr,i) => rowUI(`Dressing: <b>${dr.val || 'Unnamed'}</b> (Due: <b>${calcDue(dr.date)}</b>)`, b, 'dressings', i)).filter(Boolean).join('');
+    }
+    return out;
+  }
+  if (secId === 'turn' && d.turn && d.turn.some(t => t !== '')) {
+    const tTimes = isNight ? ['20:00','22:00','00:00','02:00','04:00','06:00'] : ['08:00','10:00','12:00','14:00','16:00','18:00'];
+    return d.turn.map((tr,i) => tr !== '' ? rowUI(`<b>${tTimes[i]}</b> - <b>${tr}</b>`, b, 'turn', i) : '').filter(Boolean).join('');
+  }
+  if (secId === 'mh' && (d.mhLevel || (d.mh && d.mh.length > 0))) {
+    let out = '';
+    if (d.mhLevel) out += flatUI(`Current Level: <b>${d.mhLevel}</b>`, b, 'mhLevel');
+    if (d.mh && d.mh.length > 0) {
+      out += d.mh.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - Mood: <b>${r.mood||'-'}</b> | Sleep: <b>${r.sleep||'-'}</b><br>Risks: <b>${r.risks||'None'}</b><br>Notes: <span style="white-space:pre-wrap;"><b>${r.note||'-'}</b></span>`, b, 'mh', i)).filter(Boolean).join('');
+    }
+    return out;
+  }
+  if (secId === 'events' && d.events && d.events.length > 0) {
+    return d.events.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <span style="white-space:pre-wrap;"><b>${r.val||''}</b></span>`, b, 'events', i)).filter(Boolean).join('');
+  }
+  if (secId === 'reminders' && d.reminders && d.reminders.length > 0) {
+    return d.reminders.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.task||'Unnamed Task'}</b>: <b>${r.outcome||'Pending'}</b>`, b, 'reminders', i)).filter(Boolean).join('');
+  }
+  if (secId === 'admit' && d.admit && d.admit.length > 0) {
+    return d.admit.map((r,i) => rowUI(`- <b>${r.val||''}</b>`, b, 'admit', i)).filter(Boolean).join('');
+  }
+  return '';
 }
 
 function renderUI() {
@@ -590,100 +753,52 @@ function renderUI() {
 function renderContent() {
   const area = document.getElementById('contentArea');
   if (showSummary) {
-    let h = '';
-    alloc.forEach(b => {
-      const d = db[b];
-      if (!d) return;
-      if (!d.td) d.td = {};
-      let sectionsHtml = '';
-      const sOn = id => getActiveSections().find(m => m.id === id);
-      
-      if (sOn('obs') && d.obs && d.obs.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('obs')}:</b><br>` + d.obs.map((l,i) => {
-          return rowUI(`<b>${l.time||'--:--'}</b> - RR <b>${l.rr||'-'}</b>, SpO2 <b>${l.spo2||'-'}%</b> (<b>${l.o2||'Air'}</b>), BP <b>${l.sys||'-'}/${l.dia||'-'}</b>, HR <b>${l.hr||'-'}</b>, <b>${l.acvpu||'Alert'}</b>, Temp <b>${l.t||'-'}${prefs.tempUnit}</b>`, b, 'obs', i);
-        }).join('') + `</div>`;
-      }
-      
-      if (sOn('bm') && d.bm && d.bm.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('bm')}:</b><br>` + d.bm.map((l,i) => rowUI(`<b>${l.time||'--:--'}</b> - <b>${l.val||'-'} ${prefs.bmUnit}</b> (<b>${l.meal||'Unspecified'}</b>)`, b, 'bm', i)).join('') + `</div>`;
-      }
+    let h = `
+    <div class="summary-toolbar">
+      <button class="tool-btn ${summaryMode==='mod'?'active':''}" onclick="toggleSummaryMode()">View: ${summaryMode==='bed'?'By Bed':'By Module'}</button>
+      <button class="tool-btn ${hideDone?'active':''}" onclick="toggleHideDone()">${hideDone?'Pending Only':'Show All'}</button>
+      <button class="tool-btn ${keepAwake?'active':''}" onclick="toggleKeepAwake()">Keep Screen On</button>
+    </div>`;
 
-      if (sOn('bp') && d.bp && (d.bp.lsys || d.bp.ldia || d.bp.ssys || d.bp.sdia)) {
-        let txt = `Lying: <b>${d.bp.lsys||'-'}/${d.bp.ldia||'-'}</b> | Standing: <b>${d.bp.ssys||'-'}/${d.bp.sdia||'-'}</b>`;
-        const lsys = parseFloat(d.bp.lsys)||0, ssys = parseFloat(d.bp.ssys)||0;
-        if (lsys && ssys) txt += `<br>Difference: <b>${lsys - ssys}</b>`;
-        sectionsHtml += `<div class="summary-sec"><b>${t('bp')}:</b><br>` + flatUI(txt, b, 'bp') + `</div>`;
-      }
-      
-      let pIn=0, pOut=0, tIn=0, tOut=0;
-      if (d.fluid) {
-        d.fluid.forEach((f, i) => {
-          let In = parseFloat(f.i)||0; let Out = parseFloat(f.o)||0;
-          if(d.td[`fl_${i}`]) { tIn+=In; tOut+=Out; } else { pIn+=In; pOut+=Out; }
+    if (summaryMode === 'bed') {
+      alloc.forEach(b => {
+        let sectionsHtml = '';
+        getActiveSections().forEach(m => {
+          const secContent = getBedSectionHtml(b, m.id);
+          if (secContent) {
+            sectionsHtml += `<div class="summary-sec"><b>${t(m.id)}:</b><br>${secContent}</div>`;
+          }
         });
+        h += `<div class="card">
+          <h2 style="color:var(--text); margin-bottom:12px; font-size:1.2rem;">
+            <span>${b}</span>
+            <button onclick="markBedDone('${b}')" style="padding:4px 10px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:var(--teal); color:#fff; border:none; font-weight:600;">Mark Bed Done</button>
+          </h2>
+          ${sectionsHtml || `<p style="color:var(--text-sub); font-size:0.9rem;">${hideDone ? 'All entries transcribed.' : 'No data recorded yet.'}</p>`}
+        </div>`;
+      });
+    } else {
+      getActiveSections().forEach(m => {
+        let bedsHtml = '';
+        alloc.forEach(b => {
+          const secContent = getBedSectionHtml(b, m.id);
+          if (secContent) {
+            bedsHtml += `<div class="summary-sec"><div style="font-weight:700; color:var(--teal); margin-bottom:4px;">${b}</div>${secContent}</div>`;
+          }
+        });
+        if (bedsHtml) {
+          h += `<div class="card">
+            <h2 style="color:var(--text); margin-bottom:12px; font-size:1.15rem;">${t(m.id)}</h2>
+            ${bedsHtml}
+          </div>`;
+        }
+      });
+      if (!h.includes('class="card"')) {
+        h += `<div class="card"><p style="color:var(--text-sub); font-size:0.9rem; text-align:center;">${hideDone ? 'All entries across all modules are transcribed.' : 'No data recorded yet.'}</p></div>`;
       }
-      if (sOn('fluid') && (tIn||tOut||pIn||pOut)) {
-        let fHtml = '';
-        if(tIn||tOut) fHtml += `<div style="opacity:0.5; margin-bottom:8px;">Transcribed: In <b>${tIn}ml</b> | Out <b>${tOut}ml</b> | Net <b>${tIn-tOut}ml</b></div>`;
-        if(pIn||pOut) fHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);"><span>Pending: In <b>${pIn}ml</b> | Out <b>${pOut}ml</b> | Net <b>${pIn-pOut}ml</b></span> <button onclick="tFluid('${b}')" style="padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:transparent; border:1px solid var(--border); color:var(--text-sub);">Mark Done</button></div>`;
-        fHtml += `<div>Shift Total: In <b>${tIn+pIn}ml</b> | Out <b>${tOut+pOut}ml</b> | Net <b>${(tIn+pIn)-(tOut+pOut)}ml</b></div>`;
-        sectionsHtml += `<div class="summary-sec"><b>${t('fluid')}:</b><br>${fHtml}</div>`;
-      }
-      
-      let dietParts = [];
-      if (d.food && d.food.b) dietParts.push(`Breakfast: <b>${d.food.b}</b>`);
-      if (d.food && d.food.l) dietParts.push(`Lunch: <b>${d.food.l}</b>`);
-      if (d.food && d.food.d) dietParts.push(`Dinner: <b>${d.food.d}</b>`);
-      if (sOn('food') && dietParts.length > 0) sectionsHtml += `<div class="summary-sec"><b>${t('food')}:</b><br>` + flatUI(dietParts.join(' | '), b, 'food') + `</div>`;
+    }
 
-      if (sOn('bowel') && d.bowel && d.bowel.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('bowel')}:</b><br>` + d.bowel.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.amt||'-'}</b> (<b>${r.type||'-'}</b>)`, b, 'bowel', i)).join('') + `</div>`;
-      }
-      
-      let skinP = [];
-      if (d.amy && d.amy.sac) skinP.push(`Sacrum (<b>${d.amy.sac === 'Fine' ? 'Intact' : d.amy.sac}</b>)`);
-      if (d.amy && d.amy.groin) skinP.push(`Groin (<b>${d.amy.groin === 'Fine' ? 'Intact' : d.amy.groin}</b>)`);
-      if (d.amy && d.amy.heels) skinP.push(`Heels (<b>${d.amy.heels === 'Fine' ? 'Intact' : d.amy.heels}</b>)`);
-      if (d.amy && d.amy.elbows) skinP.push(`Elbows (<b>${d.amy.elbows === 'Fine' ? 'Intact' : d.amy.elbows}</b>)`);
-      if (sOn('amy') && skinP.length > 0) sectionsHtml += `<div class="summary-sec"><b>${t('amy')}:</b><br>` + flatUI(skinP.join(', '), b, 'amy') + `</div>`;
-      
-      if (sOn('amy') && d.dressings && d.dressings.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>Dressings:</b><br>` + d.dressings.map((dr,i) => rowUI(`<b>${dr.val || 'Unnamed'}</b> (Due: <b>${calcDue(dr.date)}</b>)`, b, 'dressings', i)).join('') + `</div>`;
-      }
-
-      const tTimes = isNight ? ['20:00','22:00','00:00','02:00','04:00','06:00'] : ['08:00','10:00','12:00','14:00','16:00','18:00'];
-      let hasTurn = d.turn && d.turn.some(t => t !== '');
-      if (sOn('turn') && hasTurn) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('turn')}:</b><br>` + d.turn.map((tr,i) => tr !== '' ? rowUI(`<b>${tTimes[i]}</b> - <b>${tr}</b>`, b, 'turn', i) : '').join('') + `</div>`;
-      }
-
-      if (sOn('mh') && (d.mhLevel || (d.mh && d.mh.length > 0))) {
-         sectionsHtml += `<div class="summary-sec"><b>${t('mh')}:</b><br>`;
-         if(d.mhLevel) sectionsHtml += flatUI(`Current Level: <b>${d.mhLevel}</b>`, b, 'mhLevel');
-         if(d.mh && d.mh.length > 0) {
-           sectionsHtml += d.mh.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - Mood: <b>${r.mood||'-'}</b> | Sleep: <b>${r.sleep||'-'}</b><br>Risks: <b>${r.risks||'None'}</b><br>Notes: <span style="white-space:pre-wrap;"><b>${r.note||'-'}</b></span>`, b, 'mh', i)).join('');
-         }
-         sectionsHtml += `</div>`;
-      }
-
-      if (sOn('events') && d.events && d.events.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('events')}:</b><br>` + d.events.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <span style="white-space:pre-wrap;"><b>${r.val||''}</b></span>`, b, 'events', i)).join('') + `</div>`;
-      }
-
-      if (sOn('reminders') && d.reminders && d.reminders.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('reminders')}:</b><br>` + d.reminders.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.task||'Unnamed Task'}</b>: <b>${r.outcome||'Pending'}</b>`, b, 'reminders', i)).join('') + `</div>`;
-      }
-      
-      if (sOn('admit') && d.admit && d.admit.length > 0) {
-        sectionsHtml += `<div class="summary-sec"><b>${t('admit')}:</b><br>` + d.admit.map((r,i) => rowUI(`- <b>${r.val||''}</b>`, b, 'admit', i)).join('') + `</div>`;
-      }
-
-      h += `<div class="card">
-        <h2 style="color:var(--text); margin-bottom:12px; font-size:1.2rem;">${b}</h2>
-        ${sectionsHtml || `<p style="color:var(--text-sub); font-size:0.9rem;">No data recorded yet.</p>`}
-      </div>`;
-    });
-    area.innerHTML = h || '<p style="text-align:center; padding:20px; color:var(--text-sub);">No active patients.</p>';
+    area.innerHTML = h;
     return;
   }
   if (!db[curBed]) return;
@@ -746,13 +861,29 @@ function renderContent() {
 
   if (curSec === 'fluid') {
     const times = isNight ? ['19:00','20:00','21:00','22:00','23:00','00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00'] : ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
+    if (activeFluidIdx === null) {
+      const curHr = String(new Date().getHours()).padStart(2, '0') + ':00';
+      const foundIdx = times.indexOf(curHr);
+      activeFluidIdx = foundIdx >= 0 ? foundIdx : 0;
+    }
     let inT=0, outT=0; d.fluid.forEach(f=>{ inT+=parseFloat(f.i)||0; outT+=parseFloat(f.o)||0; });
-    h += `<div id="fluid-totals" class="card" style="display:flex; justify-content:space-between; font-weight:600; padding:12px;"><span>In: ${inT}ml</span><span>Out: ${outT}ml</span><span>Net: ${inT-outT}ml</span></div><div class="card">`;
+    h += `<div id="fluid-totals" class="card" style="display:flex; justify-content:space-between; font-weight:600; padding:12px;"><span>In: ${inT}ml</span><span>Out: ${outT}ml</span><span>Net: ${inT-outT}ml</span></div>`;
+    h += `<div class="card" style="padding:12px;">
+      <label style="margin-bottom:6px;">Quick Add Intake (Select Hour or Tap Row Below)</label>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <select id="quickFluidHour" style="width:95px; padding:8px;" onchange="activeFluidIdx=parseInt(this.value)">
+          ${times.map((tStr, idx) => `<option value="${idx}" ${idx===activeFluidIdx?'selected':''}>${tStr}</option>`).join('')}
+        </select>
+        <button class="quick-fluid-btn" onclick="quickAddFluid(150)">+150ml</button>
+        <button class="quick-fluid-btn" onclick="quickAddFluid(200)">+200ml</button>
+        <button class="quick-fluid-btn" onclick="quickAddFluid(250)">+250ml</button>
+      </div>
+    </div><div class="card">`;
     times.forEach((tStr, i) => {
       h += `<div class="row" style="align-items:center; margin-bottom:6px;">
         <span style="width:45px; font-weight:600; font-size:0.9rem;">${tStr}</span>
-        <input type="number" placeholder="In (ml)" value="${d.fluid[i].i}" oninput="updateField('${curBed}','fluid',${i},'i',this.value); refreshFluid()">
-        <input type="number" placeholder="Out (ml)" value="${d.fluid[i].o}" oninput="updateField('${curBed}','fluid',${i},'o',this.value); refreshFluid()">
+        <input type="number" id="fl-in-${i}" placeholder="In (ml)" value="${d.fluid[i].i}" onfocus="setFluidTarget(${i})" oninput="updateField('${curBed}','fluid',${i},'i',this.value); refreshFluid()">
+        <input type="number" placeholder="Out (ml)" value="${d.fluid[i].o}" onfocus="setFluidTarget(${i})" oninput="updateField('${curBed}','fluid',${i},'o',this.value); refreshFluid()">
       </div>`;
     });
     h += `</div>`;
@@ -857,6 +988,7 @@ function renderContent() {
   if (curSec === 'events') {
     h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('events')">+ Add ${t('events')}</button>`;
     d.events.forEach((r, i) => {
+      const chipsHtml = quickPhrases.map(p => `<button type="button" class="chip" onclick="insertPhrase(${i}, '${p}')">+ ${p}</button>`).join('');
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <div style="display:flex; align-items:center; gap:8px;">
@@ -865,7 +997,8 @@ function renderContent() {
           </div>
           <button class="btn btn-danger btn-sm" onclick="rmArr('events', ${i})">X</button>
         </div>
-        <textarea class="auto-expand" rows="3" placeholder="Enter shift notes..." oninput="autoGrow(this); updateField('${curBed}','events',${i},'val',this.value)">${r.val||''}</textarea>
+        <div class="chip-row">${chipsHtml}</div>
+        <textarea id="note-ta-${i}" class="auto-expand" rows="3" placeholder="Enter shift notes..." oninput="autoGrow(this); updateField('${curBed}','events',${i},'val',this.value)">${r.val||''}</textarea>
       </div>`;
     });
   }
@@ -906,6 +1039,36 @@ function renderContent() {
 function autoGrow(el) {
   el.style.height = 'auto';
   el.style.height = el.scrollHeight + 'px';
+}
+
+function insertPhrase(idx, phrase) {
+  const cur = (db[curBed].events[idx].val || '').trim();
+  const sep = cur.length > 0 ? (cur.endsWith('.') || cur.endsWith(',') ? ' ' : '. ') : '';
+  const updated = cur + sep + phrase + '. ';
+  db[curBed].events[idx].val = updated;
+  saveDB();
+  const ta = document.getElementById(`note-ta-${idx}`);
+  if (ta) {
+    ta.value = updated;
+    autoGrow(ta);
+  }
+}
+
+function setFluidTarget(idx) {
+  activeFluidIdx = idx;
+  const sel = document.getElementById('quickFluidHour');
+  if (sel) sel.value = idx;
+}
+
+function quickAddFluid(ml) {
+  const idx = activeFluidIdx !== null ? activeFluidIdx : 0;
+  const curVal = parseFloat(db[curBed].fluid[idx].i) || 0;
+  const newVal = curVal + ml;
+  db[curBed].fluid[idx].i = String(newVal);
+  saveDB();
+  const inp = document.getElementById(`fl-in-${idx}`);
+  if (inp) inp.value = newVal;
+  refreshFluid();
 }
 
 function updateField(bed, sec, idx, prop, val) {
@@ -978,7 +1141,7 @@ function setNoDateArr(i) {
   refreshDressDue(i);
 }
 function calcDue(val) { if (!val) return '-'; const d = new Date(val); d.setDate(d.getDate() + 3); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; }
-function clearShift() { if (confirm("Clear all shift data and return to setup?")) { localStorage.removeItem('cdu_alloc'); localStorage.removeItem('cdu_db'); localStorage.removeItem('cdu_start'); localStorage.removeItem('cdu_ward'); localStorage.removeItem('cdu_mods'); location.reload(); } }
+function clearShift() { if (confirm("Clear all shift data and return to setup?")) { releaseWakeLock(); localStorage.removeItem('cdu_alloc'); localStorage.removeItem('cdu_db'); localStorage.removeItem('cdu_start'); localStorage.removeItem('cdu_ward'); localStorage.removeItem('cdu_mods'); location.reload(); } }
 function handleSwipe() { 
   if (showSummary || alloc.length <= 1) return; 
   const diffX = touchEndX - touchStartX; 
