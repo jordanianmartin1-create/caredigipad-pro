@@ -9,7 +9,8 @@
 <style>
   :root {
     --bg: #f4f6f8; --card: #ffffff; --text: #1e293b; --text-sub: #64748b;
-    --border: #cbd5e1; --teal: #0d9488; --amber: #d97706; --slate: #475569;
+    --border: #cbd5e1; --input-bg: #ffffff; --input-border: #94a3b8;
+    --teal: #0d9488; --amber: #d97706; --slate: #475569;
     --red: #dc2626; --green: #16a34a; --tab-bg: #e2e8f0; --navy: #1f4e79;
   }
   [data-color="blue"] { --navy: #1e3a8a; --teal: #2563eb; --slate: #3b82f6; }
@@ -19,18 +20,20 @@
   [data-color="coral"] { --navy: #431407; --teal: #ea580c; --slate: #c2410c; }
 
   [data-theme="night"] {
-    --bg: #000000; --card: #121212; --text: #e2e8f0; --text-sub: #94a3b8;
-    --border: #334155; --amber: #f59e0b; --red: #ef4444; --green: #22c55e; --tab-bg: #1e293b;
+    color-scheme: dark;
+    --bg: #000000; --card: #111827; --text: #f1f5f9; --text-sub: #94a3b8;
+    --border: #334155; --input-bg: #1e293b; --input-border: #64748b;
+    --amber: #f59e0b; --red: #ef4444; --green: #22c55e; --tab-bg: #1e293b;
   }
   * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); padding-bottom: 70px; }
   .hidden { display: none !important; }
   #dimmer { position: fixed; inset: 0; background: rgba(0,0,0,0); pointer-events: none; z-index: 9998; }
-  [data-theme="night"] #dimmer { background: rgba(0,0,0,0.35); }
+  [data-theme="night"] #dimmer { background: rgba(0,0,0,0.22); }
   #blurOverlay { position: fixed; inset: 0; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); background: rgba(15, 23, 42, 0.75); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; padding: 24px; cursor: pointer; }
   .setup-container { padding: 20px; max-width: 600px; margin: 0 auto; }
   .bed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-  .bed-pill { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-weight: 600; text-align: center; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .bed-pill { padding: 12px; border: 1.5px solid var(--input-border); border-radius: 8px; background: var(--card); color: var(--text); font-weight: 600; text-align: center; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
   .bed-pill.selected { background: var(--teal); color: #fff; border-color: var(--teal); }
   .del-btn { background: transparent; color: inherit; border: none; font-weight: bold; padding: 0 8px; cursor: pointer; }
   .sticky-nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -38,7 +41,7 @@
   header h1 { font-size: 1.05rem; }
   .scroll-row { display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px; scrollbar-width: none; scroll-behavior: smooth; }
   .scroll-row::-webkit-scrollbar { display: none; }
-  .tab-btn { padding: 8px 14px; border-radius: 20px; font-weight: 600; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 0.9rem; white-space: nowrap; cursor: pointer; }
+  .tab-btn { padding: 8px 14px; border-radius: 20px; font-weight: 600; border: 1.5px solid var(--input-border); background: var(--card); color: var(--text); font-size: 0.9rem; white-space: nowrap; cursor: pointer; }
   .tab-btn.active-bed { background: var(--teal); color: #fff; border-color: var(--teal); }
   .tab-btn.active-sec { background: var(--slate); color: #fff; border-color: var(--slate); }
   .tab-btn.active-summary { background: var(--amber); color: #fff; border-color: var(--amber); }
@@ -48,26 +51,33 @@
   .row { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-end; }
   .row > div { flex: 1; }
   label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-sub); margin-bottom: 4px; }
-  input[type="text"], input[type="number"], input[type="time"], input[type="date"], select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); font-size: 0.95rem; }
+  input[type="text"], input[type="number"], input[type="time"], input[type="date"], select, textarea { width: 100%; padding: 10px; border: 1.5px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 0.95rem; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.35); }
   textarea.auto-expand { resize: none; overflow-y: hidden; line-height: 1.4; }
   .bp-pair { display: flex; align-items: center; gap: 4px; }
   .bp-pair span { font-weight: bold; color: var(--text-sub); }
   .btn { width: 100%; padding: 12px; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; font-size: 1rem; }
   .btn-primary { background: var(--slate); color: #fff; margin-top: 8px; }
   .btn-danger { background: var(--red); color: #fff; }
-  .btn-subtle { background: transparent; color: var(--text-sub); border: 1px solid var(--border); font-size: 0.9rem; padding: 10px; }
+  .btn-subtle { background: transparent; color: var(--text-sub); border: 1.5px solid var(--input-border); font-size: 0.9rem; padding: 10px; }
   .btn-sm { width: auto; padding: 6px 12px; font-size: 0.85rem; }
   .pro-tag { background: var(--amber); color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
   .summary-sec { border-bottom: 1px dashed var(--border); padding-bottom: 12px; margin-bottom: 12px; font-size: 0.95rem; line-height: 1.5; }
   .summary-sec:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
   .summary-toolbar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 16px; }
-  .tool-btn { padding: 8px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 0.8rem; font-weight: 600; cursor: pointer; text-align: center; }
+  .tool-btn { padding: 8px 6px; border-radius: 6px; border: 1.5px solid var(--input-border); background: var(--card); color: var(--text); font-size: 0.8rem; font-weight: 600; cursor: pointer; text-align: center; }
   .tool-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
   .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-  .chip { padding: 5px 10px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+  .chip { padding: 6px 10px; border-radius: 14px; border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--text); font-size: 0.78rem; font-weight: 600; cursor: pointer; }
   .chip:active { background: var(--teal); color: #fff; border-color: var(--teal); }
-  .quick-fluid-btn { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--teal); background: transparent; color: var(--teal); font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+  .quick-fluid-btn { flex: 1; padding: 8px 4px; border-radius: 6px; border: 1.5px solid var(--teal); background: var(--input-bg); color: var(--text); font-weight: 700; font-size: 0.82rem; cursor: pointer; }
+  .quick-fluid-btn.out-mode { border-color: var(--amber); }
   .quick-fluid-btn:active { background: var(--teal); color: #fff; }
+  .fl-target-in { border-color: var(--teal) !important; box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.35) !important; }
+  .fl-target-out { border-color: var(--amber) !important; box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.35) !important; }
+  .diet-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .diet-btn { flex: 1 1 calc(25% - 6px); padding: 9px 4px; border-radius: 6px; border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--text); font-weight: 600; font-size: 0.85rem; cursor: pointer; text-align: center; }
+  .diet-btn.selected { background: var(--teal); color: #fff; border-color: var(--teal); }
   .footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); padding: 10px 16px; z-index: 100; text-align: center; }
   .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
   .switch input { opacity: 0; width: 0; height: 0; }
@@ -221,6 +231,7 @@ let hideDone = false;
 let keepAwake = false;
 let wakeLock = null;
 let activeFluidIdx = null;
+let activeFluidType = 'i';
 let curBed = '';
 let curSec = 'obs';
 let isNight = false;
@@ -233,6 +244,25 @@ const quickPhrases = [
   'Mobilised to chair',
   'Escalated to RN',
   'Family updated'
+];
+
+const taskChips = [
+  'Bloods',
+  'ECG',
+  'Repeat Obs',
+  'BM',
+  'Bladder Scan',
+  'Cannula'
+];
+
+const admitChips = [
+  'Dentures',
+  'Glasses',
+  'Hearing Aid',
+  'Frame/Stick',
+  'Phone/Charger',
+  'Keys',
+  'Cash/Wallet'
 ];
 
 const i18n = {
@@ -276,7 +306,7 @@ document.addEventListener('touchend', e => {
 }, {passive: true});
 
 document.addEventListener('visibilitychange', () => {
-  if ( document.visibilityState === 'visible' && keepAwake && showSummary ) {
+  if (document.visibilityState === 'visible' && keepAwake && showSummary) {
     requestWakeLock();
   }
 });
@@ -643,7 +673,7 @@ function rowUI(txt, b, s, i) {
   const done = (typeof item === 'object' && item !== null) ? !!item.done : !!db[b].td[`${s}_${i}`];
   if (hideDone && done) return '';
   const style = done ? 'opacity:0.4; filter:grayscale(100%);' : '';
-  const btn = `<button onclick="tRow('${b}','${s}',${i})" style="margin-left:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1px solid var(--border);'}">${done?'Done':'Mark Done'}</button>`;
+  const btn = `<button onclick="tRow('${b}','${s}',${i})" style="margin-left:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1.5px solid var(--input-border);'}">${done?'Done':'Mark Done'}</button>`;
   return `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); transition:0.3s; ${style}"><div style="flex:1;">${txt}</div>${btn}</div>`;
 }
 
@@ -651,7 +681,7 @@ function flatUI(txt, b, s) {
   const done = !!db[b].td[s];
   if (hideDone && done) return '';
   const style = done ? 'opacity:0.4; filter:grayscale(100%);' : '';
-  const btn = `<button onclick="tFlat('${b}','${s}')" style="margin-left:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1px solid var(--border);'}">${done?'Done':'Mark Done'}</button>`;
+  const btn = `<button onclick="tFlat('${b}','${s}')" style="margin-left:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1.5px solid var(--input-border);'}">${done?'Done':'Mark Done'}</button>`;
   return `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); transition:0.3s; ${style}"><div style="flex:1;">${txt}</div>${btn}</div>`;
 }
 
@@ -682,7 +712,7 @@ function getBedSectionHtml(b, secId) {
     if (hideDone && !pIn && !pOut) return '';
     let fHtml = '';
     if(!hideDone && (tIn||tOut)) fHtml += `<div style="opacity:0.5; margin-bottom:8px;">Transcribed: In <b>${tIn}ml</b> | Out <b>${tOut}ml</b> | Net <b>${tIn-tOut}ml</b></div>`;
-    if(pIn||pOut) fHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);"><span>Pending: In <b>${pIn}ml</b> | Out <b>${pOut}ml</b> | Net <b>${pIn-pOut}ml</b></span> <button onclick="tFluid('${b}')" style="padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:transparent; border:1px solid var(--border); color:var(--text-sub);">Mark Done</button></div>`;
+    if(pIn||pOut) fHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);"><span>Pending: In <b>${pIn}ml</b> | Out <b>${pOut}ml</b> | Net <b>${pIn-pOut}ml</b></span> <button onclick="tFluid('${b}')" style="padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:transparent; border:1.5px solid var(--input-border); color:var(--text-sub);">Mark Done</button></div>`;
     fHtml += `<div>Shift Total: In <b>${tIn+pIn}ml</b> | Out <b>${tOut+pOut}ml</b> | Net <b>${(tIn+pIn)-(tOut+pOut)}ml</b></div>`;
     return fHtml;
   }
@@ -815,17 +845,17 @@ function renderContent() {
         </div>
         <div class="row">
           <div><label>Time</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','obs',${i},'time',this.value)"></div>
-          <div><label>RR</label><input type="number" min="0" max="60" value="${r.rr||''}" oninput="updateField('${curBed}','obs',${i},'rr',this.value)"></div>
-          <div><label>SpO2%</label><input type="number" min="0" max="100" value="${r.spo2||''}" oninput="updateField('${curBed}','obs',${i},'spo2',this.value)"></div>
+          <div><label>RR</label><input type="number" inputmode="numeric" min="0" max="60" value="${r.rr||''}" oninput="updateField('${curBed}','obs',${i},'rr',this.value)"></div>
+          <div><label>SpO2%</label><input type="number" inputmode="numeric" min="0" max="100" value="${r.spo2||''}" oninput="updateField('${curBed}','obs',${i},'spo2',this.value)"></div>
         </div>
         <div class="row">
           <div><label>Air/O2</label><select onchange="updateField('${curBed}','obs',${i},'o2',this.value)"><option>Air</option><option ${r.o2==='O2'?'selected':''}>O2</option></select></div>
-          <div><label>BP (Sys/Dia)</label><div class="bp-pair"><input type="number" value="${r.sys||''}" oninput="updateField('${curBed}','obs',${i},'sys',this.value)"><span>/</span><input type="number" value="${r.dia||''}" oninput="updateField('${curBed}','obs',${i},'dia',this.value)"></div></div>
+          <div><label>BP (Sys/Dia)</label><div class="bp-pair"><input type="number" inputmode="numeric" value="${r.sys||''}" oninput="bpSysInput(this,'${curBed}','obs',${i},'sys','obs-dia-${i}')"><span>/</span><input type="number" inputmode="numeric" id="obs-dia-${i}" value="${r.dia||''}" oninput="updateField('${curBed}','obs',${i},'dia',this.value)"></div></div>
         </div>
         <div class="row">
-          <div><label>HR</label><input type="number" value="${r.hr||''}" oninput="updateField('${curBed}','obs',${i},'hr',this.value)"></div>
+          <div><label>HR</label><input type="number" inputmode="numeric" value="${r.hr||''}" oninput="updateField('${curBed}','obs',${i},'hr',this.value)"></div>
           <div><label>ACVPU</label><select onchange="updateField('${curBed}','obs',${i},'acvpu',this.value)"><option>Alert</option><option ${r.acvpu==='CVPU'?'selected':''}>CVPU</option></select></div>
-          <div><label>Temp (${prefs.tempUnit})</label><input type="number" step="0.1" value="${r.t||''}" oninput="updateField('${curBed}','obs',${i},'t',this.value)"></div>
+          <div><label>Temp (${prefs.tempUnit})</label><input type="number" inputmode="decimal" step="0.1" value="${r.t||''}" oninput="updateField('${curBed}','obs',${i},'t',this.value)"></div>
         </div>
       </div>`;
     });
@@ -842,7 +872,7 @@ function renderContent() {
         <div class="row">
           <div><label>Time</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','bm',${i},'time',this.value)"></div>
           <div><label>Context</label><select onchange="updateField('${curBed}','bm',${i},'meal',this.value)">${opts(['','Pre-Breakfast','Post-Breakfast','Pre-Lunch','Post-Lunch','Pre-Dinner','Post-Dinner','Night'], r.meal)}</select></div>
-          <div><label>${prefs.bmUnit}</label><input type="number" step="0.1" value="${r.val||''}" oninput="updateField('${curBed}','bm',${i},'val',this.value)"></div>
+          <div><label>${prefs.bmUnit}</label><input type="number" inputmode="decimal" step="0.1" value="${r.val||''}" oninput="updateField('${curBed}','bm',${i},'val',this.value)"></div>
         </div>
       </div>`;
     });
@@ -851,10 +881,10 @@ function renderContent() {
   if (curSec === 'bp') {
     h += `<div class="card">
       <div class="row">
-        <div><label>Lying BP (Sys/Dia)</label><div class="bp-pair"><input type="number" value="${d.bp.lsys}" oninput="updateField('${curBed}','bp',null,'lsys',this.value)"><span>/</span><input type="number" value="${d.bp.ldia}" oninput="updateField('${curBed}','bp',null,'ldia',this.value)"></div></div>
+        <div><label>Lying BP (Sys/Dia)</label><div class="bp-pair"><input type="number" inputmode="numeric" value="${d.bp.lsys}" oninput="bpSysInput(this,'${curBed}','bp',null,'lsys','bp-ldia')"><span>/</span><input type="number" inputmode="numeric" id="bp-ldia" value="${d.bp.ldia}" oninput="updateField('${curBed}','bp',null,'ldia',this.value)"></div></div>
       </div>
       <div class="row">
-        <div><label>Standing BP (Sys/Dia)</label><div class="bp-pair"><input type="number" value="${d.bp.ssys}" oninput="updateField('${curBed}','bp',null,'ssys',this.value)"><span>/</span><input type="number" value="${d.bp.sdia}" oninput="updateField('${curBed}','bp',null,'sdia',this.value)"></div></div>
+        <div><label>Standing BP (Sys/Dia)</label><div class="bp-pair"><input type="number" inputmode="numeric" value="${d.bp.ssys}" oninput="bpSysInput(this,'${curBed}','bp',null,'ssys','bp-sdia')"><span>/</span><input type="number" inputmode="numeric" id="bp-sdia" value="${d.bp.sdia}" oninput="updateField('${curBed}','bp',null,'sdia',this.value)"></div></div>
       </div>
     </div>`;
   }
@@ -866,24 +896,37 @@ function renderContent() {
       const foundIdx = times.indexOf(curHr);
       activeFluidIdx = foundIdx >= 0 ? foundIdx : 0;
     }
+    const isOut = activeFluidType === 'o';
     let inT=0, outT=0; d.fluid.forEach(f=>{ inT+=parseFloat(f.i)||0; outT+=parseFloat(f.o)||0; });
     h += `<div id="fluid-totals" class="card" style="display:flex; justify-content:space-between; font-weight:600; padding:12px;"><span>In: ${inT}ml</span><span>Out: ${outT}ml</span><span>Net: ${inT-outT}ml</span></div>`;
-    h += `<div class="card" style="padding:12px;">
-      <label style="margin-bottom:6px;">Quick Add Intake (Select Hour or Tap Row Below)</label>
-      <div style="display:flex; gap:6px; align-items:center;">
-        <select id="quickFluidHour" style="width:95px; padding:8px;" onchange="activeFluidIdx=parseInt(this.value)">
-          ${times.map((tStr, idx) => `<option value="${idx}" ${idx===activeFluidIdx?'selected':''}>${tStr}</option>`).join('')}
-        </select>
-        <button class="quick-fluid-btn" onclick="quickAddFluid(150)">+150ml</button>
-        <button class="quick-fluid-btn" onclick="quickAddFluid(200)">+200ml</button>
-        <button class="quick-fluid-btn" onclick="quickAddFluid(250)">+250ml</button>
+    h += `<div class="card" style="padding:12px; position:sticky; top:112px; z-index:90; box-shadow:0 4px 10px rgba(0,0,0,0.12);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px;">
+        <div style="display:flex; align-items:center; gap:6px; flex:1;">
+          <label style="margin:0; white-space:nowrap;">Target:</label>
+          <select id="quickFluidHour" style="padding:6px 8px; font-weight:700;" onchange="setFluidTarget(parseInt(this.value), activeFluidType)">
+            ${times.map((tStr, idx) => `<option value="${idx}" ${idx===activeFluidIdx?'selected':''}>${tStr}</option>`).join('')}
+          </select>
+        </div>
+        <button id="quickFluidTypeBtn" type="button" onclick="toggleFluidType()" style="padding:7px 12px; border-radius:6px; border:none; font-weight:700; font-size:0.82rem; cursor:pointer; color:#fff; background:${isOut?'var(--amber)':'var(--teal)'};">
+          Mode: ${isOut ? 'Output (Out)' : 'Intake (In)'}
+        </button>
+      </div>
+      <div style="display:flex; gap:5px; align-items:center;">
+        <button type="button" class="quick-fluid-btn ${isOut?'out-mode':''}" onclick="quickAddFluid(100)">+100</button>
+        <button type="button" class="quick-fluid-btn ${isOut?'out-mode':''}" onclick="quickAddFluid(150)">+150</button>
+        <button type="button" class="quick-fluid-btn ${isOut?'out-mode':''}" onclick="quickAddFluid(200)">+200</button>
+        <button type="button" class="quick-fluid-btn ${isOut?'out-mode':''}" onclick="quickAddFluid(250)">+250</button>
+        <button type="button" class="quick-fluid-btn ${isOut?'out-mode':''}" onclick="quickAddFluid(500)">+500</button>
+        <button type="button" class="quick-fluid-btn" style="border-color:var(--red); color:var(--red);" onclick="quickAddFluid(0)">Clr</button>
       </div>
     </div><div class="card">`;
     times.forEach((tStr, i) => {
+      const inCls = (i === activeFluidIdx && activeFluidType === 'i') ? 'fl-target-in' : '';
+      const outCls = (i === activeFluidIdx && activeFluidType === 'o') ? 'fl-target-out' : '';
       h += `<div class="row" style="align-items:center; margin-bottom:6px;">
         <span style="width:45px; font-weight:600; font-size:0.9rem;">${tStr}</span>
-        <input type="number" id="fl-in-${i}" placeholder="In (ml)" value="${d.fluid[i].i}" onfocus="setFluidTarget(${i})" oninput="updateField('${curBed}','fluid',${i},'i',this.value); refreshFluid()">
-        <input type="number" placeholder="Out (ml)" value="${d.fluid[i].o}" onfocus="setFluidTarget(${i})" oninput="updateField('${curBed}','fluid',${i},'o',this.value); refreshFluid()">
+        <input type="number" inputmode="numeric" id="fl-i-${i}" class="${inCls}" placeholder="In (ml)" value="${d.fluid[i].i}" onfocus="setFluidTarget(${i}, 'i')" oninput="updateField('${curBed}','fluid',${i},'i',this.value); refreshFluid()">
+        <input type="number" inputmode="numeric" id="fl-o-${i}" class="${outCls}" placeholder="Out (ml)" value="${d.fluid[i].o}" onfocus="setFluidTarget(${i}, 'o')" oninput="updateField('${curBed}','fluid',${i},'o',this.value); refreshFluid()">
       </div>`;
     });
     h += `</div>`;
@@ -930,7 +973,7 @@ function renderContent() {
         </div>
         <div class="row" style="align-items:center;">
           <div><label>Written Date</label><input type="date" id="dress-date-${i}" value="${r.date||''}" onchange="updateField('${curBed}','dressings',${i},'date',this.value); refreshDressDue(${i})"></div>
-          <div style="flex:0 0 auto;"><button class="btn btn-sm" style="border:1px solid var(--border);" onclick="setNoDateArr(${i})">Today</button></div>
+          <div style="flex:0 0 auto;"><button class="btn btn-sm" style="border:1.5px solid var(--input-border);" onclick="setNoDateArr(${i})">Today</button></div>
         </div>
         <div style="font-size:0.85rem; color:var(--text-sub);">Next Due (+3 days): <b id="dress-due-${i}">${calcDue(r.date)}</b></div>
       </div>`;
@@ -938,11 +981,15 @@ function renderContent() {
   }
 
   if (curSec === 'food') {
-    const fOps = ['','100%','75%','50%','25%','0%','Refused','NBM'];
+    const fOps = ['100%','75%','50%','25%','0%','Refused','NBM'];
+    const renderMealBtns = (mealKey, curVal) => fOps.map(op => `<button type="button" class="diet-btn ${curVal===op?'selected':''}" onclick="setDiet('${mealKey}','${op}')">${op}</button>`).join('');
     h += `<div class="card">
-      <div class="row"><div><label>Breakfast</label><select onchange="updateField('${curBed}','food',null,'b',this.value)">${opts(fOps, d.food.b)}</select></div></div>
-      <div class="row"><div><label>Lunch</label><select onchange="updateField('${curBed}','food',null,'l',this.value)">${opts(fOps, d.food.l)}</select></div></div>
-      <div class="row"><div><label>Dinner</label><select onchange="updateField('${curBed}','food',null,'d',this.value)">${opts(fOps, d.food.d)}</select></div></div>
+      <label style="font-size:0.9rem; margin-bottom:8px;">Breakfast</label>
+      <div class="diet-grid">${renderMealBtns('b', d.food.b)}</div>
+      <label style="font-size:0.9rem; margin-bottom:8px;">Lunch</label>
+      <div class="diet-grid">${renderMealBtns('l', d.food.l)}</div>
+      <label style="font-size:0.9rem; margin-bottom:8px;">Dinner</label>
+      <div class="diet-grid" style="margin-bottom:0;">${renderMealBtns('d', d.food.d)}</div>
     </div>`;
   }
 
@@ -993,7 +1040,7 @@ function renderContent() {
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <div style="display:flex; align-items:center; gap:8px;">
             <label style="margin:0;">Time</label>
-            <input type="time" style="width:120px; padding:6px 10px;" value="${r.time||''}" oninput="updateField('${curBed}','events',${i},'time',this.value)">
+            <input type="time" style="width:125px; padding:6px 10px;" value="${r.time||''}" oninput="updateField('${curBed}','events',${i},'time',this.value)">
           </div>
           <button class="btn btn-danger btn-sm" onclick="rmArr('events', ${i})">X</button>
         </div>
@@ -1007,23 +1054,36 @@ function renderContent() {
     h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('reminders')">+ Add ${t('reminders')}</button>`;
     d.reminders.forEach((r, i) => {
       let isOverdue = (!r.outcome && r.time && r.time <= tNow());
+      const tChips = taskChips.map(c => `<button type="button" class="chip" onclick="setTaskName(${i}, '${c}')">${c}</button>`).join('');
       h += `<div id="task-card-${i}" class="card ${isOverdue ? 'task-alert' : ''}">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <b>Task</b><button class="btn btn-danger btn-sm" onclick="rmArr('reminders', ${i})">X</button>
         </div>
+        <div class="chip-row">${tChips}</div>
         <div class="row">
           <div><label>Due Time</label><select onchange="updateField('${curBed}','reminders',${i},'time',this.value); refreshTask(${i})">${generateTimeOpts(r.time)}</select></div>
-          <div><label>Task</label><input type="text" placeholder="e.g. Bloods, ECG" value="${r.task||''}" oninput="updateField('${curBed}','reminders',${i},'task',this.value)"></div>
+          <div><label>Task</label><input type="text" id="task-name-${i}" placeholder="e.g. Bloods, ECG" value="${r.task||''}" oninput="updateField('${curBed}','reminders',${i},'task',this.value)"></div>
         </div>
-        <div class="row">
-          <div><label>Outcome</label><input type="text" placeholder="Pending / Done..." value="${r.outcome||''}" oninput="updateField('${curBed}','reminders',${i},'outcome',this.value); refreshTask(${i})"></div>
+        <div class="row" style="margin-bottom:0;">
+          <div>
+            <label>Outcome</label>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="task-out-${i}" placeholder="Pending / Done..." value="${r.outcome||''}" oninput="updateField('${curBed}','reminders',${i},'outcome',this.value); refreshTask(${i})">
+              <button type="button" class="btn btn-sm" style="background:var(--teal); color:#fff; flex:0 0 auto;" onclick="markTaskDone(${i})">Done</button>
+            </div>
+          </div>
         </div>
       </div>`;
     });
   }
 
   if (curSec === 'admit') {
-    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('admit')">+ Add Property Item</button>`;
+    const aChips = admitChips.map(c => `<button type="button" class="chip" onclick="quickAddAdmit('${c}')">+ ${c}</button>`).join('');
+    h += `<div class="card" style="padding:12px;">
+      <label style="margin-bottom:8px;">Quick Add Property Item</label>
+      <div class="chip-row" style="margin-bottom:0;">${aChips}</div>
+    </div>
+    <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('admit')">+ Add Custom Item</button>`;
     d.admit.forEach((r, i) => {
       h += `<div class="card row" style="align-items:center;">
         <input type="text" placeholder="Item description" value="${r.val||''}" oninput="updateField('${curBed}','admit',${i},'val',this.value)">
@@ -1041,6 +1101,41 @@ function autoGrow(el) {
   el.style.height = el.scrollHeight + 'px';
 }
 
+function bpSysInput(el, bed, sec, idx, prop, nextId) {
+  updateField(bed, sec, idx, prop, el.value);
+  if (el.value.length >= 3) {
+    const nxt = document.getElementById(nextId);
+    if (nxt) nxt.focus();
+  }
+}
+
+function setDiet(meal, val) {
+  db[curBed].food[meal] = db[curBed].food[meal] === val ? '' : val;
+  saveDB();
+  renderContent();
+}
+
+function setTaskName(idx, name) {
+  db[curBed].reminders[idx].task = name;
+  saveDB();
+  const inp = document.getElementById(`task-name-${idx}`);
+  if (inp) inp.value = name;
+}
+
+function markTaskDone(idx) {
+  db[curBed].reminders[idx].outcome = 'Done';
+  saveDB();
+  const inp = document.getElementById(`task-out-${idx}`);
+  if (inp) inp.value = 'Done';
+  refreshTask(idx);
+}
+
+function quickAddAdmit(item) {
+  db[curBed].admit.unshift({time: tNow(), val: item, done: false});
+  saveDB();
+  renderContent();
+}
+
 function insertPhrase(idx, phrase) {
   const cur = (db[curBed].events[idx].val || '').trim();
   const sep = cur.length > 0 ? (cur.endsWith('.') || cur.endsWith(',') ? ' ' : '. ') : '';
@@ -1054,20 +1149,49 @@ function insertPhrase(idx, phrase) {
   }
 }
 
-function setFluidTarget(idx) {
+function setFluidTarget(idx, type) {
   activeFluidIdx = idx;
+  if (type) activeFluidType = type;
   const sel = document.getElementById('quickFluidHour');
   if (sel) sel.value = idx;
+  updateFluidTargetUI();
+}
+
+function toggleFluidType() {
+  activeFluidType = activeFluidType === 'i' ? 'o' : 'i';
+  updateFluidTargetUI();
+}
+
+function updateFluidTargetUI() {
+  const isOut = activeFluidType === 'o';
+  const btn = document.getElementById('quickFluidTypeBtn');
+  if (btn) {
+    btn.style.background = isOut ? 'var(--amber)' : 'var(--teal)';
+    btn.textContent = `Mode: ${isOut ? 'Output (Out)' : 'Intake (In)'}`;
+  }
+  document.querySelectorAll('.quick-fluid-btn').forEach(b => {
+    if (b.textContent !== 'Clr') b.classList.toggle('out-mode', isOut);
+  });
+  for (let i = 0; i < 13; i++) {
+    const inEl = document.getElementById(`fl-i-${i}`);
+    const outEl = document.getElementById(`fl-o-${i}`);
+    if (inEl) inEl.classList.toggle('fl-target-in', i === activeFluidIdx && activeFluidType === 'i');
+    if (outEl) outEl.classList.toggle('fl-target-out', i === activeFluidIdx && activeFluidType === 'o');
+  }
 }
 
 function quickAddFluid(ml) {
   const idx = activeFluidIdx !== null ? activeFluidIdx : 0;
-  const curVal = parseFloat(db[curBed].fluid[idx].i) || 0;
-  const newVal = curVal + ml;
-  db[curBed].fluid[idx].i = String(newVal);
+  const type = activeFluidType || 'i';
+  if (ml === 0) {
+    db[curBed].fluid[idx][type] = '';
+  } else {
+    const curVal = parseFloat(db[curBed].fluid[idx][type]) || 0;
+    db[curBed].fluid[idx][type] = String(curVal + ml);
+  }
   saveDB();
-  const inp = document.getElementById(`fl-in-${idx}`);
-  if (inp) inp.value = newVal;
+  const inp = document.getElementById(`fl-${type}-${idx}`);
+  if (inp) inp.value = db[curBed].fluid[idx][type];
   refreshFluid();
 }
 
