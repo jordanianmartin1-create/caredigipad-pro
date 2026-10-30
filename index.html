@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="en-GB" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -32,6 +32,10 @@
   [data-theme="night"] #dimmer { background: rgba(0,0,0,0.22); }
   #blurOverlay { position: fixed; inset: 0; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); background: rgba(15, 23, 42, 0.75); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; padding: 24px; cursor: pointer; }
   .setup-container { padding: 20px; max-width: 600px; margin: 0 auto; }
+  .setup-top-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .lang-pill { display: flex; align-items: center; gap: 6px; background: var(--card); border: 1.5px solid var(--input-border); border-radius: 20px; padding: 4px 10px; }
+  .lang-pill select { border: none; background: transparent; padding: 2px 4px; font-size: 0.85rem; font-weight: 600; color: var(--text); width: auto; cursor: pointer; }
+  .lang-pill select:focus { box-shadow: none; }
   .bed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
   .bed-pill { padding: 12px; border: 1.5px solid var(--input-border); border-radius: 8px; background: var(--card); color: var(--text); font-weight: 600; text-align: center; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
   .bed-pill.selected { background: var(--teal); color: #fff; border-color: var(--teal); }
@@ -100,9 +104,50 @@
 </div>
 
 <div id="setupView" class="setup-container">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-    <h2 style="margin:0;" id="lblSetupTitle">Shift Setup</h2>
-    <span id="tierBadge" class="pro-tag" style="font-size:0.8rem; padding:4px 8px;">FREE TIER</span>
+  <div class="setup-top-bar">
+    <div style="display:flex; align-items:center; gap:6px;">
+      <h2 style="margin:0;" id="lblSetupTitle">Shift Setup</h2>
+      <span id="tierBadge" class="pro-tag" style="font-size:0.75rem; padding:3px 7px;">FREE TIER</span>
+    </div>
+    <div class="lang-pill" title="Language">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--teal); flex-shrink:0;">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      </svg>
+      <select id="prefLang" onchange="savePrefs()" aria-label="Select Language">
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="pt">Português</option>
+        <option value="it">Italiano</option>
+        <option value="nl">Nederlands</option>
+        <option value="sv">Svenska</option>
+        <option value="pl">Polski</option>
+        <option value="ro">Română</option>
+        <option value="uk">Українська</option>
+        <option value="ru">Русский</option>
+        <option value="el">Ελληνικά</option>
+        <option value="hi">हिन्दी</option>
+        <option value="bn">বাংলা</option>
+        <option value="pa">ਪੰਜਾਬੀ</option>
+        <option value="ur">اردو</option>
+        <option value="ta">தமிழ்</option>
+        <option value="ml">മലയാളം</option>
+        <option value="zh">中文 (简体)</option>
+        <option value="zh-tw">中文 (繁體)</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+        <option value="tl">Tagalog</option>
+        <option value="id">Bahasa Indonesia / Melayu</option>
+        <option value="vi">Tiếng Việt</option>
+        <option value="ar">العربية</option>
+        <option value="tr">Türkçe</option>
+        <option value="fa">فارسی</option>
+        <option value="sw">Kiswahili</option>
+      </select>
+    </div>
   </div>
   <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:16px;" id="lblSetupSub">100% offline digital shift notepad. Data never leaves your device.</p>
 
@@ -118,18 +163,7 @@
 
   <div class="card">
     <label style="margin-bottom:10px; font-size:0.9rem; color:var(--text);" id="lblPrefs">App Preferences & Units</label>
-    <div class="row">
-      <div>
-        <label id="lblLang">Language</label>
-        <select id="prefLang" onchange="savePrefs()">
-          <option value="en">English</option>
-          <option value="es">Español</option>
-          <option value="fr">Français</option>
-          <option value="de">Deutsch</option>
-          <option value="pt">Português</option>
-          <option value="tl">Tagalog</option>
-        </select>
-      </div>
+    <div class="row" style="margin-bottom:0;">
       <div>
         <label id="lblTheme">Theme <span id="themeProTag" class="pro-tag">PRO</span></label>
         <select id="prefTheme" onchange="changeTheme(this.value)">
@@ -141,8 +175,6 @@
           <option value="coral">Warm Coral</option>
         </select>
       </div>
-    </div>
-    <div class="row" style="margin-bottom:0;">
       <div>
         <label id="lblBmUnit">Glucose Unit</label>
         <select id="prefBm" onchange="savePrefs()">
@@ -215,7 +247,7 @@
   </div>
   <div class="container" id="contentArea"></div>
   <div class="footer">
-    <button class="btn btn-subtle" onclick="clearShift()">End Shift / Clear Data</button>
+    <button class="btn btn-subtle" id="btnEndShift" onclick="clearShift()">End Shift / Clear Data</button>
   </div>
 </div>
 <script>
@@ -237,41 +269,39 @@ let curSec = 'obs';
 let isNight = false;
 let alertTimerId = null;
 
-const quickPhrases = [
-  'Personal care given',
-  'Washed & dressed',
-  'Pressure areas intact',
-  'Mobilised to chair',
-  'Escalated to RN',
-  'Family updated'
-];
-
-const taskChips = [
-  'Bloods',
-  'ECG',
-  'Repeat Obs',
-  'BM',
-  'Bladder Scan',
-  'Cannula'
-];
-
-const admitChips = [
-  'Dentures',
-  'Glasses',
-  'Hearing Aid',
-  'Frame/Stick',
-  'Phone/Charger',
-  'Keys',
-  'Cash/Wallet'
-];
+const rtlLangs = ['ar', 'ur', 'fa'];
 
 const i18n = {
-  en: { setup:'Shift Setup', start:'Start / Update Shift', summary:'Transcribe', share:'Share Care Digipad with a Colleague', obs:'Vitals', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Bowels', amy:'Skin & Dressings', food:'Diet', turn:'Turning', mh:'Mental Health', events:'Notes', reminders:'Tasks', admit:'Admissions' },
-  es: { setup:'Configuración de Turno', start:'Iniciar / Actualizar Turno', summary:'Transcribir', share:'Compartir con un Colega', obs:'Signos Vitales', bm:'Glucosa', bp:'PA Acostado/De Pie', fluid:'Balance Hídrico', bowel:'Deposiciones', amy:'Piel y Apósito', food:'Dieta', turn:'Cambios Posturales', mh:'Salud Mental', events:'Notas', reminders:'Tareas', admit:'Admisiones' },
-  fr: { setup:'Configuration de Garde', start:'Démarrer / Mettre à Jour', summary:'Transcrire', share:'Partager avec un Collègue', obs:'Constantes', bm:'Glycémie', bp:'TA Couché/Debout', fluid:'Bilan Hydrique', bowel:'Selles', amy:'Peau et Pansements', food:'Alimentation', turn:'Positionnement', mh:'Santé Mentale', events:'Notes', reminders:'Tâches', admit:'Admissions' },
-  de: { setup:'Schicht-Einstellungen', start:'Schicht Starten / Aktualisieren', summary:'Übertragen', share:'Mit Kollegen Teilen', obs:'Vitalzeichen', bm:'Blutzucker', bp:'RR Liegen/Stehen', fluid:'Bilanzierung', bowel:'Stuhlgang', amy:'Haut & Verbände', food:'Ernährung', turn:'Lagerung', mh:'Psychische Gesundheit', events:'Notizen', reminders:'Aufgaben', admit:'Aufnahme' },
-  pt: { setup:'Configuração de Plantão', start:'Iniciar / Atualizar Plantão', summary:'Transcrever', share:'Compartilhar com Colega', obs:'Sinais Vitais', bm:'Glicemia', bp:'PA Deitado/Em Pé', fluid:'Balanço Hídrico', bowel:'Evacuação', amy:'Pele e Curativos', food:'Dieta', turn:'Mudança de Decúbito', mh:'Saúde Mental', events:'Notas', reminders:'Tarefas', admit:'Admissão' },
-  tl: { setup:'Setup ng Shift', start:'Simulan / I-update ang Shift', summary:'I-transcribe', share:'Ibahagi sa Katrabaho', obs:'Vital Signs', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Pagdumi', amy:'Balat at Dressing', food:'Pagkain', turn:'Pagpihit', mh:'Mental Health', events:'Mga Tala', reminders:'Mga Gawain', admit:'Admissions' }
+  en: { setup:'Shift Setup', start:'Start / Update Shift', summary:'Summary', share:'Share Care Digipad with a Colleague', endShift:'End Shift / Clear Data', obs:'Vitals', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Bowels', amy:'Skin & Dressings', food:'Diet', turn:'Turning', mh:'Mental Health', events:'Notes', reminders:'Tasks', admit:'Admissions', done:'Done', markDone:'Mark Done', markBed:'Mark Bed Done', pending:'Pending Only', showAll:'Show All', keepOn:'Keep Screen On', byBed:'By Bed', byMod:'By Module', time:'Time', intact:'Intact', red:'Red', broken:'Broken', markIntact:'Mark All Intact', b:'Breakfast', l:'Lunch', d:'Dinner', phrases:['Personal care given', 'Washed & dressed', 'Pressure areas intact', 'Mobilised to chair', 'Escalated to RN', 'Family updated'], tasks:['Bloods', 'ECG', 'Repeat Obs', 'BM', 'Bladder Scan', 'Cannula'], admits:['Dentures', 'Glasses', 'Hearing Aid', 'Frame/Stick', 'Phone/Charger', 'Keys', 'Cash/Wallet'] },
+  es: { setup:'Configuración de Turno', start:'Iniciar / Actualizar Turno', summary:'Resumen', share:'Compartir con un Colega', endShift:'Finalizar Turno / Borrar', obs:'Signos Vitales', bm:'Glucosa', bp:'PA Acostado/De Pie', fluid:'Líquidos', bowel:'Deposiciones', amy:'Piel y Apósito', food:'Dieta', turn:'Cambios Posturales', mh:'Salud Mental', events:'Notas', reminders:'Tareas', admit:'Admisiones', done:'Hecho', markDone:'Marcar Hecho', markBed:'Cama Hecha', pending:'Solo Pendientes', showAll:'Ver Todo', keepOn:'Pantalla Activa', byBed:'Por Cama', byMod:'Por Módulo', time:'Hora', intact:'Íntegra', red:'Enrojecida', broken:'Lesionada', markIntact:'Marcar Todo Íntegro', b:'Desayuno', l:'Almuerzo', d:'Cena', phrases:['Aseo personal realizado', 'Lavado y vestido', 'Zonas de presión íntegras', 'Movilizado a sillón', 'Informado a enfermera', 'Familia informada'], tasks:['Analítica', 'ECG', 'Repetir Constantes', 'Glucemia', 'Ecografía Vesical', 'Vía Venosa'], admits:['Prótesis Dental', 'Gafas', 'Audífono', 'Andador/Bastón', 'Móvil/Cargador', 'Llaves', 'Efectivo/Cartera'] },
+  fr: { setup:'Configuration de Garde', start:'Démarrer / Mettre à Jour', summary:'Résumé', share:'Partager avec un Collègue', endShift:'Fin de Garde / Effacer', obs:'Constantes', bm:'Glycémie', bp:'TA Couché/Debout', fluid:'Bilan Hydrique', bowel:'Selles', amy:'Peau et Pansements', food:'Alimentation', turn:'Positionnement', mh:'Santé Mentale', events:'Notes', reminders:'Tâches', admit:'Admissions', done:'Fait', markDone:'Marquer Fait', markBed:'Lit Terminé', pending:'En Attente', showAll:'Tout Voir', keepOn:'Écran Allumé', byBed:'Par Lit', byMod:'Par Module', time:'Heure', intact:'Intacte', red:'Rougeur', broken:'Lésée', markIntact:'Tout Marquer Intact', b:'Petit-déjeuner', l:'Déjeuner', d:'Dîner', phrases:['Soins d’hygiène effectués', 'Lavé et habillé', 'Points d’appui intacts', 'Installé au fauteuil', 'Transmis à l’IDE', 'Famille informée'], tasks:['Bilan Sanguin', 'ECG', 'Contrôle Constantes', 'Glycémie', 'Bladder Scan', 'Cathéter'], admits:['Prothèse Dentaire', 'Lunettes', 'Appareil Auditif', 'Déambulateur/Canne', 'Téléphone/Chargeur', 'Clés', 'Espèces/Portefeuille'] },
+  de: { setup:'Schicht-Einstellungen', start:'Schicht Starten / Aktualisieren', summary:'Übersicht', share:'Mit Kollegen Teilen', endShift:'Schicht Beenden / Löschen', obs:'Vitalzeichen', bm:'Blutzucker', bp:'RR Liegen/Stehen', fluid:'Bilanzierung', bowel:'Stuhlgang', amy:'Haut & Verbände', food:'Ernährung', turn:'Lagerung', mh:'Psychische Gesundheit', events:'Notizen', reminders:'Aufgaben', admit:'Aufnahme', done:'Erledigt', markDone:'Als Erledigt', markBed:'Bett Erledigt', pending:'Nur Offene', showAll:'Alle Zeigen', keepOn:'Display An', byBed:'Nach Bett', byMod:'Nach Modul', time:'Zeit', intact:'Intakt', red:'Gerötet', broken:'Offen', markIntact:'Alle Intakt', b:'Frühstück', l:'Mittagessen', d:'Abendessen', phrases:['Körperpflege durchgeführt', 'Gewaschen & angekleidet', 'Druckstellen intakt', 'In den Stuhl mobilisiert', 'An Pflegefachkraft gemeldet', 'Angehörige informiert'], tasks:['Blutentnahme', 'EKG', 'Vitalzeichen-Kontrolle', 'BZ-Kontrolle', 'Blasenscan', 'Venenverweilkanüle'], admits:['Zahnprothese', 'Brille', 'Hörgerät', 'Rollator/Gehstock', 'Handy/Ladegerät', 'Schlüssel', 'Bargeld/Geldbörse'] },
+  pt: { setup:'Configuração de Plantão', start:'Iniciar / Atualizar Plantão', summary:'Resumo', share:'Compartilhar com Colega', endShift:'Encerrar Plantão / Limpar', obs:'Sinais Vitais', bm:'Glicemia', bp:'PA Deitado/Em Pé', fluid:'Balanço Hídrico', bowel:'Evacuação', amy:'Pele e Curativos', food:'Dieta', turn:'Mudança de Decúbito', mh:'Saúde Mental', events:'Notas', reminders:'Tarefas', admit:'Admissão', done:'Feito', markDone:'Marcar Feito', markBed:'Leito Concluído', pending:'Pendentes', showAll:'Mostrar Tudo', keepOn:'Manter Tela', byBed:'Por Leito', byMod:'Por Módulo', time:'Hora', intact:'Íntegra', red:'Hiperemiada', broken:'Lesionada', markIntact:'Marcar Tudo Íntegro', b:'Peq. Almoço', l:'Almoço', d:'Jantar', phrases:['Cuidados de higiene realizados', 'Banho e troca realizados', 'Zonas de pressão íntegras', 'Mobilizado para poltrona', 'Comunicado ao enfermeiro', 'Família atualizada'], tasks:['Exames de Sangue', 'ECG', 'Repetir Sinais Vitais', 'Glicemia Capilar', 'Bladder Scan', 'Acesso Venoso'], admits:['Prótese Dentária', 'Óculos', 'Aparelho Auditivo', 'Andador/Bengala', 'Telemóvel/Carregador', 'Chaves', 'Dinheiro/Carteira'] },
+  it: { setup:'Impostazione Turno', start:'Inizia / Aggiorna Turno', summary:'Riepilogo', share:'Condividi con un Collega', endShift:'Fine Turno / Cancella', obs:'Parametri Vitali', bm:'Glicemia', bp:'PA Supino/Ortostatica', fluid:'Bilancio Idrico', bowel:'Alvo', amy:'Cute e Medicazioni', food:'Vitto', turn:'Mobilizzazione', mh:'Salute Mentale', events:'Note', reminders:'Compiti', admit:'Accettazione', done:'Fatto', markDone:'Segna Fatto', markBed:'Letto Completato', pending:'In Sospeso', showAll:'Mostra Tutto', keepOn:'Schermo Acceso', byBed:'Per Letto', byMod:'Per Modulo', time:'Ora', intact:'Integra', red:'Arrossata', broken:'Lesionata', markIntact:'Segna Tutto Integro', b:'Colazione', l:'Pranzo', d:'Cena', phrases:['Cure igieniche effettuate', 'Lavato e vestito', 'Zone di pressione integre', 'Mobilizzato in poltrona', 'Segnalato all’infermiere', 'Famiglia aggiornata'], tasks:['Prelievo Ematico', 'ECG', 'Controllo Parametri', 'Glicemia', 'Bladder Scan', 'CVP/Cannula'], admits:['Protesi Dentaria', 'Occhiali', 'Apparecchio Acustico', 'Deambulatore/Bastone', 'Telefono/Caricabatterie', 'Chiavi', 'Contanti/Portafoglio'] },
+  nl: { setup:'Dienst Instellen', start:'Start / Update Dienst', summary:'Overzicht', share:'Deel met een Collega', endShift:'Dienst Beëindigen / Wissen', obs:'Vitale Functies', bm:'Glucose', bp:'RR Liggend/Staand', fluid:'Vochtbalans', bowel:'Defecatie', amy:'Huid & Wondzorg', food:'Voeding', turn:'Wisselligging', mh:'Mentale Gezondheid', events:'Notities', reminders:'Taken', admit:'Opname', done:'Klaar', markDone:'Markeer Klaar', markBed:'Bed Klaar', pending:'Alleen Open', showAll:'Toon Alles', keepOn:'Scherm Aan', byBed:'Per Bed', byMod:'Per Module', time:'Tijd', intact:'Intact', red:'Rood', broken:'Defect', markIntact:'Alles Intact', b:'Ontbijt', l:'Lunch', d:'Avondeten', phrases:['Persoonlijke verzorging gegeven', 'Gewassen en aangekleed', 'Drukplekken intact', 'Gemobiliseerd naar stoel', 'Gemeld aan verpleegkundige', 'Familie geïnformeerd'], tasks:['Bloedafname', 'ECG', 'Herhaal Controles', 'Bloedsuiker', 'Bladderscan', 'Infuus/Canule'], admits:['Gebitsprothese', 'Bril', 'Gehoorapparaat', 'Rollator/Wandelstok', 'Telefoon/Oplader', 'Sleutels', 'Contanten/Portemonnee'] },
+  sv: { setup:'Passinställning', start:'Starta / Uppdatera Pass', summary:'Översikt', share:'Dela med en Kollega', endShift:'Avsluta Pass / Rensa', obs:'Vitalparametrar', bm:'Blodsocker', bp:'BT Liggande/Stående', fluid:'VätskeLista', bowel:'Avföring', amy:'Hud & Förband', food:'Kost', turn:'Vändschema', mh:'Psykisk Hälsa', events:'Anteckningar', reminders:'Uppgifter', admit:'Inskrivning', done:'Klar', markDone:'Markera Klar', markBed:'Plats Klar', pending:'Endast Kvar', showAll:'Visa Alla', keepOn:'Håll Skärm På', byBed:'Per Plats', byMod:'Per Modul', time:'Tid', intact:'Hel', red:'Rodnad', broken:'Skadad', markIntact:'Markera Alla Hela', b:'Frukost', l:'Lunch', d:'Middag', phrases:['Personlig omvårdnad utförd', 'Tvättad och påklädd', 'Tryckytor intakta', 'Mobiliserad till fåtölj', 'Rapporterat till SSK', 'Närstående informerade'], tasks:['Blodprov', 'EKG', 'Nya Kontroller', 'B-Glukos', 'BladderScan', 'PVK'], admits:['Tandprotes', 'Glasögon', 'Hörapparat', 'Rollator/Käpp', 'Mobil/Laddare', 'Nycklar', 'Kontanter/Plånbok'] },
+  pl: { setup:'Ustawienia Dyżuru', start:'Rozpocznij / Aktualizuj', summary:'Podsumowanie', share:'Udostępnij Współpracownikowi', endShift:'Zakończ Dyżur / Wyczyść', obs:'Parametry', bm:'Glikemia', bp:'RR Leżąc/Stojąc', fluid:'Bilans Płynów', bowel:'Wypróżnienia', amy:'Skóra i Opatrunki', food:'Dieta', turn:'Zmiana Pozycji', mh:'Stan Psychiczny', events:'Notatki', reminders:'Zadania', admit:'Przyjęcie', done:'Gotowe', markDone:'Oznacz', markBed:'Łóżko Gotowe', pending:'Oczekujące', showAll:'Pokaż Wszystko', keepOn:'Ekran Włączony', byBed:'Wg Łóżka', byMod:'Wg Modułu', time:'Czas', intact:'Czysta', red:'Zaczerwieniona', broken:'Uszkodzona', markIntact:'Wszystko Czyste', b:'Śniadanie', l:'Obiad', d:'Kolacja', phrases:['Wykonano toaletę ciała', 'Umyto i przebrano', 'Miejsca ucisku bez zmian', 'Posadzono w fotelu', 'Zgłoszono pielęgniarce', 'Poinformowano rodzinę'], tasks:['Badania Krwi', 'EKG', 'Kontrola Parametrów', 'Glikemia', 'USG Pęcherza', 'Wenflon'], admits:['Proteza Zębowa', 'Okulary', 'Aparat Słuchowy', 'Chodzik/Laska', 'Telefon/Ładowarka', 'Klucze', 'Gotówka/Portfel'] },
+  ro: { setup:'Configurare Tură', start:'Începe / Actualizează Tura', summary:'Rezumat', share:'Distribuie unui Coleg', endShift:'Termină Tura / Șterge', obs:'Funcții Vitale', bm:'Glicemie', bp:'TA Culcat/Ortostatism', fluid:'Bilanț Hidric', bowel:'Scaun', amy:'Piele și Pansamente', food:'Alimentație', turn:'Mobilizare', mh:'Sănătate Mintală', events:'Note', reminders:'Sarcini', admit:'Internare', done:'Gata', markDone:'Marchează', markBed:'Pat Finalizat', pending:'În Așteptare', showAll:'Arată Tot', keepOn:'Ecran Aprins', byBed:'După Pat', byMod:'După Modul', time:'Ora', intact:'Integră', red:'Eritem', broken:'Leziune', markIntact:'Totul Integru', b:'Mic Dejun', l:'Prânz', d:'Cină', phrases:['Igienă personală efectuată', 'Spălat și schimbat', 'Zone de presiune integre', 'Mobilizat în fotoliu', 'Anunțat asistentul medical', 'Familie informată'], tasks:['Analize Sânge', 'EKG', 'Repetare Funcții Vitale', 'Glicemie', 'Scanare Vezicală', 'Branulă'], admits:['Proteză Dentară', 'Ochelari', 'Aparat Auditiv', 'Cadru/Baston', 'Telefon/Încărcător', 'Chei', 'Bani/Portofel'] },
+  uk: { setup:'Налаштування Зміни', start:'Почати / Оновити Зміну', summary:'Підсумок', share:'Поділитися з Колегою', endShift:'Завершити Зміну / Очистити', obs:'Показники', bm:'Глюкоза', bp:'АТ Лежачи/Стоячи', fluid:'Гідробаланс', bowel:'Випорожнення', amy:'Шкіра та Пов’язки', food:'Харчування', turn:'Повороти', mh:'Психічний Стан', events:'Нотатки', reminders:'Завдання', admit:'Госпіталізація', done:'Готово', markDone:'Відмітити', markBed:'Ліжко Готово', pending:'Неперенесені', showAll:'Показати Все', keepOn:'Екран Увімк.', byBed:'За Ліжком', byMod:'За Модулем', time:'Час', intact:'Ціла', red:'Почервоніння', broken:'Пошкоджена', markIntact:'Все Ціле', b:'Сніданок', l:'Обід', d:'Вечеря', phrases:['Проведено особисту гігієну', 'Вмитий та переодягнений', 'Місця тиску неушкоджені', 'Пересаджено в крісло', 'Повідомлено медсестру', 'Родину поінформовано'], tasks:['Аналіз Крові', 'ЕКГ', 'Повторити Показники', 'Глюкоза Крові', 'УЗД Сечового', 'Катетер'], admits:['Зубні Протези', 'Окуляри', 'Слуховий Апарат', 'Ходунки/Тростина', 'Телефон/Зарядка', 'Ключі', 'Готівка/Гаманець'] },
+  ru: { setup:'Настройка Смены', start:'Начать / Обновить Смену', summary:'Сводка', share:'Поделиться с Коллегой', endShift:'Завершить Смену / Очистить', obs:'Показатели', bm:'Глюкоза', bp:'АД Лежа/Стоя', fluid:'Гидробаланс', bowel:'Стул', amy:'Кожа и Повязки', food:'Питание', turn:'Повороты', mh:'Психический Статус', events:'Заметки', reminders:'Задачи', admit:'Поступление', done:'Готово', markDone:'Отметить', markBed:'Койка Готова', pending:'Ожидающие', showAll:'Показать Все', keepOn:'Экран Вкл.', byBed:'По Койкам', byMod:'По Модулям', time:'Время', intact:'Чистая', red:'Гиперемия', broken:'Повреждена', markIntact:'Все Чисто', b:'Завтрак', l:'Обед', d:'Ужин', phrases:['Гигиенический уход выполнен', 'Умыт и переодет', 'Точки давления без изменений', 'Пересажен в кресло', 'Доложено медсестре', 'Родственники информированы'], tasks:['Забор Крови', 'ЭКГ', 'Повтор Показателей', 'Глюкометрия', 'УЗИ Мочевого', 'Канюля'], admits:['Зубные Протезы', 'Очки', 'Слуховой Аппарат', 'Ходунки/Трость', 'Телефон/Зарядка', 'Ключи', 'Наличные/Кошелек'] },
+  el: { setup:'Ρύθμιση Βάρδιας', start:'Έναρξη / Ενημέρωση Βάρδιας', summary:'Σύνοψη', share:'Κοινοποίηση σε Συνάδελφο', endShift:'Τέλος Βάρδιας / Διαγραφή', obs:'Ζωτικά', bm:'Γλυκόζη', bp:'ΑΠ Ύπτια/Όρθια', fluid:'Ισοζύγιο Υγρών', bowel:'Κενώσεις', amy:'Δέρμα & Επιθέματα', food:'Δίαιτα', turn:'Αλλαγή Θέσης', mh:'Ψυχική Υγεία', events:'Σημειώσεις', reminders:'Εργασίες', admit:'Εισαγωγή', done:'Έγινε', markDone:'Σήμανση', markBed:'Κλίνη Έτοιμη', pending:'Εκκρεμή', showAll:'Όλα', keepOn:'Οθόνη Ενεργή', byBed:'Ανά Κλίνη', byMod:'Ανά Ενότητα', time:'Ώρα', intact:'Ακέραιο', red:'Ερυθρότητα', broken:'Λύση Δέρματος', markIntact:'Όλα Ακέραια', b:'Πρωινό', l:'Μεσημεριανό', d:'Βραδινό', phrases:['δόθηκε ατομική φροντίδα', 'Πλύθηκε και ντύθηκε', 'Σημεία πίεσης ακέραια', 'Κινητοποιήθηκε σε καρέκλα', 'Ενημερώθηκε νοσηλευτής', 'Ενημερώθηκε η οικογένεια'], tasks:['Αιμοληψία', 'ΗΚΓ', 'Επανάληψη Ζωτικών', 'Σάκχαρο', 'Υπέρηχος Κύστης', 'Φλεβοκαθετήρας'], admits:['Οδοντοστοιχία', 'Γυαλιά', 'Ακουστικό', 'Πι/Μπαστούνι', 'Τηλέφωνο/Φορτιστής', 'Κλειδιά', 'Μετρητά/Πορτοφόλι'] },
+  hi: { setup:'शिफ्ट सेटअप', start:'शिफ्ट शुरू / अपडेट करें', summary:'सारांश', share:'सहकर्मी के साथ साझा करें', endShift:'शिफ्ट समाप्त / डेटा मिटाएं', obs:'वाइटल्स', bm:'ग्लूकोज', bp:'L/S बीपी', fluid:'फ्लूइड', bowel:'मल त्याग', amy:'त्वचा और ड्रेसिंग', food:'आहार', turn:'करवट', mh:'मानसिक स्वास्थ्य', events:'नोट्स', reminders:'कार्य', admit:'भर्ती', done:'पूर्ण', markDone:'पूर्ण करें', markBed:'बेड पूर्ण', pending:'केवल बाकी', showAll:'सभी दिखाएं', keepOn:'स्क्रीन ऑन रखें', byBed:'बेड अनुसार', byMod:'मॉड्यूल अनुसार', time:'समय', intact:'सुरक्षित', red:'लाल', broken:'घाव/टूटी', markIntact:'सभी सुरक्षित', b:'नाश्ता', l:'दोपहर का भोजन', d:'रात का भोजन', phrases:['व्यक्तिगत देखभाल दी गई', 'स्नान और कपड़े बदले गए', 'दबाव वाले हिस्से सुरक्षित हैं', 'कुर्सी पर बैठाया गया', 'नर्स (RN) को सूचित किया', 'परिवार को जानकारी दी गई'], tasks:['ब्लड टेस्ट', 'ECG', 'दोबारा वाइटल्स', 'शुगर जांच (BM)', 'ब्लैडर स्कैन', 'कैनुला'], admits:['नकली दांत', 'चश्मा', 'हियरिंग एड', 'वॉकर/छड़ी', 'फोन/चार्जर', 'चाबियां', 'नकद/पर्स'] },
+  bn: { setup:'শিফট সেটআপ', start:'শিফট শুরু / আপডেট', summary:'সারাংশ', share:'সহকর্মীর সাথে শেয়ার করুন', endShift:'শিফট শেষ / মুছুন', obs:'ভাইটালস', bm:'গ্লুকোজ', bp:'শোয়া/দাঁড়ানো বিপি', fluid:'ফ্লুইড', bowel:'মলত্যাগ', amy:'ত্বক ও ড্রেসিং', food:'খাবার', turn:'পাশ ফেরানো', mh:'মানসিক স্বাস্থ্য', events:'নোট', reminders:'কাজ', admit:'ভর্তি', done:'সম্পন্ন', markDone:'সম্পন্ন করুন', markBed:'বেড সম্পন্ন', pending:'বাকিগুলো', showAll:'সব দেখান', keepOn:'স্ক্রিন চালু', byBed:'বেড অনুযায়ী', byMod:'মডিউল অনুযায়ী', time:'সময়', intact:'অক্ষত', red:'লালচে', broken:'ক্ষত', markIntact:'সব অক্ষত', b:'সকালের নাস্তা', l:'দুপুরের খাবার', d:'রাতের খাবার', phrases:['ব্যক্তিগত পরিচর্যা দেওয়া হয়েছে', 'পরিষ্কার ও পোশাক পরিবর্তন করা হয়েছে', 'চাপের স্থানগুলো অক্ষত আছে', 'চেয়ারে বসানো হয়েছে', 'নার্সকে (RN) জানানো হয়েছে', 'পরিবারকে আপডেট দেওয়া হয়েছে'], tasks:['রক্ত পরীক্ষা', 'ইসিজি (ECG)', 'পুনরায় ভাইটালস', 'ব্লাড সুগার', 'ব্লাডার স্ক্যান', 'ক্যানুলা'], admits:['নকল দাঁত', 'চশমা', 'হিয়ারিং এইড', 'ওয়াকার/লাঠি', 'ফোন/চার্জার', 'চাবি', 'নগদ টাকা/মানিব্যাগ'] },
+  pa: { setup:'ਸ਼ਿਫਟ ਸੈੱਟਅੱਪ', start:'ਸ਼ਿਫਟ ਸ਼ੁਰੂ / ਅਪਡੇਟ ਕਰੋ', summary:'ਸੰਖੇਪ', share:'ਸਹਿਕਰਮੀ ਨਾਲ ਸਾਂਝਾ ਕਰੋ', endShift:'ਸ਼ਿਫਟ ਖਤਮ / ਡਾਟਾ ਮਿਟਾਓ', obs:'ਵਾਈਟਲਸ', bm:'ਗਲੂਕੋਜ਼', bp:'ਲੇਟ ਕੇ/ਖੜ੍ਹੇ ਬੀਪੀ', fluid:'ਤਰਲ (Fluids)', bowel:'ਟੱਟੀ (Bowels)', amy:'ਚਮੜੀ ਅਤੇ ਪੱਟੀ', food:'ਖੁਰਾਕ', turn:'ਪਾਸਾ ਬਦਲਣਾ', mh:'ਮਾਨਸਿਕ ਸਿਹਤ', events:'ਨੋਟਸ', reminders:'ਕੰਮ', admit:'ਦਾਖਲਾ', done:'ਪੂਰਾ', markDone:'ਪੂਰਾ ਕਰੋ', markBed:'ਬੈੱਡ ਪੂਰਾ', pending:'ਬਾਕੀ ਰਹਿੰਦੇ', showAll:'ਸਭ ਦਿਖਾਓ', keepOn:'ਸਕ੍ਰੀਨ ਚਾਲੂ', byBed:'ਬੈੱਡ ਅਨੁਸਾਰ', byMod:'ਮੋਡੀਊਲ ਅਨੁਸਾਰ', time:'ਸਮਾਂ', intact:'ਠੀਕ (Intact)', red:'ਲਾਲ', broken:'ਜ਼ਖ਼ਮ', markIntact:'ਸਾਰੇ ਠੀਕ', b:'ਨਾਸ਼ਤਾ', l:'ਦੁਪਹਿਰ ਦਾ ਖਾਣਾ', d:'ਰਾਤ ਦਾ ਖਾਣਾ', phrases:['ਨਿੱਜੀ ਦੇਖਭਾਲ ਦਿੱਤੀ ਗਈ', 'ਨਹਾਇਆ ਅਤੇ ਕੱਪੜੇ ਬਦਲੇ', 'ਦਬਾਅ ਵਾਲੇ ਹਿੱਸੇ ਠੀਕ ਹਨ', 'ਕੁਰਸੀ ਤੇ ਬਿਠਾਇਆ ਗਿਆ', 'ਨਰਸ (RN) ਨੂੰ ਦੱਸਿਆ ਗਿਆ', 'ਪਰਿਵਾਰ ਨੂੰ ਜਾਣਕਾਰੀ ਦਿੱਤੀ'], tasks:['ਖੂਨ ਦੀ ਜਾਂਚ', 'ECG', 'ਦੁਬਾਰਾ ਵਾਈਟਲਸ', 'ਸ਼ੂਗਰ ਜਾਂਚ', 'ਬਲੈਡਰ ਸਕੈਨ', 'ਕੈਨੂਲਾ'], admits:['ਨਕਲੀ ਦੰਦ', 'ਐਨਕਾਂ', 'ਸੁਣਨ ਵਾਲੀ ਮਸ਼ੀਨ', 'ਵਾਕਰ/ਸੋਟੀ', 'ਫੋਨ/ਚਾਰਜਰ', 'ਚਾਬੀਆਂ', 'ਨਕਦੀ/ਪਰਸ'] },
+  ur: { setup:'شفٹ سیٹ اپ', start:'شفٹ شروع / اپ ڈیٹ کریں', summary:'خلاصہ', share:'ساتھی کے ساتھ شیئر کریں', endShift:'شفٹ ختم / ڈیٹا صاف کریں', obs:'وائٹلز', bm:'شوگر (Glucose)', bp:'لیٹے/کھڑے بی پی', fluid:'فلوئڈز', bowel:'اجابت', amy:'جلد اور پٹی', food:'خوراک', turn:'کروٹ بدلنا', mh:'ذہنی صحت', events:'نوٹس', reminders:'کام', admit:'داخلہ', done:'مکمل', markDone:'مکمل کریں', markBed:'بیڈ مکمل', pending:'صرف بقایا', showAll:'سب دکھائیں', keepOn:'اسکرین آن رکھیں', byBed:'بلحاظ بیڈ', byMod:'بلحاظ ماڈیول', time:'وقت', intact:'محفوظ', red:'سرخ', broken:'زخم', markIntact:'سب محفوظ', b:'ناشتہ', l:'دوپہر کا کھانا', d:'رات کا کھانا', phrases:['ذاتی نگہداشت فراہم کی گئی', 'غسل اور لباس تبدیل کیا گیا', 'دباؤ والے حصے محفوظ ہیں', 'کرسی پر بٹھایا گیا', 'نرس (RN) کو مطلع کیا گیا', 'اہل خانہ کو آگاہ کیا گیا'], tasks:['بلڈ ٹیسٹ', 'ECG', 'دوبارہ وائٹلز', 'شوگر چیک', 'بلیڈر اسکین', 'کینولا'], admits:['مصنوعی دانت', 'عینک', 'آلہ سماعت', 'واکر/چھڑی', 'فون/چارجر', 'چابیاں', 'نقدی/بٹوہ'] },
+  ta: { setup:'ஷிப்ட் அமைப்பு', start:'ஷிப்ட் தொடங்கு / புதுப்பி', summary:'சுருக்கம்', share:'சக ஊழியருடன் பகிர்', endShift:'ஷிப்ட் முடிவு / அழி', obs:'வைட்டல்ஸ்', bm:'குளுக்கோஸ்', bp:'படுத்த/நின்ற BP', fluid:'திரவ அளவு', bowel:'மலம் கழித்தல்', amy:'தோல் & கட்டு', food:'உணவு', turn:'புரட்டி படுக்க வைத்தல்', mh:'மனநலம்', events:'குறிப்புகள்', reminders:'பணிகள்', admit:'சேர்க்கை', done:'முடிந்தது', markDone:'முடிந்ததாக குறி', markBed:'படுக்கை முடிந்தது', pending:'நிலுவையில் உள்ளவை', showAll:'அனைத்தும் காட்டு', keepOn:'திரை روشن', byBed:'படுக்கை வாரியாக', byMod:'பிரிவு வாரியாக', time:'நேரம்', intact:'நல்ல நிலை', red:'சிவப்பு', broken:'புண்', markIntact:'அனைத்தும் நல்ல நிலை', b:'காலை உணவு', l:'மதிய உணவு', d:'இரவு உணவு', phrases:['தனிப்பட்ட பராமரிப்பு வழங்கப்பட்டது', 'குளிப்பாட்டி உடை மாற்றப்பட்டது', 'அழுத்தப் பகுதிகள் பாதிப்பில்லை', 'நாற்காலியில் அமர வைக்கப்பட்டார்', 'செவிலியரிடம் (RN) தெரிவிக்கப்பட்டது', 'குடும்பத்தினருக்கு தகவல் அளிக்கப்பட்டது'], tasks:['இரத்தப் பரிசோதனை', 'ECG', 'மீண்டும் வைட்டல்ஸ்', 'சர்க்கரை அளவு', 'பிளாடர் ஸ்கேன்', 'கானுலா'], admits:['பல் செட்', 'மூக்குக்கண்ணாடி', 'காது கேட்கும் கருவி', 'வாக்கர்/கைத்தடி', 'போன்/சார்ஜர்', 'சாவிகள்', 'பணம்/பர்ஸ்'] },
+  ml: { setup:'ഷിഫ്റ്റ് ക്രമീകരണം', start:'ഷിഫ്റ്റ് തുടങ്ങുക / പുതുക്കുക', summary:'സംഗ്രഹം', share:'സഹപ്രവർത്തകരുമായി പങ്കിടുക', endShift:'ഷിഫ്റ്റ് അവസാനിപ്പിക്കുക', obs:'വൈറ്റൽസ്', bm:'ഗ്ലൂക്കോസ്', bp:'L/S ബിപി', fluid:'ഫ്ലൂയിഡ്സ്', bowel:'ശോധന', amy:'ചർമ്മവും ഡ്രസ്സിംഗും', food:'ഭക്ഷണം', turn:'തിരിച്ചുകിടത്തൽ', mh:'മാനസികാരോഗ്യം', events:'കുറിപ്പുകൾ', reminders:'ചുമതലകൾ', admit:'അഡ്മിഷൻ', done:'പൂർത്തിയായി', markDone:'പൂർത്തിയാക്കുക', markBed:'ബെഡ് പൂർത്തിയായി', pending:'ബാക്കിയുള്ളവ', showAll:'എല്ലാം കാണിക്കുക', keepOn:'സ്ക്രീൻ ഓൺ', byBed:'ബെഡ് ക്രമത്തിൽ', byMod:'വിഭാഗം ക്രമത്തിൽ', time:'സമയം', intact:'കുഴപ്പമില്ല', red:'ചുവപ്പ്', broken:'മുറിവ്', markIntact:'എല്ലാം കുഴപ്പമില്ല', b:'പ്രഭാതഭക്ഷണം', l:'ഉച്ചഭക്ഷണം', d:'അത്താഴം', phrases:['വ്യക്തിഗത പരിചരണം നൽകി', 'കുളിപ്പിച്ച് വസ്ത്രം മാറ്റി', 'പ്രഷർ ഏരിയകൾക്ക് കുഴപ്പമില്ല', 'കസേരയിലേക്ക് മാറ്റിയിരുത്തി', 'നഴ്സിനെ (RN) അറിയിച്ചു', 'കുടുംബത്തെ വിവരമറിയിച്ചു'], tasks:['രക്തപരിശോധന', 'ECG', 'വൈറ്റൽസ് ആവർത്തിക്കുക', 'ഷുഗർ (BM)', 'ബ്ലാഡർ സ്കാൻ', 'കാനുല'], admits:['വെപ്പുപല്ല്', 'കണ്ണട', 'ഹിയറിംഗ് എയ്ഡ്', 'വാക്കർ/വടി', 'ഫോൺ/ചാർജർ', 'താക്കോൽ', 'പണം/പേഴ്സ്'] },
+  zh: { setup:'班次设置', start:'开始 / 更新班次', summary:'汇总', share:'与同事分享应用', endShift:'结束班次 / 清除数据', obs:'生命体征', bm:'血糖', bp:'卧/立位血压', fluid:'出入量', bowel:'排便', amy:'皮肤与敷料', food:'饮食', turn:'翻身', mh:'心理健康', events:'护理记录', reminders:'待办任务', admit:'入院物品', done:'已录', markDone:'标记已录', markBed:'整床已录', pending:'仅看未录', showAll:'显示全部', keepOn:'屏幕常亮', byBed:'按床位', byMod:'按模块', time:'时间', intact:'完好', red:'发红', broken:'破损', markIntact:'全部完好', b:'早餐', l:'午餐', d:'晚餐', phrases:['已完成个人护理', '已擦浴并更换衣物', '受压部位皮肤完好', '已协助移至座椅', '已上报责任护士(RN)', '已向家属沟通病情'], tasks:['抽血', '心电图 (ECG)', '复测生命体征', '测血糖', '膀胱扫描', '留置针护理'], admits:['假牙', '眼镜', '助听器', '助行器/拐杖', '手机/充电器', '钥匙', '现金/钱包'] },
+  'zh-tw': { setup:'班次設定', start:'開始 / 更新班次', summary:'總覽', share:'與同事分享應用程式', endShift:'結束班次 / 清除資料', obs:'生命徵象', bm:'血糖', bp:'臥/立位血壓', fluid:'出入量', bowel:'排便', amy:'皮膚與敷料', food:'飲食', turn:'翻身', mh:'心理健康', events:'護理紀錄', reminders:'待辦任務', admit:'入院物品', done:'已錄', markDone:'標記已錄', markBed:'整床已錄', pending:'僅看未錄', showAll:'顯示全部', keepOn:'螢幕常亮', byBed:'按床位', byMod:'按模組', time:'時間', intact:'完整', red:'發紅', broken:'破損', markIntact:'全部完整', b:'早餐', l:'午餐', d:'晚餐', phrases:['已完成個人護理', '已擦澡並更換衣物', '受壓部位皮膚完整', '已協助移至座椅', '已通報負責護理師(RN)', '已向家屬說明近況'], tasks:['抽血', '心電圖 (ECG)', '複測生命徵象', '測血糖', '膀胱掃描', '留置針護理'], admits:['假牙', '眼鏡', '助聽器', '助行器/拐杖', '手機/充電器', '鑰匙', '現金/錢包'] },
+  ja: { setup:'シフト設定', start:'シフト開始 / 更新', summary:'サマリー', share:'同僚にアプリを共有', endShift:'シフト終了 / データ消去', obs:'バイタル', bm:'血糖値', bp:'臥位/立位血圧', fluid:'水分出納', bowel:'排便', amy:'皮膚・創傷処置', food:'食事', turn:'体位変換', mh:'精神状態', events:'メモ', reminders:'タスク', admit:'入院持参品', done:'済', markDone:'済にする', markBed:'ベッド完了', pending:'未転記のみ', showAll:'すべて表示', keepOn:'画面常時オン', byBed:'ベッド別', byMod:'項目別', time:'時間', intact:'異常なし', red:'発赤', broken:'損傷', markIntact:'すべて異常なし', b:'朝食', l:'昼食', d:'夕食', phrases:['清潔ケア実施', '清拭・更衣完了', '褥瘡好発部位異常なし', '車椅子・椅子へ離床', '看護師へ報告済', '家族へ連絡済'], tasks:['採血', '心電図 (ECG)', 'バイタル再検', '血糖測定', 'ブラダースキャン', '末梢ルート'], admits:['義歯', '眼鏡', '補聴器', '歩行器・杖', '携帯電話・充電器', '鍵', '現金・財布'] },
+  ko: { setup:'근무 설정', start:'근무 시작 / 업데이트', summary:'요약', share:'동료에게 앱 공유', endShift:'근무 종료 / 데이터 삭제', obs:'활력징후', bm:'혈당', bp:'와위/기립 혈압', fluid:'수분 섭취/배설', bowel:'배변', amy:'피부 및 드레싱', food:'식이', turn:'체위변경', mh:'정신건강', events:'메모', reminders:'업무', admit:'입원 물품', done:'완료', markDone:'완료 표시', markBed:'병상 완료', pending:'미기록만', showAll:'전체 보기', keepOn:'화면 켜짐 유지', byBed:'병상별', byMod:'항목별', time:'시간', intact:'온전함', red:'발적', broken:'손상', markIntact:'모두 온전함', b:'아침', l:'점심', d:'저녁', phrases:['개인 위생 간호 시행', '세안 및 환의 교체', '욕창 부위 피부 온전함', '의자로 이동 보조', '담당 간호사(RN) 보고됨', '보호자 설명 완료'], tasks:['채혈', '심전도 (ECG)', '활력징후 재측정', '혈당(BST)', '방광 스캔', '정맥 주사관'], admits:['틀니', '안경', '보청기', '보행기/지팡이', '휴대폰/충전기', '열쇠', '현금/지갑'] },
+  tl: { setup:'Setup ng Shift', start:'Simulan / I-update ang Shift', summary:'Buod', share:'Ibahagi sa Katrabaho', endShift:'Tapusin ang Shift / Burahin', obs:'Vital Signs', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Pagdumi', amy:'Balat at Dressing', food:'Pagkain', turn:'Pagpihit', mh:'Mental Health', events:'Mga Tala', reminders:'Mga Gawain', admit:'Admissions', done:'Tapos', markDone:'Markahan', markBed:'Kama Tapos Na', pending:'Pending Lang', showAll:'Ipakita Lahat', keepOn:'Screen Naka-on', byBed:'Bawat Kama', byMod:'Bawat Module', time:'Oras', intact:'Intact', red:'Mapula', broken:'May Sugat', markIntact:'Lahat Intact', b:'Almusal', l:'Tanghalian', d:'Hapunan', phrases:['Nabigyan ng personal care', 'Napaliguan at nabihisan', 'Intact ang pressure areas', 'Nailipat sa upuan', 'Na-escalate sa RN', 'Na-update ang pamilya'], tasks:['Bloods', 'ECG', 'Ulitin ang Obs', 'BM', 'Bladder Scan', 'Cannula'], admits:['Pustiso', 'Salamin', 'Hearing Aid', 'Walker/Tungkod', 'Cellphone/Charger', 'Susi', 'Pera/Pitaka'] },
+  id: { setup:'Pengaturan Shift', start:'Mulai / Perbarui Shift', summary:'Ringkasan', share:'Bagikan ke Rekan Kerja', endShift:'Akhiri Shift / Hapus Data', obs:'Tanda Vital', bm:'Glukosa', bp:'TD Berbaring/Berdiri', fluid:'Cairan', bowel:'BAB', amy:'Kulit & Balutan', food:'Diet', turn:'Miring Kanan/Kiri', mh:'Kesehatan Mental', events:'Catatan', reminders:'Tugas', admit:'Admisi', done:'Selesai', markDone:'Tandai Selesai', markBed:'Bed Selesai', pending:'Belum Selesai', showAll:'Tampilkan Semua', keepOn:'Layar Menyala', byBed:'Per Bed', byMod:'Per Modul', time:'Waktu', intact:'Utuh', red:'Kemerahan', broken:'Luka/Lecet', markIntact:'Semua Utuh', b:'Sarapan', l:'Makan Siang', d:'Makan Malam', phrases:['Perawatan diri diberikan', 'Sudah dimandikan & ganti pakaian', 'Area tekan utuh/intact', 'Mobilisasi ke kursi', 'Dilaporkan ke perawat (RN)', 'Keluarga sudah diinformasikan'], tasks:['Cek Darah', 'EKG', 'Ulang Tanda Vital', 'Gula Darah', 'Bladder Scan', 'Kanula/Infus'], admits:['Gigi Palsu', 'Kacamata', 'Alat Bantu Dengar', 'Walker/Tongkat', 'HP/Charger', 'Kunci', 'Uang/Dompet'] },
+  vi: { setup:'Thiết Lập Ca Trực', start:'Bắt Đầu / Cập Nhật Ca', summary:'Tóm Tắt', share:'Chia Sẻ Với Đồng Nghiệp', endShift:'Kết Thúc Ca / Xóa Dữ Liệu', obs:'Sinh Hiệu', bm:'Đường Huyết', bp:'HA Nằm/Đứng', fluid:'Dịch Xuất Nhập', bowel:'Đại Tiện', amy:'Da & Băng Vết Thương', food:'Dinh Dưỡng', turn:'Xoay Trở', mh:'Sức Khỏe Tâm Thần', events:'Ghi Chú', reminders:'Công Việc', admit:'Nhập Viện', done:'Xong', markDone:'Đánh Dấu Xong', markBed:'Xong Giường Này', pending:'Chưa Chép', showAll:'Hiện Tất Cả', keepOn:'Giữ Sáng Màn Hình', byBed:'Theo Giường', byMod:'Theo Mục', time:'Giờ', intact:'Nguyên Vẹn', red:'Đỏ Da', broken:'Trầy Loét', markIntact:'Tất Cả Nguyên Vẹn', b:'Bữa Sáng', l:'Bữa Trưa', d:'Bữa Tối', phrases:['Đã chăm sóc vệ sinh cá nhân', 'Đã tắm rửa & thay đồ', 'Vùng tỳ đè nguyên vẹn', 'Hỗ trợ ngồi ghế', 'Đã báo điều dưỡng (RN)', 'Đã cập nhật cho gia đình'], tasks:['Lấy Máu', 'Điện Tim (ECG)', 'Đo Lại Sinh Hiệu', 'Đường Huyết', 'Siêu Âm Bàng Quang', 'Kim Luồn'], admits:['Răng Giả', 'Mắt Kính', 'Máy Trợ Thính', 'Khung Tập Đi/Gậy', 'Điện Thoại/Sạc', 'Chìa Khóa', 'Tiền Mặt/Ví'] },
+  ar: { setup:'إعداد المناوبة', start:'بدء / تحديث المناوبة', summary:'الملخص', share:'مشاركة التطبيق مع زميل', endShift:'إنهاء المناوبة / مسح البيانات', obs:'العلامات الحيوية', bm:'سكر الدم', bp:'الضغط مستلقياً/واقفاً', fluid:'السوائل', bowel:'الإخراج', amy:'الجلد والضمادات', food:'التغذية', turn:'التقليب', mh:'الصحة النفسية', events:'ملاحظات', reminders:'المهام', admit:'مقتنيات الدخول', done:'تم', markDone:'تحديد كـ تم', markBed:'إتمام السرير', pending:'قيد الانتظار', showAll:'عرض الكل', keepOn:'إبقاء الشاشة مضاءة', byBed:'حسب السرير', byMod:'حسب القسم', time:'الوقت', intact:'سليم', red:'احمرار', broken:'متقرح', markIntact:'تحديد الكل سليم', b:'الإفطار', l:'الغداء', d:'العشاء', phrases:['تم تقديم الرعاية الشخصية', 'تم الاستحمام وتغيير الملابس', 'مناطق الضغط سليمة', 'تم الإجلاس على الكرسي', 'تم إبلاغ الممرض المسؤول', 'تم تحديث العائلة'], tasks:['سحب دم', 'تخطيط قلب (ECG)', 'إعادة العلامات الحيوية', 'فحص السكر', 'مسح المثانة', 'كانيولا'], admits:['طقم أسنان', 'نظارات', 'سماعة طبية', 'مشاية/عكاز', 'هاتف/شاحن', 'مفاتيح', 'نقود/محفظة'] },
+  tr: { setup:'Nöbet Kurulumu', start:'Nöbeti Başlat / Güncelle', summary:'Özet', share:'Arkadaşınla Paylaş', endShift:'Nöbeti Bitir / Verileri Sil', obs:'Vital Bulgular', bm:'Kan Şekeri', bp:'Yatarak/Ayakta KB', fluid:'Sıvı Изlemi', bowel:'Defekasyon', amy:'Cilt ve Pansuman', food:'Beslenme', turn:'Pozisyon', mh:'Ruh Sağlığı', events:'Notlar', reminders:'Görevler', admit:'Yatış Eşyaları', done:'Tamam', markDone:'Tamamlandı', markBed:'Yatak Tamam', pending:'Bekleyenler', showAll:'Tümünü Göster', keepOn:'Ekranı Açık Tut', byBed:'Yatağa Göre', byMod:'Modüle Göre', time:'Saat', intact:'Bütünlüğü Tam', red:'Kızarık', broken:'Bozulmuş', markIntact:'Tümü Sağlam', b:'Kahvaltı', l:'Öğle Yemeği', d:'Akşam Yemeği', phrases:['Kişisel bakım verildi', 'Yıkandı ve giydirildi', 'Bası bölgeleri sağlam', 'Sandalyeye mobilize edildi', 'Sorumlu hemşireye bildirildi', 'Aile bilgilendirildi'], tasks:['Kan Alma', 'EKG', 'Vital Tekrarı', 'Kan Şekeri', 'Mesane Ultrasonu', 'Branül'], admits:['Diş Protezi', 'Gözlük', 'İşitme Cihazı', 'Yürüteç/Baston', 'Telefon/Şarj', 'Anahtar', 'Nakit/Cüzdan'] },
+  fa: { setup:'تنظیمات شیفت', start:'شروع / بروزرسانی شیفت', summary:'خلاصه', share:'اشتراک‌گذاری با همکار', endShift:'پایان شیفت / پاک کردن اطلاعات', obs:'علائم حیاتی', bm:'قند خون', bp:'فشار خون خوابیده/ایستاده', fluid:'جذب و دفع', bowel:'اجابت مزاج', amy:'پوست و پانسمان', food:'رژیم غذایی', turn:'تغییر پوزیشن', mh:'سلامت روان', events:'گزارش پرستاری', reminders:'وظایف', admit:'وسایل بیمار', done:'ثبت شد', markDone:'علامت ثبت', markBed:'تکمیل تخت', pending:'فقط ثبت‌نشده‌ها', showAll:'نمایش همه', keepOn:'روشن ماندن صفحه', byBed:'بر اساس تخت', byMod:'بر اساس بخش', time:'زمان', intact:'سالم', red:'قرمزی', broken:'زخم', markIntact:'همه سالم', b:'صبحانه', l:'ناهار', d:'شام', phrases:['مراقبت شخصی انجام شد', 'شستشو و تعویض لباس انجام شد', 'نواحی تحت فشار سالم است', 'به صندلی منتقل شد', 'به پرستار مسئول اطلاع داده شد', 'به خانواده اطلاع داده شد'], tasks:['نمونه‌گیری خون', 'نوار قلب (ECG)', 'چک مجدد علائم حیاتی', 'تست قند خون', 'اسکن مثانه', 'آنژیوکت'], admits:['دندان مصنوعی', 'عینک', 'سمعک', 'واکر/عصا', 'موبایل/شارژر', 'کلید', 'وجه نقد/کیف پول'] },
+  sw: { setup:'Mpangilio wa Zamu', start:'Anza / Sasisha Zamu', summary:'Muhtasari', share:'Shiriki na Mwenzako', endShift:'Maliza Zamu / Futa Data', obs:'Dalili za Uhai', bm:'Sukari (Glucose)', bp:'BP Kulala/Kusimama', fluid:'Vimiminika', bowel:'Choo Kubwa', amy:'Ngozi na Vidonda', food:'Lishe', turn:'Kugeuza Mgonjwa', mh:'Afya ya Akili', events:'Maelezo', reminders:'Majukumu', admit:'Mali za Mgonjwa', done:'Imekamilika', markDone:'Weka Alama', markBed:'Kitanda Tayari', pending:'Zinazosubiri', showAll:'Onyesha Zote', keepOn:'Washa Skrini', byBed:'Kwa Kitanda', byMod:'Kwa Sehemu', time:'Muda', intact:'Salama', red:' imekuwa Nyekundu', broken:'Michubuko', markIntact:'Zote Salama', b:'Kifungua Kinywa', l:'Chakula cha Mchana', d:'Chakula cha Jioni', phrases:['Huduma ya usafi imetolewa', 'Ameogeshwa na kuvalishwa', 'Sehemu za mgandamizo zipo salama', 'Amehamishwa kwenye kiti', 'Muuguzi (RN) amefahamishwa', 'Familia imejulishwa'], tasks:['Vipimo vya Damu', 'ECG', 'Rudia Vipimo', 'Kipimo cha Sukari', 'Bladder Scan', 'Kanyula'], admits:['Meno ya Bandia', 'Miwani', 'Kifaa cha Kusikia', 'Kitembezi/Fimbo', 'Simu/Chaja', 'Funguo', 'Pesa/Pochi'] }
 };
 
 let defaultMods = [
@@ -314,7 +344,19 @@ document.addEventListener('visibilitychange', () => {
 try {
   if (localStorage.getItem('cdu_pro') === 'true') isPro = true;
   const sPrefs = localStorage.getItem('cdu_prefs');
-  if (sPrefs) prefs = { ...prefs, ...JSON.parse(sPrefs) };
+  if (sPrefs) {
+    prefs = { ...prefs, ...JSON.parse(sPrefs) };
+  } else {
+    const rawLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+    if (rawLang === 'zh-tw' || rawLang === 'zh-hk' || rawLang === 'zh-hant') {
+      prefs.lang = 'zh-tw';
+    } else {
+      let shortLang = rawLang.slice(0, 2);
+      if (shortLang === 'ms') shortLang = 'id';
+      if (shortLang === 'fi' && rawLang.startsWith('fil')) shortLang = 'tl';
+      if (i18n[shortLang]) prefs.lang = shortLang;
+    }
+  }
   
   const sLayouts = localStorage.getItem('cdu_layouts');
   if (sLayouts) savedLayouts = JSON.parse(sLayouts);
@@ -350,7 +392,14 @@ function t(key) {
   return dict[key] || i18n.en[key] || key;
 }
 
+function getLangList(listKey) {
+  const dict = i18n[prefs.lang] || i18n.en;
+  return dict[listKey] || i18n.en[listKey] || [];
+}
+
 function applyPrefsUI() {
+  document.documentElement.lang = prefs.lang;
+  document.documentElement.dir = rtlLangs.includes(prefs.lang) ? 'rtl' : 'ltr';
   document.getElementById('prefLang').value = prefs.lang;
   document.getElementById('prefTheme').value = isPro ? prefs.theme : 'teal';
   document.getElementById('prefBm').value = prefs.bmUnit;
@@ -359,6 +408,8 @@ function applyPrefsUI() {
   document.getElementById('lblSetupTitle').textContent = t('setup');
   document.getElementById('btnStartShift').textContent = t('start');
   document.getElementById('btnShare').textContent = t('share');
+  const endBtn = document.getElementById('btnEndShift');
+  if (endBtn) endBtn.textContent = t('endShift');
 
   if (isPro) {
     document.getElementById('proBox').classList.add('hidden');
@@ -452,10 +503,10 @@ function renderMods() {
     const locked = m.pro && !isPro;
     return `
     <div class="mod-item" style="${locked?'opacity:0.65;':''}">
-      <input type="checkbox" ${m.on && !locked?'checked':''} onchange="toggleMod(${i}, this)" style="width:20px; height:20px; margin-right:12px;">
+      <input type="checkbox" ${m.on && !locked?'checked':''} onchange="toggleMod(${i}, this)" style="width:20px; height:20px; margin-inline-end:12px;">
       <span style="flex:1; font-weight:600; color:var(--text);">${t(m.id)} ${locked?'<span class="pro-tag">PRO</span>':''}</span>
       <button class="btn btn-subtle btn-sm" style="padding:4px 10px;" onclick="moveMod(${i}, -1)">Up</button>
-      <button class="btn btn-subtle btn-sm" style="padding:4px 10px; margin-left:4px;" onclick="moveMod(${i}, 1)">Down</button>
+      <button class="btn btn-subtle btn-sm" style="padding:4px 10px; margin-inline-start:4px;" onclick="moveMod(${i}, 1)">Down</button>
     </div>`;
   }).join('');
 }
@@ -673,7 +724,7 @@ function rowUI(txt, b, s, i) {
   const done = (typeof item === 'object' && item !== null) ? !!item.done : !!db[b].td[`${s}_${i}`];
   if (hideDone && done) return '';
   const style = done ? 'opacity:0.4; filter:grayscale(100%);' : '';
-  const btn = `<button onclick="tRow('${b}','${s}',${i})" style="margin-left:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1.5px solid var(--input-border);'}">${done?'Done':'Mark Done'}</button>`;
+  const btn = `<button onclick="tRow('${b}','${s}',${i})" style="margin-inline-start:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1.5px solid var(--input-border);'}">${done?t('done'):t('markDone')}</button>`;
   return `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); transition:0.3s; ${style}"><div style="flex:1;">${txt}</div>${btn}</div>`;
 }
 
@@ -681,8 +732,16 @@ function flatUI(txt, b, s) {
   const done = !!db[b].td[s];
   if (hideDone && done) return '';
   const style = done ? 'opacity:0.4; filter:grayscale(100%);' : '';
-  const btn = `<button onclick="tFlat('${b}','${s}')" style="margin-left:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1.5px solid var(--input-border);'}">${done?'Done':'Mark Done'}</button>`;
+  const btn = `<button onclick="tFlat('${b}','${s}')" style="margin-inline-start:8px; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; flex:0 0 auto; ${done?'background:var(--green);color:#fff;border:none;':'background:transparent;color:var(--text-sub);border:1.5px solid var(--input-border);'}">${done?t('done'):t('markDone')}</button>`;
   return `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); transition:0.3s; ${style}"><div style="flex:1;">${txt}</div>${btn}</div>`;
+}
+
+function trSkin(val) {
+  if (!val) return '';
+  if (val === 'Fine' || val === 'Intact') return t('intact');
+  if (val === 'Red') return t('red');
+  if (val === 'Broken') return t('broken');
+  return val;
 }
 
 function getBedSectionHtml(b, secId) {
@@ -711,16 +770,16 @@ function getBedSectionHtml(b, secId) {
     if (!tIn && !tOut && !pIn && !pOut) return '';
     if (hideDone && !pIn && !pOut) return '';
     let fHtml = '';
-    if(!hideDone && (tIn||tOut)) fHtml += `<div style="opacity:0.5; margin-bottom:8px;">Transcribed: In <b>${tIn}ml</b> | Out <b>${tOut}ml</b> | Net <b>${tIn-tOut}ml</b></div>`;
-    if(pIn||pOut) fHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);"><span>Pending: In <b>${pIn}ml</b> | Out <b>${pOut}ml</b> | Net <b>${pIn-pOut}ml</b></span> <button onclick="tFluid('${b}')" style="padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:transparent; border:1.5px solid var(--input-border); color:var(--text-sub);">Mark Done</button></div>`;
-    fHtml += `<div>Shift Total: In <b>${tIn+pIn}ml</b> | Out <b>${tOut+pOut}ml</b> | Net <b>${(tIn+pIn)-(tOut+pOut)}ml</b></div>`;
+    if(!hideDone && (tIn||tOut)) fHtml += `<div style="opacity:0.5; margin-bottom:8px;">${t('done')}: In <b>${tIn}ml</b> | Out <b>${tOut}ml</b> | Net <b>${tIn-tOut}ml</b></div>`;
+    if(pIn||pOut) fHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);"><span>In <b>${pIn}ml</b> | Out <b>${pOut}ml</b> | Net <b>${pIn-pOut}ml</b></span> <button onclick="tFluid('${b}')" style="padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:transparent; border:1.5px solid var(--input-border); color:var(--text-sub);">${t('markDone')}</button></div>`;
+    fHtml += `<div>Total: In <b>${tIn+pIn}ml</b> | Out <b>${tOut+pOut}ml</b> | Net <b>${(tIn+pIn)-(tOut+pOut)}ml</b></div>`;
     return fHtml;
   }
   if (secId === 'food' && d.food) {
     let dietParts = [];
-    if (d.food.b) dietParts.push(`Breakfast: <b>${d.food.b}</b>`);
-    if (d.food.l) dietParts.push(`Lunch: <b>${d.food.l}</b>`);
-    if (d.food.d) dietParts.push(`Dinner: <b>${d.food.d}</b>`);
+    if (d.food.b) dietParts.push(`${t('b')}: <b>${d.food.b}</b>`);
+    if (d.food.l) dietParts.push(`${t('l')}: <b>${d.food.l}</b>`);
+    if (d.food.d) dietParts.push(`${t('d')}: <b>${d.food.d}</b>`);
     return dietParts.length > 0 ? flatUI(dietParts.join(' | '), b, 'food') : '';
   }
   if (secId === 'bowel' && d.bowel && d.bowel.length > 0) {
@@ -729,13 +788,13 @@ function getBedSectionHtml(b, secId) {
   if (secId === 'amy') {
     let out = '';
     let skinP = [];
-    if (d.amy && d.amy.sac) skinP.push(`Sacrum (<b>${d.amy.sac === 'Fine' ? 'Intact' : d.amy.sac}</b>)`);
-    if (d.amy && d.amy.groin) skinP.push(`Groin (<b>${d.amy.groin === 'Fine' ? 'Intact' : d.amy.groin}</b>)`);
-    if (d.amy && d.amy.heels) skinP.push(`Heels (<b>${d.amy.heels === 'Fine' ? 'Intact' : d.amy.heels}</b>)`);
-    if (d.amy && d.amy.elbows) skinP.push(`Elbows (<b>${d.amy.elbows === 'Fine' ? 'Intact' : d.amy.elbows}</b>)`);
+    if (d.amy && d.amy.sac) skinP.push(`Sacrum (<b>${trSkin(d.amy.sac)}</b>)`);
+    if (d.amy && d.amy.groin) skinP.push(`Groin (<b>${trSkin(d.amy.groin)}</b>)`);
+    if (d.amy && d.amy.heels) skinP.push(`Heels (<b>${trSkin(d.amy.heels)}</b>)`);
+    if (d.amy && d.amy.elbows) skinP.push(`Elbows (<b>${trSkin(d.amy.elbows)}</b>)`);
     if (skinP.length > 0) out += flatUI(skinP.join(', '), b, 'amy');
     if (d.dressings && d.dressings.length > 0) {
-      out += d.dressings.map((dr,i) => rowUI(`Dressing: <b>${dr.val || 'Unnamed'}</b> (Due: <b>${calcDue(dr.date)}</b>)`, b, 'dressings', i)).filter(Boolean).join('');
+      out += d.dressings.map((dr,i) => rowUI(`<b>${dr.val || 'Dressing'}</b> (Due: <b>${calcDue(dr.date)}</b>)`, b, 'dressings', i)).filter(Boolean).join('');
     }
     return out;
   }
@@ -745,9 +804,9 @@ function getBedSectionHtml(b, secId) {
   }
   if (secId === 'mh' && (d.mhLevel || (d.mh && d.mh.length > 0))) {
     let out = '';
-    if (d.mhLevel) out += flatUI(`Current Level: <b>${d.mhLevel}</b>`, b, 'mhLevel');
+    if (d.mhLevel) out += flatUI(`Level: <b>${d.mhLevel}</b>`, b, 'mhLevel');
     if (d.mh && d.mh.length > 0) {
-      out += d.mh.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - Mood: <b>${r.mood||'-'}</b> | Sleep: <b>${r.sleep||'-'}</b><br>Risks: <b>${r.risks||'None'}</b><br>Notes: <span style="white-space:pre-wrap;"><b>${r.note||'-'}</b></span>`, b, 'mh', i)).filter(Boolean).join('');
+      out += d.mh.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.mood||'-'}</b> | <b>${r.sleep||'-'}</b><br>Context: <b>${r.risks||'None'}</b><br><span style="white-space:pre-wrap;"><b>${r.note||'-'}</b></span>`, b, 'mh', i)).filter(Boolean).join('');
     }
     return out;
   }
@@ -755,7 +814,7 @@ function getBedSectionHtml(b, secId) {
     return d.events.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <span style="white-space:pre-wrap;"><b>${r.val||''}</b></span>`, b, 'events', i)).filter(Boolean).join('');
   }
   if (secId === 'reminders' && d.reminders && d.reminders.length > 0) {
-    return d.reminders.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.task||'Unnamed Task'}</b>: <b>${r.outcome||'Pending'}</b>`, b, 'reminders', i)).filter(Boolean).join('');
+    return d.reminders.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.task||'Task'}</b>: <b>${r.outcome||'Pending'}</b>`, b, 'reminders', i)).filter(Boolean).join('');
   }
   if (secId === 'admit' && d.admit && d.admit.length > 0) {
     return d.admit.map((r,i) => rowUI(`- <b>${r.val||''}</b>`, b, 'admit', i)).filter(Boolean).join('');
@@ -785,9 +844,9 @@ function renderContent() {
   if (showSummary) {
     let h = `
     <div class="summary-toolbar">
-      <button class="tool-btn ${summaryMode==='mod'?'active':''}" onclick="toggleSummaryMode()">View: ${summaryMode==='bed'?'By Bed':'By Module'}</button>
-      <button class="tool-btn ${hideDone?'active':''}" onclick="toggleHideDone()">${hideDone?'Pending Only':'Show All'}</button>
-      <button class="tool-btn ${keepAwake?'active':''}" onclick="toggleKeepAwake()">Keep Screen On</button>
+      <button class="tool-btn ${summaryMode==='mod'?'active':''}" onclick="toggleSummaryMode()">${summaryMode==='bed'?t('byBed'):t('byMod')}</button>
+      <button class="tool-btn ${hideDone?'active':''}" onclick="toggleHideDone()">${hideDone?t('pending'):t('showAll')}</button>
+      <button class="tool-btn ${keepAwake?'active':''}" onclick="toggleKeepAwake()">${t('keepOn')}</button>
     </div>`;
 
     if (summaryMode === 'bed') {
@@ -802,9 +861,9 @@ function renderContent() {
         h += `<div class="card">
           <h2 style="color:var(--text); margin-bottom:12px; font-size:1.2rem;">
             <span>${b}</span>
-            <button onclick="markBedDone('${b}')" style="padding:4px 10px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:var(--teal); color:#fff; border:none; font-weight:600;">Mark Bed Done</button>
+            <button onclick="markBedDone('${b}')" style="padding:4px 10px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:var(--teal); color:#fff; border:none; font-weight:600;">${t('markBed')}</button>
           </h2>
-          ${sectionsHtml || `<p style="color:var(--text-sub); font-size:0.9rem;">${hideDone ? 'All entries transcribed.' : 'No data recorded yet.'}</p>`}
+          ${sectionsHtml || `<p style="color:var(--text-sub); font-size:0.9rem;">-</p>`}
         </div>`;
       });
     } else {
@@ -824,7 +883,7 @@ function renderContent() {
         }
       });
       if (!h.includes('class="card"')) {
-        h += `<div class="card"><p style="color:var(--text-sub); font-size:0.9rem; text-align:center;">${hideDone ? 'All entries across all modules are transcribed.' : 'No data recorded yet.'}</p></div>`;
+        h += `<div class="card"><p style="color:var(--text-sub); font-size:0.9rem; text-align:center;">-</p></div>`;
       }
     }
 
@@ -836,7 +895,7 @@ function renderContent() {
   let h = '';
 
   if (curSec === 'obs') {
-    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('obs')">+ Add ${t('obs')}</button>`;
+    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('obs')">+ ${t('obs')}</button>`;
     d.obs.forEach((r, i) => {
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -844,7 +903,7 @@ function renderContent() {
           <button class="btn btn-danger btn-sm" onclick="rmArr('obs', ${i})">X</button>
         </div>
         <div class="row">
-          <div><label>Time</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','obs',${i},'time',this.value)"></div>
+          <div><label>${t('time')}</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','obs',${i},'time',this.value)"></div>
           <div><label>RR</label><input type="number" inputmode="numeric" min="0" max="60" value="${r.rr||''}" oninput="updateField('${curBed}','obs',${i},'rr',this.value)"></div>
           <div><label>SpO2%</label><input type="number" inputmode="numeric" min="0" max="100" value="${r.spo2||''}" oninput="updateField('${curBed}','obs',${i},'spo2',this.value)"></div>
         </div>
@@ -862,7 +921,7 @@ function renderContent() {
   }
 
   if (curSec === 'bm') {
-    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('bm')">+ Add ${t('bm')}</button>`;
+    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('bm')">+ ${t('bm')}</button>`;
     d.bm.forEach((r, i) => {
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -870,7 +929,7 @@ function renderContent() {
           <button class="btn btn-danger btn-sm" onclick="rmArr('bm', ${i})">X</button>
         </div>
         <div class="row">
-          <div><label>Time</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','bm',${i},'time',this.value)"></div>
+          <div><label>${t('time')}</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','bm',${i},'time',this.value)"></div>
           <div><label>Context</label><select onchange="updateField('${curBed}','bm',${i},'meal',this.value)">${opts(['','Pre-Breakfast','Post-Breakfast','Pre-Lunch','Post-Lunch','Pre-Dinner','Post-Dinner','Night'], r.meal)}</select></div>
           <div><label>${prefs.bmUnit}</label><input type="number" inputmode="decimal" step="0.1" value="${r.val||''}" oninput="updateField('${curBed}','bm',${i},'val',this.value)"></div>
         </div>
@@ -902,13 +961,13 @@ function renderContent() {
     h += `<div class="card" style="padding:12px; position:sticky; top:112px; z-index:90; box-shadow:0 4px 10px rgba(0,0,0,0.12);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px;">
         <div style="display:flex; align-items:center; gap:6px; flex:1;">
-          <label style="margin:0; white-space:nowrap;">Target:</label>
+          <label style="margin:0; white-space:nowrap;">${t('time')}:</label>
           <select id="quickFluidHour" style="padding:6px 8px; font-weight:700;" onchange="setFluidTarget(parseInt(this.value), activeFluidType)">
             ${times.map((tStr, idx) => `<option value="${idx}" ${idx===activeFluidIdx?'selected':''}>${tStr}</option>`).join('')}
           </select>
         </div>
         <button id="quickFluidTypeBtn" type="button" onclick="toggleFluidType()" style="padding:7px 12px; border-radius:6px; border:none; font-weight:700; font-size:0.82rem; cursor:pointer; color:#fff; background:${isOut?'var(--amber)':'var(--teal)'};">
-          Mode: ${isOut ? 'Output (Out)' : 'Intake (In)'}
+          ${isOut ? 'Output (Out)' : 'Intake (In)'}
         </button>
       </div>
       <div style="display:flex; gap:5px; align-items:center;">
@@ -933,36 +992,36 @@ function renderContent() {
   }
 
   if (curSec === 'bowel') {
-    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('bowel')">+ Add ${t('bowel')}</button>`;
+    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('bowel')">+ ${t('bowel')}</button>`;
     d.bowel.forEach((r, i) => {
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <b>Entry</b><button class="btn btn-danger btn-sm" onclick="rmArr('bowel', ${i})">X</button>
+          <b>${t('bowel')}</b><button class="btn btn-danger btn-sm" onclick="rmArr('bowel', ${i})">X</button>
         </div>
         <div class="row">
-          <div><label>Time</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','bowel',${i},'time',this.value)"></div>
+          <div><label>${t('time')}</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','bowel',${i},'time',this.value)"></div>
           <div><label>Amount</label><select onchange="updateField('${curBed}','bowel',${i},'amt',this.value)">${opts(['','Small','Medium','Large','Smear'], r.amt)}</select></div>
         </div>
         <div class="row">
-          <div><label>Type / Consistency</label><select onchange="updateField('${curBed}','bowel',${i},'type',this.value)">${opts(['','Type 1','Type 2','Type 3','Type 4','Type 5','Type 6','Type 7','BNO'], r.type)}</select></div>
+          <div><label>Type</label><select onchange="updateField('${curBed}','bowel',${i},'type',this.value)">${opts(['','Type 1','Type 2','Type 3','Type 4','Type 5','Type 6','Type 7','BNO'], r.type)}</select></div>
         </div>
       </div>`;
     });
   }
 
   if (curSec === 'amy') {
-    const sOpts = ['','Intact','Red','Broken'];
-    h += `<div class="card"><button class="btn btn-primary" style="margin-bottom:16px; background:var(--teal);" onclick="markSkinIntact()">Mark All Intact</button>
+    const sPairs = [['',''], ['Intact', t('intact')], ['Red', t('red')], ['Broken', t('broken')]];
+    h += `<div class="card"><button class="btn btn-primary" style="margin-bottom:16px; background:var(--teal);" onclick="markSkinIntact()">${t('markIntact')}</button>
     <div class="row">
-      <div><label>Sacrum</label><select onchange="updateField('${curBed}','amy',null,'sac',this.value)">${opts(sOpts, d.amy.sac === 'Fine' ? 'Intact' : d.amy.sac)}</select></div>
-      <div><label>Groin</label><select onchange="updateField('${curBed}','amy',null,'groin',this.value)">${opts(sOpts, d.amy.groin === 'Fine' ? 'Intact' : d.amy.groin)}</select></div>
+      <div><label>Sacrum</label><select onchange="updateField('${curBed}','amy',null,'sac',this.value)">${optsMap(sPairs, d.amy.sac === 'Fine' ? 'Intact' : d.amy.sac)}</select></div>
+      <div><label>Groin</label><select onchange="updateField('${curBed}','amy',null,'groin',this.value)">${optsMap(sPairs, d.amy.groin === 'Fine' ? 'Intact' : d.amy.groin)}</select></div>
     </div>
     <div class="row">
-      <div><label>Heels</label><select onchange="updateField('${curBed}','amy',null,'heels',this.value)">${opts(sOpts, d.amy.heels === 'Fine' ? 'Intact' : d.amy.heels)}</select></div>
-      <div><label>Elbows</label><select onchange="updateField('${curBed}','amy',null,'elbows',this.value)">${opts(sOpts, d.amy.elbows === 'Fine' ? 'Intact' : d.amy.elbows)}</select></div>
+      <div><label>Heels</label><select onchange="updateField('${curBed}','amy',null,'heels',this.value)">${optsMap(sPairs, d.amy.heels === 'Fine' ? 'Intact' : d.amy.heels)}</select></div>
+      <div><label>Elbows</label><select onchange="updateField('${curBed}','amy',null,'elbows',this.value)">${optsMap(sPairs, d.amy.elbows === 'Fine' ? 'Intact' : d.amy.elbows)}</select></div>
     </div>
     </div>
-    <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('dressings')">+ Add Dressing</button>`;
+    <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('dressings')">+ Dressing</button>`;
     d.dressings.forEach((r, i) => {
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -972,10 +1031,10 @@ function renderContent() {
           <div><label>Location / Notes</label><input type="text" placeholder="e.g. Sacrum" value="${r.val||''}" oninput="updateField('${curBed}','dressings',${i},'val',this.value)"></div>
         </div>
         <div class="row" style="align-items:center;">
-          <div><label>Written Date</label><input type="date" id="dress-date-${i}" value="${r.date||''}" onchange="updateField('${curBed}','dressings',${i},'date',this.value); refreshDressDue(${i})"></div>
+          <div><label>Date</label><input type="date" id="dress-date-${i}" value="${r.date||''}" onchange="updateField('${curBed}','dressings',${i},'date',this.value); refreshDressDue(${i})"></div>
           <div style="flex:0 0 auto;"><button class="btn btn-sm" style="border:1.5px solid var(--input-border);" onclick="setNoDateArr(${i})">Today</button></div>
         </div>
-        <div style="font-size:0.85rem; color:var(--text-sub);">Next Due (+3 days): <b id="dress-due-${i}">${calcDue(r.date)}</b></div>
+        <div style="font-size:0.85rem; color:var(--text-sub);">Due (+3d): <b id="dress-due-${i}">${calcDue(r.date)}</b></div>
       </div>`;
     });
   }
@@ -984,11 +1043,11 @@ function renderContent() {
     const fOps = ['100%','75%','50%','25%','0%','Refused','NBM'];
     const renderMealBtns = (mealKey, curVal) => fOps.map(op => `<button type="button" class="diet-btn ${curVal===op?'selected':''}" onclick="setDiet('${mealKey}','${op}')">${op}</button>`).join('');
     h += `<div class="card">
-      <label style="font-size:0.9rem; margin-bottom:8px;">Breakfast</label>
+      <label style="font-size:0.9rem; margin-bottom:8px;">${t('b')}</label>
       <div class="diet-grid">${renderMealBtns('b', d.food.b)}</div>
-      <label style="font-size:0.9rem; margin-bottom:8px;">Lunch</label>
+      <label style="font-size:0.9rem; margin-bottom:8px;">${t('l')}</label>
       <div class="diet-grid">${renderMealBtns('l', d.food.l)}</div>
-      <label style="font-size:0.9rem; margin-bottom:8px;">Dinner</label>
+      <label style="font-size:0.9rem; margin-bottom:8px;">${t('d')}</label>
       <div class="diet-grid" style="margin-bottom:0;">${renderMealBtns('d', d.food.d)}</div>
     </div>`;
   }
@@ -1006,70 +1065,72 @@ function renderContent() {
   }
   if (curSec === 'mh') {
     h += `<div class="card" style="border: 2px solid var(--teal);">
-            <label style="color:var(--teal); font-size:0.95rem;">Current Observation Level</label>
+            <label style="color:var(--teal); font-size:0.95rem;">Observation Level</label>
             <select style="font-weight:bold; font-size:1.05rem;" onchange="updateField('${curBed}', 'mhLevel', null, null, this.value)">
               ${opts(['', 'Level 1: General', 'Level 2: Intermittent', 'Level 3: Eyesight', "Level 4: Arm's Length"], d.mhLevel)}
             </select>
           </div>
-          <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('mh')">+ Add ${t('mh')}</button>`;
+          <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('mh')">+ ${t('mh')}</button>`;
     d.mh.forEach((r, i) => {
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <b>Entry</b><button class="btn btn-danger btn-sm" onclick="rmArr('mh', ${i})">X</button>
+          <b>${t('mh')}</b><button class="btn btn-danger btn-sm" onclick="rmArr('mh', ${i})">X</button>
         </div>
         <div class="row">
-          <div><label>Time</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','mh',${i},'time',this.value)"></div>
-          <div><label>Presentation</label><select onchange="updateField('${curBed}','mh',${i},'mood',this.value)">${opts(['','Calm','Anxious','Agitated','Low','Elevated','Hostile'], r.mood)}</select></div>
+          <div><label>${t('time')}</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','mh',${i},'time',this.value)"></div>
+          <div><label>Mood</label><select onchange="updateField('${curBed}','mh',${i},'mood',this.value)">${opts(['','Calm','Anxious','Agitated','Low','Elevated','Hostile'], r.mood)}</select></div>
         </div>
         <div class="row">
-          <div><label>Rest Status</label><select onchange="updateField('${curBed}','mh',${i},'sleep',this.value)">${opts(['','Asleep','Settled','Restless','Out of Bed'], r.sleep)}</select></div>
-          <div><label>Notes / Context</label><input type="text" placeholder="Details" value="${r.risks||''}" oninput="updateField('${curBed}','mh',${i},'risks',this.value)"></div>
+          <div><label>Rest</label><select onchange="updateField('${curBed}','mh',${i},'sleep',this.value)">${opts(['','Asleep','Settled','Restless','Out of Bed'], r.sleep)}</select></div>
+          <div><label>Context</label><input type="text" value="${r.risks||''}" oninput="updateField('${curBed}','mh',${i},'risks',this.value)"></div>
         </div>
         <div class="row" style="margin-bottom:0;">
-          <div><label>Notes</label><textarea class="auto-expand" rows="3" oninput="autoGrow(this); updateField('${curBed}','mh',${i},'note',this.value)">${r.note||''}</textarea></div>
+          <div><label>${t('events')}</label><textarea class="auto-expand" rows="3" oninput="autoGrow(this); updateField('${curBed}','mh',${i},'note',this.value)">${r.note||''}</textarea></div>
         </div>
       </div>`;
     });
   }
 
   if (curSec === 'events') {
-    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('events')">+ Add ${t('events')}</button>`;
+    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('events')">+ ${t('events')}</button>`;
+    const phrases = getLangList('phrases');
     d.events.forEach((r, i) => {
-      const chipsHtml = quickPhrases.map(p => `<button type="button" class="chip" onclick="insertPhrase(${i}, '${p}')">+ ${p}</button>`).join('');
+      const chipsHtml = phrases.map((p, pIdx) => `<button type="button" class="chip" onclick="insertPhrase(${i}, ${pIdx})">+ ${p}</button>`).join('');
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <label style="margin:0;">Time</label>
+            <label style="margin:0;">${t('time')}</label>
             <input type="time" style="width:125px; padding:6px 10px;" value="${r.time||''}" oninput="updateField('${curBed}','events',${i},'time',this.value)">
           </div>
           <button class="btn btn-danger btn-sm" onclick="rmArr('events', ${i})">X</button>
         </div>
         <div class="chip-row">${chipsHtml}</div>
-        <textarea id="note-ta-${i}" class="auto-expand" rows="3" placeholder="Enter shift notes..." oninput="autoGrow(this); updateField('${curBed}','events',${i},'val',this.value)">${r.val||''}</textarea>
+        <textarea id="note-ta-${i}" class="auto-expand" rows="3" placeholder="..." oninput="autoGrow(this); updateField('${curBed}','events',${i},'val',this.value)">${r.val||''}</textarea>
       </div>`;
     });
   }
 
   if (curSec === 'reminders') {
-    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('reminders')">+ Add ${t('reminders')}</button>`;
+    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('reminders')">+ ${t('reminders')}</button>`;
+    const tList = getLangList('tasks');
     d.reminders.forEach((r, i) => {
       let isOverdue = (!r.outcome && r.time && r.time <= tNow());
-      const tChips = taskChips.map(c => `<button type="button" class="chip" onclick="setTaskName(${i}, '${c}')">${c}</button>`).join('');
+      const tChips = tList.map((c, cIdx) => `<button type="button" class="chip" onclick="setTaskName(${i}, ${cIdx})">${c}</button>`).join('');
       h += `<div id="task-card-${i}" class="card ${isOverdue ? 'task-alert' : ''}">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <b>Task</b><button class="btn btn-danger btn-sm" onclick="rmArr('reminders', ${i})">X</button>
+          <b>${t('reminders')}</b><button class="btn btn-danger btn-sm" onclick="rmArr('reminders', ${i})">X</button>
         </div>
         <div class="chip-row">${tChips}</div>
         <div class="row">
-          <div><label>Due Time</label><select onchange="updateField('${curBed}','reminders',${i},'time',this.value); refreshTask(${i})">${generateTimeOpts(r.time)}</select></div>
-          <div><label>Task</label><input type="text" id="task-name-${i}" placeholder="e.g. Bloods, ECG" value="${r.task||''}" oninput="updateField('${curBed}','reminders',${i},'task',this.value)"></div>
+          <div><label>${t('time')}</label><select onchange="updateField('${curBed}','reminders',${i},'time',this.value); refreshTask(${i})">${generateTimeOpts(r.time)}</select></div>
+          <div><label>${t('reminders')}</label><input type="text" id="task-name-${i}" value="${r.task||''}" oninput="updateField('${curBed}','reminders',${i},'task',this.value)"></div>
         </div>
         <div class="row" style="margin-bottom:0;">
           <div>
             <label>Outcome</label>
             <div style="display:flex; gap:6px;">
-              <input type="text" id="task-out-${i}" placeholder="Pending / Done..." value="${r.outcome||''}" oninput="updateField('${curBed}','reminders',${i},'outcome',this.value); refreshTask(${i})">
-              <button type="button" class="btn btn-sm" style="background:var(--teal); color:#fff; flex:0 0 auto;" onclick="markTaskDone(${i})">Done</button>
+              <input type="text" id="task-out-${i}" value="${r.outcome||''}" oninput="updateField('${curBed}','reminders',${i},'outcome',this.value); refreshTask(${i})">
+              <button type="button" class="btn btn-sm" style="background:var(--teal); color:#fff; flex:0 0 auto;" onclick="markTaskDone(${i})">${t('done')}</button>
             </div>
           </div>
         </div>
@@ -1078,15 +1139,15 @@ function renderContent() {
   }
 
   if (curSec === 'admit') {
-    const aChips = admitChips.map(c => `<button type="button" class="chip" onclick="quickAddAdmit('${c}')">+ ${c}</button>`).join('');
+    const aList = getLangList('admits');
+    const aChips = aList.map((c, cIdx) => `<button type="button" class="chip" onclick="quickAddAdmit(${cIdx})">+ ${c}</button>`).join('');
     h += `<div class="card" style="padding:12px;">
-      <label style="margin-bottom:8px;">Quick Add Property Item</label>
       <div class="chip-row" style="margin-bottom:0;">${aChips}</div>
     </div>
-    <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('admit')">+ Add Custom Item</button>`;
+    <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('admit')">+ ${t('admit')}</button>`;
     d.admit.forEach((r, i) => {
       h += `<div class="card row" style="align-items:center;">
-        <input type="text" placeholder="Item description" value="${r.val||''}" oninput="updateField('${curBed}','admit',${i},'val',this.value)">
+        <input type="text" value="${r.val||''}" oninput="updateField('${curBed}','admit',${i},'val',this.value)">
         <button class="btn btn-danger btn-sm" style="flex:0 0 auto;" onclick="rmArr('admit', ${i})">X</button>
       </div>`;
     });
@@ -1115,7 +1176,8 @@ function setDiet(meal, val) {
   renderContent();
 }
 
-function setTaskName(idx, name) {
+function setTaskName(idx, chipIdx) {
+  const name = getLangList('tasks')[chipIdx] || '';
   db[curBed].reminders[idx].task = name;
   saveDB();
   const inp = document.getElementById(`task-name-${idx}`);
@@ -1123,22 +1185,25 @@ function setTaskName(idx, name) {
 }
 
 function markTaskDone(idx) {
-  db[curBed].reminders[idx].outcome = 'Done';
+  const doneTxt = t('done');
+  db[curBed].reminders[idx].outcome = doneTxt;
   saveDB();
   const inp = document.getElementById(`task-out-${idx}`);
-  if (inp) inp.value = 'Done';
+  if (inp) inp.value = doneTxt;
   refreshTask(idx);
 }
 
-function quickAddAdmit(item) {
+function quickAddAdmit(chipIdx) {
+  const item = getLangList('admits')[chipIdx] || '';
   db[curBed].admit.unshift({time: tNow(), val: item, done: false});
   saveDB();
   renderContent();
 }
 
-function insertPhrase(idx, phrase) {
+function insertPhrase(idx, phraseIdx) {
+  const phrase = getLangList('phrases')[phraseIdx] || '';
   const cur = (db[curBed].events[idx].val || '').trim();
-  const sep = cur.length > 0 ? (cur.endsWith('.') || cur.endsWith(',') ? ' ' : '. ') : '';
+  const sep = cur.length > 0 ? (cur.endsWith('.') || cur.endsWith(',') || cur.endsWith('。') ? ' ' : '. ') : '';
   const updated = cur + sep + phrase + '. ';
   db[curBed].events[idx].val = updated;
   saveDB();
@@ -1167,7 +1232,7 @@ function updateFluidTargetUI() {
   const btn = document.getElementById('quickFluidTypeBtn');
   if (btn) {
     btn.style.background = isOut ? 'var(--amber)' : 'var(--teal)';
-    btn.textContent = `Mode: ${isOut ? 'Output (Out)' : 'Intake (In)'}`;
+    btn.textContent = isOut ? 'Output (Out)' : 'Intake (In)';
   }
   document.querySelectorAll('.quick-fluid-btn').forEach(b => {
     if (b.textContent !== 'Clr') b.classList.toggle('out-mode', isOut);
@@ -1246,6 +1311,7 @@ function startAlertTimer() {
 }
 
 function opts(arr, sel) { return arr.map(a => `<option value="${a}" ${a===sel?'selected':''}>${a}</option>`).join(''); }
+function optsMap(pairs, sel) { return pairs.map(([val, lbl]) => `<option value="${val}" ${val===sel?'selected':''}>${lbl}</option>`).join(''); }
 function tNow() { const d = new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function addArr(k) { 
   const defaultTime = k === 'reminders' ? '' : tNow();
