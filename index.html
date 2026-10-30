@@ -45,10 +45,11 @@
   header h1 { font-size: 1.05rem; }
   .scroll-row { display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px; scrollbar-width: none; scroll-behavior: smooth; }
   .scroll-row::-webkit-scrollbar { display: none; }
-  .tab-btn { padding: 8px 14px; border-radius: 20px; font-weight: 600; border: 1.5px solid var(--input-border); background: var(--card); color: var(--text); font-size: 0.9rem; white-space: nowrap; cursor: pointer; }
+  .tab-btn { padding: 8px 14px; border-radius: 20px; font-weight: 600; border: 1.5px solid var(--input-border); background: var(--card); color: var(--text); font-size: 0.9rem; white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; }
   .tab-btn.active-bed { background: var(--teal); color: #fff; border-color: var(--teal); }
   .tab-btn.active-sec { background: var(--slate); color: #fff; border-color: var(--slate); }
   .tab-btn.active-summary { background: var(--amber); color: #fff; border-color: var(--amber); }
+  .alert-dot { display: inline-block; width: 8px; height: 8px; background: var(--red); border-radius: 50%; margin-inline-start: 6px; box-shadow: 0 0 0 2px var(--card); }
   .container { padding: 16px; max-width: 600px; margin: 0 auto; }
   .card { background: var(--card); padding: 16px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px; transition: 0.3s; }
   h2 { font-size: 1.1rem; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; color: var(--text); }
@@ -56,6 +57,7 @@
   .row > div { flex: 1; }
   label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-sub); margin-bottom: 4px; }
   input[type="text"], input[type="number"], input[type="time"], input[type="date"], select, textarea { width: 100%; padding: 10px; border: 1.5px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 0.95rem; }
+  input::placeholder, textarea::placeholder { text-transform: none; color: var(--text-sub); opacity: 0.7; }
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.35); }
   textarea.auto-expand { resize: none; overflow-y: hidden; line-height: 1.4; }
   .bp-pair { display: flex; align-items: center; gap: 4px; }
@@ -65,7 +67,7 @@
   .btn-danger { background: var(--red); color: #fff; }
   .btn-subtle { background: transparent; color: var(--text-sub); border: 1.5px solid var(--input-border); font-size: 0.9rem; padding: 10px; }
   .btn-sm { width: auto; padding: 6px 12px; font-size: 0.85rem; }
-  .pro-tag { background: var(--amber); color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
+  .pro-tag { background: var(--amber); color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-inline-start: 6px; vertical-align: middle; }
   .summary-sec { border-bottom: 1px dashed var(--border); padding-bottom: 12px; margin-bottom: 12px; font-size: 0.95rem; line-height: 1.5; }
   .summary-sec:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
   .summary-toolbar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 16px; }
@@ -82,6 +84,7 @@
   .diet-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
   .diet-btn { flex: 1 1 calc(25% - 6px); padding: 9px 4px; border-radius: 6px; border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--text); font-weight: 600; font-size: 0.85rem; cursor: pointer; text-align: center; }
   .diet-btn.selected { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .bed-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 8px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
   .footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); padding: 10px 16px; z-index: 100; text-align: center; }
   .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
   .switch input { opacity: 0; width: 0; height: 0; }
@@ -99,15 +102,15 @@
 <body>
 <div id="dimmer"></div>
 <div id="blurOverlay" class="hidden" onclick="toggleBlur(false)">
-  <h2 style="color:#fff; margin-bottom:8px;">Screen Hidden</h2>
-  <p style="font-size:0.95rem; opacity:0.85;">Tap anywhere to return to shift notes</p>
+  <h2 style="color:#fff; margin-bottom:8px;" id="lblHiddenTitle">Screen Hidden</h2>
+  <p style="font-size:0.95rem; opacity:0.85;" id="lblHiddenSub">Tap anywhere to return to shift notes</p>
 </div>
 
 <div id="setupView" class="setup-container">
   <div class="setup-top-bar">
     <div style="display:flex; align-items:center; gap:6px;">
       <h2 style="margin:0;" id="lblSetupTitle">Shift Setup</h2>
-      <span id="tierBadge" class="pro-tag" style="font-size:0.75rem; padding:3px 7px;">FREE TIER</span>
+      <span id="tierBadge" class="pro-tag" style="font-size:0.75rem; padding:3px 7px;">FREE</span>
     </div>
     <div class="lang-pill" title="Language">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--teal); flex-shrink:0;">
@@ -152,34 +155,43 @@
   <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:16px;" id="lblSetupSub">100% offline digital shift notepad. Data never leaves your device.</p>
 
   <div id="proBox" class="card" style="border: 2px solid var(--amber);">
-    <label style="color:var(--amber); font-size:0.9rem;">Unlock Care Digipad Pro (£9.99 Lifetime)</label>
-    <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:10px;">Unlocks unlimited beds, saved ward layouts, custom themes, task alarms and all specialist modules.</p>
+    <label style="color:var(--amber); font-size:0.9rem;" id="lblProTitle">Unlock Care Digipad Pro (£9.99 Lifetime)</label>
+    <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:10px;" id="lblProSub">Unlocks unlimited beds, saved ward layouts, custom themes, task alarms and all specialist modules.</p>
     <div style="display:flex; gap:8px; margin-bottom:8px;">
-      <input type="text" id="proKeyInput" placeholder="Enter licence key" style="flex:1;">
-      <button class="btn btn-primary" style="margin-top:0; width:auto; padding:0 16px; background:var(--amber);" onclick="unlockPro()">Unlock</button>
+      <input type="text" id="proKeyInput" placeholder="CDP-XXXX-XXXX" style="flex:1;">
+      <button class="btn btn-primary" style="margin-top:0; width:auto; padding:0 16px; background:var(--amber);" onclick="unlockPro()" id="btnUnlock">Unlock</button>
     </div>
-    <a href="https://yourwebsite.app/buy" target="_blank" style="font-size:0.8rem; color:var(--teal); font-weight:600; text-decoration:none;">Get a Lifetime Licence Key &rarr;</a>
+    <a href="https://yourwebsite.app/buy" target="_blank" style="font-size:0.8rem; color:var(--teal); font-weight:600; text-decoration:none;" id="lnkGetPro">Get a Lifetime Licence Key &rarr;</a>
   </div>
 
   <div class="card">
     <label style="margin-bottom:10px; font-size:0.9rem; color:var(--text);" id="lblPrefs">App Preferences & Units</label>
-    <div class="row" style="margin-bottom:0;">
+    <div class="row">
       <div>
-        <label id="lblTheme">Theme <span id="themeProTag" class="pro-tag">PRO</span></label>
+        <label><span id="lblThemeTxt">Theme</span> <span id="themeProTag" class="pro-tag">PRO</span></label>
         <select id="prefTheme" onchange="changeTheme(this.value)">
-          <option value="teal">Clinical Teal</option>
-          <option value="blue">Healthcare Blue</option>
-          <option value="green">Scrub Green</option>
-          <option value="berry">Plum & Berry</option>
-          <option value="slate">Midnight Slate</option>
-          <option value="coral">Warm Coral</option>
+          <option value="teal" id="optThTeal">Teal</option>
+          <option value="blue" id="optThBlue">Blue</option>
+          <option value="green" id="optThGreen">Green</option>
+          <option value="berry" id="optThBerry">Berry</option>
+          <option value="slate" id="optThSlate">Slate</option>
+          <option value="coral" id="optThCoral">Coral</option>
         </select>
       </div>
       <div>
+        <label id="lblShiftType">Shift Hours</label>
+        <select id="prefShift" onchange="savePrefs()">
+          <option value="day" id="optDayShift">Day (07:00)</option>
+          <option value="night" id="optNightShift">Night (19:00)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:0;">
+      <div>
         <label id="lblBmUnit">Glucose Unit</label>
         <select id="prefBm" onchange="savePrefs()">
-          <option value="mmol/L">mmol/L (UK/AU/CA)</option>
-          <option value="mg/dL">mg/dL (US/EU)</option>
+          <option value="mmol/L">mmol/L</option>
+          <option value="mg/dL">mg/dL</option>
         </select>
       </div>
       <div>
@@ -196,15 +208,15 @@
     <label><span id="lblSavedLayouts">Load Saved Layout</span> <span id="layoutProTag" class="pro-tag">PRO</span></label>
     <div style="display:flex; gap:8px;">
       <select id="savedLayoutsDropdown" style="flex:1;" onchange="loadLayout(this.value)"></select>
-      <button class="btn btn-danger" style="margin-top:0; width:auto; padding:0 15px;" onclick="deleteLayout()">Del</button>
+      <button class="btn btn-danger" style="margin-top:0; width:auto; padding:0 15px;" onclick="deleteLayout()" id="btnDelLayout">Del</button>
     </div>
   </div>
 
   <div class="card">
-    <label id="lblAddBed">1. Add Bed / Initials (Max 4 chars for privacy)</label>
+    <label id="lblAddBed">1. Add Bed / Initials (Max 4 chars)</label>
     <div style="display:flex; gap:8px;">
       <input type="text" id="newBedInput" maxlength="4" placeholder="e.g. B5B1" style="flex:1; text-transform:uppercase;">
-      <button class="btn btn-primary" style="margin-top:0; width:auto; padding:0 20px;" onclick="addNewBed()">Add</button>
+      <button class="btn btn-primary" style="margin-top:0; width:auto; padding:0 20px;" onclick="addNewBed()" id="btnAddBed">Add</button>
     </div>
   </div>
 
@@ -217,10 +229,10 @@
   </div>
 
   <div class="card">
-    <label><span id="lblSaveLayout">3. Save Layout As (Optional)</span> <span id="saveProTag" class="pro-tag">PRO</span></label>
+    <label><span id="lblSaveLayout">3. Save Layout As</span> <span id="saveProTag" class="pro-tag">PRO</span></label>
     <div style="display:flex; gap:8px;">
       <input type="text" id="layoutNameInput" placeholder="e.g. Bay 1" style="flex:1;">
-      <button class="btn btn-primary" style="margin-top:0; width:auto; padding:0 15px;" onclick="saveLayout()">Save</button>
+      <button class="btn btn-primary" style="margin-top:0; width:auto; padding:0 15px;" onclick="saveLayout()" id="btnSaveLayout">Save</button>
     </div>
   </div>
 
@@ -233,13 +245,12 @@
     <header>
       <div style="display:flex; align-items:center; gap:6px;">
         <h1>Care Digipad</h1>
-        <button class="btn-sm" style="background:var(--teal); color:#fff; border:none; border-radius:4px; padding:4px 8px; font-weight:bold; cursor:pointer;" onclick="editBeds()">Edit</button>
-        <button class="btn-sm" style="background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:4px; padding:4px 8px; font-weight:bold; cursor:pointer;" onclick="toggleBlur(true)">Hide</button>
+        <button class="btn-sm" id="btnHdrEdit" style="background:var(--teal); color:#fff; border:none; border-radius:4px; padding:4px 8px; font-weight:bold; cursor:pointer;" onclick="editBeds()">Edit</button>
+        <button class="btn-sm" id="btnHdrHide" style="background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:4px; padding:4px 8px; font-weight:bold; cursor:pointer;" onclick="toggleBlur(true)">Hide</button>
       </div>
       <div class="shift-toggle">
-        <span>Day</span>
-        <label class="switch"><input type="checkbox" id="shiftToggle" onchange="toggleNight(this.checked)"><span class="slider"></span></label>
-        <span>Night</span>
+        <span id="lblHdrDark">Dark</span>
+        <label class="switch"><input type="checkbox" id="darkToggle" onchange="toggleDark(this.checked)"><span class="slider"></span></label>
       </div>
     </header>
     <div class="scroll-row" id="bedTabs" style="background:var(--card);"></div>
@@ -252,7 +263,7 @@
 </div>
 <script>
 let isPro = false;
-let prefs = { lang: 'en', theme: 'teal', bmUnit: 'mmol/L', tempUnit: '°C' };
+let prefs = { lang: 'en', theme: 'teal', bmUnit: 'mmol/L', tempUnit: '°C', shift: 'day', dark: false };
 let savedLayouts = {};
 let currentLayoutBeds = [];
 let alloc = [];
@@ -266,43 +277,93 @@ let activeFluidIdx = null;
 let activeFluidType = 'i';
 let curBed = '';
 let curSec = 'obs';
-let isNight = false;
 let alertTimerId = null;
 
 const rtlLangs = ['ar', 'ur', 'fa'];
 
-const i18n = {
-  en: { setup:'Shift Setup', start:'Start / Update Shift', summary:'Summary', share:'Share Care Digipad with a Colleague', endShift:'End Shift / Clear Data', obs:'Vitals', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Bowels', amy:'Skin & Dressings', food:'Diet', turn:'Turning', mh:'Mental Health', events:'Notes', reminders:'Tasks', admit:'Admissions', done:'Done', markDone:'Mark Done', markBed:'Mark Bed Done', pending:'Pending Only', showAll:'Show All', keepOn:'Keep Screen On', byBed:'By Bed', byMod:'By Module', time:'Time', intact:'Intact', red:'Red', broken:'Broken', markIntact:'Mark All Intact', b:'Breakfast', l:'Lunch', d:'Dinner', phrases:['Personal care given', 'Washed & dressed', 'Pressure areas intact', 'Mobilised to chair', 'Escalated to RN', 'Family updated'], tasks:['Bloods', 'ECG', 'Repeat Obs', 'BM', 'Bladder Scan', 'Cannula'], admits:['Dentures', 'Glasses', 'Hearing Aid', 'Frame/Stick', 'Phone/Charger', 'Keys', 'Cash/Wallet'] },
-  es: { setup:'Configuración de Turno', start:'Iniciar / Actualizar Turno', summary:'Resumen', share:'Compartir con un Colega', endShift:'Finalizar Turno / Borrar', obs:'Signos Vitales', bm:'Glucosa', bp:'PA Acostado/De Pie', fluid:'Líquidos', bowel:'Deposiciones', amy:'Piel y Apósito', food:'Dieta', turn:'Cambios Posturales', mh:'Salud Mental', events:'Notas', reminders:'Tareas', admit:'Admisiones', done:'Hecho', markDone:'Marcar Hecho', markBed:'Cama Hecha', pending:'Solo Pendientes', showAll:'Ver Todo', keepOn:'Pantalla Activa', byBed:'Por Cama', byMod:'Por Módulo', time:'Hora', intact:'Íntegra', red:'Enrojecida', broken:'Lesionada', markIntact:'Marcar Todo Íntegro', b:'Desayuno', l:'Almuerzo', d:'Cena', phrases:['Aseo personal realizado', 'Lavado y vestido', 'Zonas de presión íntegras', 'Movilizado a sillón', 'Informado a enfermera', 'Familia informada'], tasks:['Analítica', 'ECG', 'Repetir Constantes', 'Glucemia', 'Ecografía Vesical', 'Vía Venosa'], admits:['Prótesis Dental', 'Gafas', 'Audífono', 'Andador/Bastón', 'Móvil/Cargador', 'Llaves', 'Efectivo/Cartera'] },
-  fr: { setup:'Configuration de Garde', start:'Démarrer / Mettre à Jour', summary:'Résumé', share:'Partager avec un Collègue', endShift:'Fin de Garde / Effacer', obs:'Constantes', bm:'Glycémie', bp:'TA Couché/Debout', fluid:'Bilan Hydrique', bowel:'Selles', amy:'Peau et Pansements', food:'Alimentation', turn:'Positionnement', mh:'Santé Mentale', events:'Notes', reminders:'Tâches', admit:'Admissions', done:'Fait', markDone:'Marquer Fait', markBed:'Lit Terminé', pending:'En Attente', showAll:'Tout Voir', keepOn:'Écran Allumé', byBed:'Par Lit', byMod:'Par Module', time:'Heure', intact:'Intacte', red:'Rougeur', broken:'Lésée', markIntact:'Tout Marquer Intact', b:'Petit-déjeuner', l:'Déjeuner', d:'Dîner', phrases:['Soins d’hygiène effectués', 'Lavé et habillé', 'Points d’appui intacts', 'Installé au fauteuil', 'Transmis à l’IDE', 'Famille informée'], tasks:['Bilan Sanguin', 'ECG', 'Contrôle Constantes', 'Glycémie', 'Bladder Scan', 'Cathéter'], admits:['Prothèse Dentaire', 'Lunettes', 'Appareil Auditif', 'Déambulateur/Canne', 'Téléphone/Chargeur', 'Clés', 'Espèces/Portefeuille'] },
-  de: { setup:'Schicht-Einstellungen', start:'Schicht Starten / Aktualisieren', summary:'Übersicht', share:'Mit Kollegen Teilen', endShift:'Schicht Beenden / Löschen', obs:'Vitalzeichen', bm:'Blutzucker', bp:'RR Liegen/Stehen', fluid:'Bilanzierung', bowel:'Stuhlgang', amy:'Haut & Verbände', food:'Ernährung', turn:'Lagerung', mh:'Psychische Gesundheit', events:'Notizen', reminders:'Aufgaben', admit:'Aufnahme', done:'Erledigt', markDone:'Als Erledigt', markBed:'Bett Erledigt', pending:'Nur Offene', showAll:'Alle Zeigen', keepOn:'Display An', byBed:'Nach Bett', byMod:'Nach Modul', time:'Zeit', intact:'Intakt', red:'Gerötet', broken:'Offen', markIntact:'Alle Intakt', b:'Frühstück', l:'Mittagessen', d:'Abendessen', phrases:['Körperpflege durchgeführt', 'Gewaschen & angekleidet', 'Druckstellen intakt', 'In den Stuhl mobilisiert', 'An Pflegefachkraft gemeldet', 'Angehörige informiert'], tasks:['Blutentnahme', 'EKG', 'Vitalzeichen-Kontrolle', 'BZ-Kontrolle', 'Blasenscan', 'Venenverweilkanüle'], admits:['Zahnprothese', 'Brille', 'Hörgerät', 'Rollator/Gehstock', 'Handy/Ladegerät', 'Schlüssel', 'Bargeld/Geldbörse'] },
-  pt: { setup:'Configuração de Plantão', start:'Iniciar / Atualizar Plantão', summary:'Resumo', share:'Compartilhar com Colega', endShift:'Encerrar Plantão / Limpar', obs:'Sinais Vitais', bm:'Glicemia', bp:'PA Deitado/Em Pé', fluid:'Balanço Hídrico', bowel:'Evacuação', amy:'Pele e Curativos', food:'Dieta', turn:'Mudança de Decúbito', mh:'Saúde Mental', events:'Notas', reminders:'Tarefas', admit:'Admissão', done:'Feito', markDone:'Marcar Feito', markBed:'Leito Concluído', pending:'Pendentes', showAll:'Mostrar Tudo', keepOn:'Manter Tela', byBed:'Por Leito', byMod:'Por Módulo', time:'Hora', intact:'Íntegra', red:'Hiperemiada', broken:'Lesionada', markIntact:'Marcar Tudo Íntegro', b:'Peq. Almoço', l:'Almoço', d:'Jantar', phrases:['Cuidados de higiene realizados', 'Banho e troca realizados', 'Zonas de pressão íntegras', 'Mobilizado para poltrona', 'Comunicado ao enfermeiro', 'Família atualizada'], tasks:['Exames de Sangue', 'ECG', 'Repetir Sinais Vitais', 'Glicemia Capilar', 'Bladder Scan', 'Acesso Venoso'], admits:['Prótese Dentária', 'Óculos', 'Aparelho Auditivo', 'Andador/Bengala', 'Telemóvel/Carregador', 'Chaves', 'Dinheiro/Carteira'] },
-  it: { setup:'Impostazione Turno', start:'Inizia / Aggiorna Turno', summary:'Riepilogo', share:'Condividi con un Collega', endShift:'Fine Turno / Cancella', obs:'Parametri Vitali', bm:'Glicemia', bp:'PA Supino/Ortostatica', fluid:'Bilancio Idrico', bowel:'Alvo', amy:'Cute e Medicazioni', food:'Vitto', turn:'Mobilizzazione', mh:'Salute Mentale', events:'Note', reminders:'Compiti', admit:'Accettazione', done:'Fatto', markDone:'Segna Fatto', markBed:'Letto Completato', pending:'In Sospeso', showAll:'Mostra Tutto', keepOn:'Schermo Acceso', byBed:'Per Letto', byMod:'Per Modulo', time:'Ora', intact:'Integra', red:'Arrossata', broken:'Lesionata', markIntact:'Segna Tutto Integro', b:'Colazione', l:'Pranzo', d:'Cena', phrases:['Cure igieniche effettuate', 'Lavato e vestito', 'Zone di pressione integre', 'Mobilizzato in poltrona', 'Segnalato all’infermiere', 'Famiglia aggiornata'], tasks:['Prelievo Ematico', 'ECG', 'Controllo Parametri', 'Glicemia', 'Bladder Scan', 'CVP/Cannula'], admits:['Protesi Dentaria', 'Occhiali', 'Apparecchio Acustico', 'Deambulatore/Bastone', 'Telefono/Caricabatterie', 'Chiavi', 'Contanti/Portafoglio'] },
-  nl: { setup:'Dienst Instellen', start:'Start / Update Dienst', summary:'Overzicht', share:'Deel met een Collega', endShift:'Dienst Beëindigen / Wissen', obs:'Vitale Functies', bm:'Glucose', bp:'RR Liggend/Staand', fluid:'Vochtbalans', bowel:'Defecatie', amy:'Huid & Wondzorg', food:'Voeding', turn:'Wisselligging', mh:'Mentale Gezondheid', events:'Notities', reminders:'Taken', admit:'Opname', done:'Klaar', markDone:'Markeer Klaar', markBed:'Bed Klaar', pending:'Alleen Open', showAll:'Toon Alles', keepOn:'Scherm Aan', byBed:'Per Bed', byMod:'Per Module', time:'Tijd', intact:'Intact', red:'Rood', broken:'Defect', markIntact:'Alles Intact', b:'Ontbijt', l:'Lunch', d:'Avondeten', phrases:['Persoonlijke verzorging gegeven', 'Gewassen en aangekleed', 'Drukplekken intact', 'Gemobiliseerd naar stoel', 'Gemeld aan verpleegkundige', 'Familie geïnformeerd'], tasks:['Bloedafname', 'ECG', 'Herhaal Controles', 'Bloedsuiker', 'Bladderscan', 'Infuus/Canule'], admits:['Gebitsprothese', 'Bril', 'Gehoorapparaat', 'Rollator/Wandelstok', 'Telefoon/Oplader', 'Sleutels', 'Contanten/Portemonnee'] },
-  sv: { setup:'Passinställning', start:'Starta / Uppdatera Pass', summary:'Översikt', share:'Dela med en Kollega', endShift:'Avsluta Pass / Rensa', obs:'Vitalparametrar', bm:'Blodsocker', bp:'BT Liggande/Stående', fluid:'VätskeLista', bowel:'Avföring', amy:'Hud & Förband', food:'Kost', turn:'Vändschema', mh:'Psykisk Hälsa', events:'Anteckningar', reminders:'Uppgifter', admit:'Inskrivning', done:'Klar', markDone:'Markera Klar', markBed:'Plats Klar', pending:'Endast Kvar', showAll:'Visa Alla', keepOn:'Håll Skärm På', byBed:'Per Plats', byMod:'Per Modul', time:'Tid', intact:'Hel', red:'Rodnad', broken:'Skadad', markIntact:'Markera Alla Hela', b:'Frukost', l:'Lunch', d:'Middag', phrases:['Personlig omvårdnad utförd', 'Tvättad och påklädd', 'Tryckytor intakta', 'Mobiliserad till fåtölj', 'Rapporterat till SSK', 'Närstående informerade'], tasks:['Blodprov', 'EKG', 'Nya Kontroller', 'B-Glukos', 'BladderScan', 'PVK'], admits:['Tandprotes', 'Glasögon', 'Hörapparat', 'Rollator/Käpp', 'Mobil/Laddare', 'Nycklar', 'Kontanter/Plånbok'] },
-  pl: { setup:'Ustawienia Dyżuru', start:'Rozpocznij / Aktualizuj', summary:'Podsumowanie', share:'Udostępnij Współpracownikowi', endShift:'Zakończ Dyżur / Wyczyść', obs:'Parametry', bm:'Glikemia', bp:'RR Leżąc/Stojąc', fluid:'Bilans Płynów', bowel:'Wypróżnienia', amy:'Skóra i Opatrunki', food:'Dieta', turn:'Zmiana Pozycji', mh:'Stan Psychiczny', events:'Notatki', reminders:'Zadania', admit:'Przyjęcie', done:'Gotowe', markDone:'Oznacz', markBed:'Łóżko Gotowe', pending:'Oczekujące', showAll:'Pokaż Wszystko', keepOn:'Ekran Włączony', byBed:'Wg Łóżka', byMod:'Wg Modułu', time:'Czas', intact:'Czysta', red:'Zaczerwieniona', broken:'Uszkodzona', markIntact:'Wszystko Czyste', b:'Śniadanie', l:'Obiad', d:'Kolacja', phrases:['Wykonano toaletę ciała', 'Umyto i przebrano', 'Miejsca ucisku bez zmian', 'Posadzono w fotelu', 'Zgłoszono pielęgniarce', 'Poinformowano rodzinę'], tasks:['Badania Krwi', 'EKG', 'Kontrola Parametrów', 'Glikemia', 'USG Pęcherza', 'Wenflon'], admits:['Proteza Zębowa', 'Okulary', 'Aparat Słuchowy', 'Chodzik/Laska', 'Telefon/Ładowarka', 'Klucze', 'Gotówka/Portfel'] },
-  ro: { setup:'Configurare Tură', start:'Începe / Actualizează Tura', summary:'Rezumat', share:'Distribuie unui Coleg', endShift:'Termină Tura / Șterge', obs:'Funcții Vitale', bm:'Glicemie', bp:'TA Culcat/Ortostatism', fluid:'Bilanț Hidric', bowel:'Scaun', amy:'Piele și Pansamente', food:'Alimentație', turn:'Mobilizare', mh:'Sănătate Mintală', events:'Note', reminders:'Sarcini', admit:'Internare', done:'Gata', markDone:'Marchează', markBed:'Pat Finalizat', pending:'În Așteptare', showAll:'Arată Tot', keepOn:'Ecran Aprins', byBed:'După Pat', byMod:'După Modul', time:'Ora', intact:'Integră', red:'Eritem', broken:'Leziune', markIntact:'Totul Integru', b:'Mic Dejun', l:'Prânz', d:'Cină', phrases:['Igienă personală efectuată', 'Spălat și schimbat', 'Zone de presiune integre', 'Mobilizat în fotoliu', 'Anunțat asistentul medical', 'Familie informată'], tasks:['Analize Sânge', 'EKG', 'Repetare Funcții Vitale', 'Glicemie', 'Scanare Vezicală', 'Branulă'], admits:['Proteză Dentară', 'Ochelari', 'Aparat Auditiv', 'Cadru/Baston', 'Telefon/Încărcător', 'Chei', 'Bani/Portofel'] },
-  uk: { setup:'Налаштування Зміни', start:'Почати / Оновити Зміну', summary:'Підсумок', share:'Поділитися з Колегою', endShift:'Завершити Зміну / Очистити', obs:'Показники', bm:'Глюкоза', bp:'АТ Лежачи/Стоячи', fluid:'Гідробаланс', bowel:'Випорожнення', amy:'Шкіра та Пов’язки', food:'Харчування', turn:'Повороти', mh:'Психічний Стан', events:'Нотатки', reminders:'Завдання', admit:'Госпіталізація', done:'Готово', markDone:'Відмітити', markBed:'Ліжко Готово', pending:'Неперенесені', showAll:'Показати Все', keepOn:'Екран Увімк.', byBed:'За Ліжком', byMod:'За Модулем', time:'Час', intact:'Ціла', red:'Почервоніння', broken:'Пошкоджена', markIntact:'Все Ціле', b:'Сніданок', l:'Обід', d:'Вечеря', phrases:['Проведено особисту гігієну', 'Вмитий та переодягнений', 'Місця тиску неушкоджені', 'Пересаджено в крісло', 'Повідомлено медсестру', 'Родину поінформовано'], tasks:['Аналіз Крові', 'ЕКГ', 'Повторити Показники', 'Глюкоза Крові', 'УЗД Сечового', 'Катетер'], admits:['Зубні Протези', 'Окуляри', 'Слуховий Апарат', 'Ходунки/Тростина', 'Телефон/Зарядка', 'Ключі', 'Готівка/Гаманець'] },
-  ru: { setup:'Настройка Смены', start:'Начать / Обновить Смену', summary:'Сводка', share:'Поделиться с Коллегой', endShift:'Завершить Смену / Очистить', obs:'Показатели', bm:'Глюкоза', bp:'АД Лежа/Стоя', fluid:'Гидробаланс', bowel:'Стул', amy:'Кожа и Повязки', food:'Питание', turn:'Повороты', mh:'Психический Статус', events:'Заметки', reminders:'Задачи', admit:'Поступление', done:'Готово', markDone:'Отметить', markBed:'Койка Готова', pending:'Ожидающие', showAll:'Показать Все', keepOn:'Экран Вкл.', byBed:'По Койкам', byMod:'По Модулям', time:'Время', intact:'Чистая', red:'Гиперемия', broken:'Повреждена', markIntact:'Все Чисто', b:'Завтрак', l:'Обед', d:'Ужин', phrases:['Гигиенический уход выполнен', 'Умыт и переодет', 'Точки давления без изменений', 'Пересажен в кресло', 'Доложено медсестре', 'Родственники информированы'], tasks:['Забор Крови', 'ЭКГ', 'Повтор Показателей', 'Глюкометрия', 'УЗИ Мочевого', 'Канюля'], admits:['Зубные Протезы', 'Очки', 'Слуховой Аппарат', 'Ходунки/Трость', 'Телефон/Зарядка', 'Ключи', 'Наличные/Кошелек'] },
-  el: { setup:'Ρύθμιση Βάρδιας', start:'Έναρξη / Ενημέρωση Βάρδιας', summary:'Σύνοψη', share:'Κοινοποίηση σε Συνάδελφο', endShift:'Τέλος Βάρδιας / Διαγραφή', obs:'Ζωτικά', bm:'Γλυκόζη', bp:'ΑΠ Ύπτια/Όρθια', fluid:'Ισοζύγιο Υγρών', bowel:'Κενώσεις', amy:'Δέρμα & Επιθέματα', food:'Δίαιτα', turn:'Αλλαγή Θέσης', mh:'Ψυχική Υγεία', events:'Σημειώσεις', reminders:'Εργασίες', admit:'Εισαγωγή', done:'Έγινε', markDone:'Σήμανση', markBed:'Κλίνη Έτοιμη', pending:'Εκκρεμή', showAll:'Όλα', keepOn:'Οθόνη Ενεργή', byBed:'Ανά Κλίνη', byMod:'Ανά Ενότητα', time:'Ώρα', intact:'Ακέραιο', red:'Ερυθρότητα', broken:'Λύση Δέρματος', markIntact:'Όλα Ακέραια', b:'Πρωινό', l:'Μεσημεριανό', d:'Βραδινό', phrases:['δόθηκε ατομική φροντίδα', 'Πλύθηκε και ντύθηκε', 'Σημεία πίεσης ακέραια', 'Κινητοποιήθηκε σε καρέκλα', 'Ενημερώθηκε νοσηλευτής', 'Ενημερώθηκε η οικογένεια'], tasks:['Αιμοληψία', 'ΗΚΓ', 'Επανάληψη Ζωτικών', 'Σάκχαρο', 'Υπέρηχος Κύστης', 'Φλεβοκαθετήρας'], admits:['Οδοντοστοιχία', 'Γυαλιά', 'Ακουστικό', 'Πι/Μπαστούνι', 'Τηλέφωνο/Φορτιστής', 'Κλειδιά', 'Μετρητά/Πορτοφόλι'] },
-  hi: { setup:'शिफ्ट सेटअप', start:'शिफ्ट शुरू / अपडेट करें', summary:'सारांश', share:'सहकर्मी के साथ साझा करें', endShift:'शिफ्ट समाप्त / डेटा मिटाएं', obs:'वाइटल्स', bm:'ग्लूकोज', bp:'L/S बीपी', fluid:'फ्लूइड', bowel:'मल त्याग', amy:'त्वचा और ड्रेसिंग', food:'आहार', turn:'करवट', mh:'मानसिक स्वास्थ्य', events:'नोट्स', reminders:'कार्य', admit:'भर्ती', done:'पूर्ण', markDone:'पूर्ण करें', markBed:'बेड पूर्ण', pending:'केवल बाकी', showAll:'सभी दिखाएं', keepOn:'स्क्रीन ऑन रखें', byBed:'बेड अनुसार', byMod:'मॉड्यूल अनुसार', time:'समय', intact:'सुरक्षित', red:'लाल', broken:'घाव/टूटी', markIntact:'सभी सुरक्षित', b:'नाश्ता', l:'दोपहर का भोजन', d:'रात का भोजन', phrases:['व्यक्तिगत देखभाल दी गई', 'स्नान और कपड़े बदले गए', 'दबाव वाले हिस्से सुरक्षित हैं', 'कुर्सी पर बैठाया गया', 'नर्स (RN) को सूचित किया', 'परिवार को जानकारी दी गई'], tasks:['ब्लड टेस्ट', 'ECG', 'दोबारा वाइटल्स', 'शुगर जांच (BM)', 'ब्लैडर स्कैन', 'कैनुला'], admits:['नकली दांत', 'चश्मा', 'हियरिंग एड', 'वॉकर/छड़ी', 'फोन/चार्जर', 'चाबियां', 'नकद/पर्स'] },
-  bn: { setup:'শিফট সেটআপ', start:'শিফট শুরু / আপডেট', summary:'সারাংশ', share:'সহকর্মীর সাথে শেয়ার করুন', endShift:'শিফট শেষ / মুছুন', obs:'ভাইটালস', bm:'গ্লুকোজ', bp:'শোয়া/দাঁড়ানো বিপি', fluid:'ফ্লুইড', bowel:'মলত্যাগ', amy:'ত্বক ও ড্রেসিং', food:'খাবার', turn:'পাশ ফেরানো', mh:'মানসিক স্বাস্থ্য', events:'নোট', reminders:'কাজ', admit:'ভর্তি', done:'সম্পন্ন', markDone:'সম্পন্ন করুন', markBed:'বেড সম্পন্ন', pending:'বাকিগুলো', showAll:'সব দেখান', keepOn:'স্ক্রিন চালু', byBed:'বেড অনুযায়ী', byMod:'মডিউল অনুযায়ী', time:'সময়', intact:'অক্ষত', red:'লালচে', broken:'ক্ষত', markIntact:'সব অক্ষত', b:'সকালের নাস্তা', l:'দুপুরের খাবার', d:'রাতের খাবার', phrases:['ব্যক্তিগত পরিচর্যা দেওয়া হয়েছে', 'পরিষ্কার ও পোশাক পরিবর্তন করা হয়েছে', 'চাপের স্থানগুলো অক্ষত আছে', 'চেয়ারে বসানো হয়েছে', 'নার্সকে (RN) জানানো হয়েছে', 'পরিবারকে আপডেট দেওয়া হয়েছে'], tasks:['রক্ত পরীক্ষা', 'ইসিজি (ECG)', 'পুনরায় ভাইটালস', 'ব্লাড সুগার', 'ব্লাডার স্ক্যান', 'ক্যানুলা'], admits:['নকল দাঁত', 'চশমা', 'হিয়ারিং এইড', 'ওয়াকার/লাঠি', 'ফোন/চার্জার', 'চাবি', 'নগদ টাকা/মানিব্যাগ'] },
-  pa: { setup:'ਸ਼ਿਫਟ ਸੈੱਟਅੱਪ', start:'ਸ਼ਿਫਟ ਸ਼ੁਰੂ / ਅਪਡੇਟ ਕਰੋ', summary:'ਸੰਖੇਪ', share:'ਸਹਿਕਰਮੀ ਨਾਲ ਸਾਂਝਾ ਕਰੋ', endShift:'ਸ਼ਿਫਟ ਖਤਮ / ਡਾਟਾ ਮਿਟਾਓ', obs:'ਵਾਈਟਲਸ', bm:'ਗਲੂਕੋਜ਼', bp:'ਲੇਟ ਕੇ/ਖੜ੍ਹੇ ਬੀਪੀ', fluid:'ਤਰਲ (Fluids)', bowel:'ਟੱਟੀ (Bowels)', amy:'ਚਮੜੀ ਅਤੇ ਪੱਟੀ', food:'ਖੁਰਾਕ', turn:'ਪਾਸਾ ਬਦਲਣਾ', mh:'ਮਾਨਸਿਕ ਸਿਹਤ', events:'ਨੋਟਸ', reminders:'ਕੰਮ', admit:'ਦਾਖਲਾ', done:'ਪੂਰਾ', markDone:'ਪੂਰਾ ਕਰੋ', markBed:'ਬੈੱਡ ਪੂਰਾ', pending:'ਬਾਕੀ ਰਹਿੰਦੇ', showAll:'ਸਭ ਦਿਖਾਓ', keepOn:'ਸਕ੍ਰੀਨ ਚਾਲੂ', byBed:'ਬੈੱਡ ਅਨੁਸਾਰ', byMod:'ਮੋਡੀਊਲ ਅਨੁਸਾਰ', time:'ਸਮਾਂ', intact:'ਠੀਕ (Intact)', red:'ਲਾਲ', broken:'ਜ਼ਖ਼ਮ', markIntact:'ਸਾਰੇ ਠੀਕ', b:'ਨਾਸ਼ਤਾ', l:'ਦੁਪਹਿਰ ਦਾ ਖਾਣਾ', d:'ਰਾਤ ਦਾ ਖਾਣਾ', phrases:['ਨਿੱਜੀ ਦੇਖਭਾਲ ਦਿੱਤੀ ਗਈ', 'ਨਹਾਇਆ ਅਤੇ ਕੱਪੜੇ ਬਦਲੇ', 'ਦਬਾਅ ਵਾਲੇ ਹਿੱਸੇ ਠੀਕ ਹਨ', 'ਕੁਰਸੀ ਤੇ ਬਿਠਾਇਆ ਗਿਆ', 'ਨਰਸ (RN) ਨੂੰ ਦੱਸਿਆ ਗਿਆ', 'ਪਰਿਵਾਰ ਨੂੰ ਜਾਣਕਾਰੀ ਦਿੱਤੀ'], tasks:['ਖੂਨ ਦੀ ਜਾਂਚ', 'ECG', 'ਦੁਬਾਰਾ ਵਾਈਟਲਸ', 'ਸ਼ੂਗਰ ਜਾਂਚ', 'ਬਲੈਡਰ ਸਕੈਨ', 'ਕੈਨੂਲਾ'], admits:['ਨਕਲੀ ਦੰਦ', 'ਐਨਕਾਂ', 'ਸੁਣਨ ਵਾਲੀ ਮਸ਼ੀਨ', 'ਵਾਕਰ/ਸੋਟੀ', 'ਫੋਨ/ਚਾਰਜਰ', 'ਚਾਬੀਆਂ', 'ਨਕਦੀ/ਪਰਸ'] },
-  ur: { setup:'شفٹ سیٹ اپ', start:'شفٹ شروع / اپ ڈیٹ کریں', summary:'خلاصہ', share:'ساتھی کے ساتھ شیئر کریں', endShift:'شفٹ ختم / ڈیٹا صاف کریں', obs:'وائٹلز', bm:'شوگر (Glucose)', bp:'لیٹے/کھڑے بی پی', fluid:'فلوئڈز', bowel:'اجابت', amy:'جلد اور پٹی', food:'خوراک', turn:'کروٹ بدلنا', mh:'ذہنی صحت', events:'نوٹس', reminders:'کام', admit:'داخلہ', done:'مکمل', markDone:'مکمل کریں', markBed:'بیڈ مکمل', pending:'صرف بقایا', showAll:'سب دکھائیں', keepOn:'اسکرین آن رکھیں', byBed:'بلحاظ بیڈ', byMod:'بلحاظ ماڈیول', time:'وقت', intact:'محفوظ', red:'سرخ', broken:'زخم', markIntact:'سب محفوظ', b:'ناشتہ', l:'دوپہر کا کھانا', d:'رات کا کھانا', phrases:['ذاتی نگہداشت فراہم کی گئی', 'غسل اور لباس تبدیل کیا گیا', 'دباؤ والے حصے محفوظ ہیں', 'کرسی پر بٹھایا گیا', 'نرس (RN) کو مطلع کیا گیا', 'اہل خانہ کو آگاہ کیا گیا'], tasks:['بلڈ ٹیسٹ', 'ECG', 'دوبارہ وائٹلز', 'شوگر چیک', 'بلیڈر اسکین', 'کینولا'], admits:['مصنوعی دانت', 'عینک', 'آلہ سماعت', 'واکر/چھڑی', 'فون/چارجر', 'چابیاں', 'نقدی/بٹوہ'] },
-  ta: { setup:'ஷிப்ட் அமைப்பு', start:'ஷிப்ட் தொடங்கு / புதுப்பி', summary:'சுருக்கம்', share:'சக ஊழியருடன் பகிர்', endShift:'ஷிப்ட் முடிவு / அழி', obs:'வைட்டல்ஸ்', bm:'குளுக்கோஸ்', bp:'படுத்த/நின்ற BP', fluid:'திரவ அளவு', bowel:'மலம் கழித்தல்', amy:'தோல் & கட்டு', food:'உணவு', turn:'புரட்டி படுக்க வைத்தல்', mh:'மனநலம்', events:'குறிப்புகள்', reminders:'பணிகள்', admit:'சேர்க்கை', done:'முடிந்தது', markDone:'முடிந்ததாக குறி', markBed:'படுக்கை முடிந்தது', pending:'நிலுவையில் உள்ளவை', showAll:'அனைத்தும் காட்டு', keepOn:'திரை روشن', byBed:'படுக்கை வாரியாக', byMod:'பிரிவு வாரியாக', time:'நேரம்', intact:'நல்ல நிலை', red:'சிவப்பு', broken:'புண்', markIntact:'அனைத்தும் நல்ல நிலை', b:'காலை உணவு', l:'மதிய உணவு', d:'இரவு உணவு', phrases:['தனிப்பட்ட பராமரிப்பு வழங்கப்பட்டது', 'குளிப்பாட்டி உடை மாற்றப்பட்டது', 'அழுத்தப் பகுதிகள் பாதிப்பில்லை', 'நாற்காலியில் அமர வைக்கப்பட்டார்', 'செவிலியரிடம் (RN) தெரிவிக்கப்பட்டது', 'குடும்பத்தினருக்கு தகவல் அளிக்கப்பட்டது'], tasks:['இரத்தப் பரிசோதனை', 'ECG', 'மீண்டும் வைட்டல்ஸ்', 'சர்க்கரை அளவு', 'பிளாடர் ஸ்கேன்', 'கானுலா'], admits:['பல் செட்', 'மூக்குக்கண்ணாடி', 'காது கேட்கும் கருவி', 'வாக்கர்/கைத்தடி', 'போன்/சார்ஜர்', 'சாவிகள்', 'பணம்/பர்ஸ்'] },
-  ml: { setup:'ഷിഫ്റ്റ് ക്രമീകരണം', start:'ഷിഫ്റ്റ് തുടങ്ങുക / പുതുക്കുക', summary:'സംഗ്രഹം', share:'സഹപ്രവർത്തകരുമായി പങ്കിടുക', endShift:'ഷിഫ്റ്റ് അവസാനിപ്പിക്കുക', obs:'വൈറ്റൽസ്', bm:'ഗ്ലൂക്കോസ്', bp:'L/S ബിപി', fluid:'ഫ്ലൂയിഡ്സ്', bowel:'ശോധന', amy:'ചർമ്മവും ഡ്രസ്സിംഗും', food:'ഭക്ഷണം', turn:'തിരിച്ചുകിടത്തൽ', mh:'മാനസികാരോഗ്യം', events:'കുറിപ്പുകൾ', reminders:'ചുമതലകൾ', admit:'അഡ്മിഷൻ', done:'പൂർത്തിയായി', markDone:'പൂർത്തിയാക്കുക', markBed:'ബെഡ് പൂർത്തിയായി', pending:'ബാക്കിയുള്ളവ', showAll:'എല്ലാം കാണിക്കുക', keepOn:'സ്ക്രീൻ ഓൺ', byBed:'ബെഡ് ക്രമത്തിൽ', byMod:'വിഭാഗം ക്രമത്തിൽ', time:'സമയം', intact:'കുഴപ്പമില്ല', red:'ചുവപ്പ്', broken:'മുറിവ്', markIntact:'എല്ലാം കുഴപ്പമില്ല', b:'പ്രഭാതഭക്ഷണം', l:'ഉച്ചഭക്ഷണം', d:'അത്താഴം', phrases:['വ്യക്തിഗത പരിചരണം നൽകി', 'കുളിപ്പിച്ച് വസ്ത്രം മാറ്റി', 'പ്രഷർ ഏരിയകൾക്ക് കുഴപ്പമില്ല', 'കസേരയിലേക്ക് മാറ്റിയിരുത്തി', 'നഴ്സിനെ (RN) അറിയിച്ചു', 'കുടുംബത്തെ വിവരമറിയിച്ചു'], tasks:['രക്തപരിശോധന', 'ECG', 'വൈറ്റൽസ് ആവർത്തിക്കുക', 'ഷുഗർ (BM)', 'ബ്ലാഡർ സ്കാൻ', 'കാനുല'], admits:['വെപ്പുപല്ല്', 'കണ്ണട', 'ഹിയറിംഗ് എയ്ഡ്', 'വാക്കർ/വടി', 'ഫോൺ/ചാർജർ', 'താക്കോൽ', 'പണം/പേഴ്സ്'] },
-  zh: { setup:'班次设置', start:'开始 / 更新班次', summary:'汇总', share:'与同事分享应用', endShift:'结束班次 / 清除数据', obs:'生命体征', bm:'血糖', bp:'卧/立位血压', fluid:'出入量', bowel:'排便', amy:'皮肤与敷料', food:'饮食', turn:'翻身', mh:'心理健康', events:'护理记录', reminders:'待办任务', admit:'入院物品', done:'已录', markDone:'标记已录', markBed:'整床已录', pending:'仅看未录', showAll:'显示全部', keepOn:'屏幕常亮', byBed:'按床位', byMod:'按模块', time:'时间', intact:'完好', red:'发红', broken:'破损', markIntact:'全部完好', b:'早餐', l:'午餐', d:'晚餐', phrases:['已完成个人护理', '已擦浴并更换衣物', '受压部位皮肤完好', '已协助移至座椅', '已上报责任护士(RN)', '已向家属沟通病情'], tasks:['抽血', '心电图 (ECG)', '复测生命体征', '测血糖', '膀胱扫描', '留置针护理'], admits:['假牙', '眼镜', '助听器', '助行器/拐杖', '手机/充电器', '钥匙', '现金/钱包'] },
-  'zh-tw': { setup:'班次設定', start:'開始 / 更新班次', summary:'總覽', share:'與同事分享應用程式', endShift:'結束班次 / 清除資料', obs:'生命徵象', bm:'血糖', bp:'臥/立位血壓', fluid:'出入量', bowel:'排便', amy:'皮膚與敷料', food:'飲食', turn:'翻身', mh:'心理健康', events:'護理紀錄', reminders:'待辦任務', admit:'入院物品', done:'已錄', markDone:'標記已錄', markBed:'整床已錄', pending:'僅看未錄', showAll:'顯示全部', keepOn:'螢幕常亮', byBed:'按床位', byMod:'按模組', time:'時間', intact:'完整', red:'發紅', broken:'破損', markIntact:'全部完整', b:'早餐', l:'午餐', d:'晚餐', phrases:['已完成個人護理', '已擦澡並更換衣物', '受壓部位皮膚完整', '已協助移至座椅', '已通報負責護理師(RN)', '已向家屬說明近況'], tasks:['抽血', '心電圖 (ECG)', '複測生命徵象', '測血糖', '膀胱掃描', '留置針護理'], admits:['假牙', '眼鏡', '助聽器', '助行器/拐杖', '手機/充電器', '鑰匙', '現金/錢包'] },
-  ja: { setup:'シフト設定', start:'シフト開始 / 更新', summary:'サマリー', share:'同僚にアプリを共有', endShift:'シフト終了 / データ消去', obs:'バイタル', bm:'血糖値', bp:'臥位/立位血圧', fluid:'水分出納', bowel:'排便', amy:'皮膚・創傷処置', food:'食事', turn:'体位変換', mh:'精神状態', events:'メモ', reminders:'タスク', admit:'入院持参品', done:'済', markDone:'済にする', markBed:'ベッド完了', pending:'未転記のみ', showAll:'すべて表示', keepOn:'画面常時オン', byBed:'ベッド別', byMod:'項目別', time:'時間', intact:'異常なし', red:'発赤', broken:'損傷', markIntact:'すべて異常なし', b:'朝食', l:'昼食', d:'夕食', phrases:['清潔ケア実施', '清拭・更衣完了', '褥瘡好発部位異常なし', '車椅子・椅子へ離床', '看護師へ報告済', '家族へ連絡済'], tasks:['採血', '心電図 (ECG)', 'バイタル再検', '血糖測定', 'ブラダースキャン', '末梢ルート'], admits:['義歯', '眼鏡', '補聴器', '歩行器・杖', '携帯電話・充電器', '鍵', '現金・財布'] },
-  ko: { setup:'근무 설정', start:'근무 시작 / 업데이트', summary:'요약', share:'동료에게 앱 공유', endShift:'근무 종료 / 데이터 삭제', obs:'활력징후', bm:'혈당', bp:'와위/기립 혈압', fluid:'수분 섭취/배설', bowel:'배변', amy:'피부 및 드레싱', food:'식이', turn:'체위변경', mh:'정신건강', events:'메모', reminders:'업무', admit:'입원 물품', done:'완료', markDone:'완료 표시', markBed:'병상 완료', pending:'미기록만', showAll:'전체 보기', keepOn:'화면 켜짐 유지', byBed:'병상별', byMod:'항목별', time:'시간', intact:'온전함', red:'발적', broken:'손상', markIntact:'모두 온전함', b:'아침', l:'점심', d:'저녁', phrases:['개인 위생 간호 시행', '세안 및 환의 교체', '욕창 부위 피부 온전함', '의자로 이동 보조', '담당 간호사(RN) 보고됨', '보호자 설명 완료'], tasks:['채혈', '심전도 (ECG)', '활력징후 재측정', '혈당(BST)', '방광 스캔', '정맥 주사관'], admits:['틀니', '안경', '보청기', '보행기/지팡이', '휴대폰/충전기', '열쇠', '현금/지갑'] },
-  tl: { setup:'Setup ng Shift', start:'Simulan / I-update ang Shift', summary:'Buod', share:'Ibahagi sa Katrabaho', endShift:'Tapusin ang Shift / Burahin', obs:'Vital Signs', bm:'Glucose', bp:'L/S BP', fluid:'Fluids', bowel:'Pagdumi', amy:'Balat at Dressing', food:'Pagkain', turn:'Pagpihit', mh:'Mental Health', events:'Mga Tala', reminders:'Mga Gawain', admit:'Admissions', done:'Tapos', markDone:'Markahan', markBed:'Kama Tapos Na', pending:'Pending Lang', showAll:'Ipakita Lahat', keepOn:'Screen Naka-on', byBed:'Bawat Kama', byMod:'Bawat Module', time:'Oras', intact:'Intact', red:'Mapula', broken:'May Sugat', markIntact:'Lahat Intact', b:'Almusal', l:'Tanghalian', d:'Hapunan', phrases:['Nabigyan ng personal care', 'Napaliguan at nabihisan', 'Intact ang pressure areas', 'Nailipat sa upuan', 'Na-escalate sa RN', 'Na-update ang pamilya'], tasks:['Bloods', 'ECG', 'Ulitin ang Obs', 'BM', 'Bladder Scan', 'Cannula'], admits:['Pustiso', 'Salamin', 'Hearing Aid', 'Walker/Tungkod', 'Cellphone/Charger', 'Susi', 'Pera/Pitaka'] },
-  id: { setup:'Pengaturan Shift', start:'Mulai / Perbarui Shift', summary:'Ringkasan', share:'Bagikan ke Rekan Kerja', endShift:'Akhiri Shift / Hapus Data', obs:'Tanda Vital', bm:'Glukosa', bp:'TD Berbaring/Berdiri', fluid:'Cairan', bowel:'BAB', amy:'Kulit & Balutan', food:'Diet', turn:'Miring Kanan/Kiri', mh:'Kesehatan Mental', events:'Catatan', reminders:'Tugas', admit:'Admisi', done:'Selesai', markDone:'Tandai Selesai', markBed:'Bed Selesai', pending:'Belum Selesai', showAll:'Tampilkan Semua', keepOn:'Layar Menyala', byBed:'Per Bed', byMod:'Per Modul', time:'Waktu', intact:'Utuh', red:'Kemerahan', broken:'Luka/Lecet', markIntact:'Semua Utuh', b:'Sarapan', l:'Makan Siang', d:'Makan Malam', phrases:['Perawatan diri diberikan', 'Sudah dimandikan & ganti pakaian', 'Area tekan utuh/intact', 'Mobilisasi ke kursi', 'Dilaporkan ke perawat (RN)', 'Keluarga sudah diinformasikan'], tasks:['Cek Darah', 'EKG', 'Ulang Tanda Vital', 'Gula Darah', 'Bladder Scan', 'Kanula/Infus'], admits:['Gigi Palsu', 'Kacamata', 'Alat Bantu Dengar', 'Walker/Tongkat', 'HP/Charger', 'Kunci', 'Uang/Dompet'] },
-  vi: { setup:'Thiết Lập Ca Trực', start:'Bắt Đầu / Cập Nhật Ca', summary:'Tóm Tắt', share:'Chia Sẻ Với Đồng Nghiệp', endShift:'Kết Thúc Ca / Xóa Dữ Liệu', obs:'Sinh Hiệu', bm:'Đường Huyết', bp:'HA Nằm/Đứng', fluid:'Dịch Xuất Nhập', bowel:'Đại Tiện', amy:'Da & Băng Vết Thương', food:'Dinh Dưỡng', turn:'Xoay Trở', mh:'Sức Khỏe Tâm Thần', events:'Ghi Chú', reminders:'Công Việc', admit:'Nhập Viện', done:'Xong', markDone:'Đánh Dấu Xong', markBed:'Xong Giường Này', pending:'Chưa Chép', showAll:'Hiện Tất Cả', keepOn:'Giữ Sáng Màn Hình', byBed:'Theo Giường', byMod:'Theo Mục', time:'Giờ', intact:'Nguyên Vẹn', red:'Đỏ Da', broken:'Trầy Loét', markIntact:'Tất Cả Nguyên Vẹn', b:'Bữa Sáng', l:'Bữa Trưa', d:'Bữa Tối', phrases:['Đã chăm sóc vệ sinh cá nhân', 'Đã tắm rửa & thay đồ', 'Vùng tỳ đè nguyên vẹn', 'Hỗ trợ ngồi ghế', 'Đã báo điều dưỡng (RN)', 'Đã cập nhật cho gia đình'], tasks:['Lấy Máu', 'Điện Tim (ECG)', 'Đo Lại Sinh Hiệu', 'Đường Huyết', 'Siêu Âm Bàng Quang', 'Kim Luồn'], admits:['Răng Giả', 'Mắt Kính', 'Máy Trợ Thính', 'Khung Tập Đi/Gậy', 'Điện Thoại/Sạc', 'Chìa Khóa', 'Tiền Mặt/Ví'] },
-  ar: { setup:'إعداد المناوبة', start:'بدء / تحديث المناوبة', summary:'الملخص', share:'مشاركة التطبيق مع زميل', endShift:'إنهاء المناوبة / مسح البيانات', obs:'العلامات الحيوية', bm:'سكر الدم', bp:'الضغط مستلقياً/واقفاً', fluid:'السوائل', bowel:'الإخراج', amy:'الجلد والضمادات', food:'التغذية', turn:'التقليب', mh:'الصحة النفسية', events:'ملاحظات', reminders:'المهام', admit:'مقتنيات الدخول', done:'تم', markDone:'تحديد كـ تم', markBed:'إتمام السرير', pending:'قيد الانتظار', showAll:'عرض الكل', keepOn:'إبقاء الشاشة مضاءة', byBed:'حسب السرير', byMod:'حسب القسم', time:'الوقت', intact:'سليم', red:'احمرار', broken:'متقرح', markIntact:'تحديد الكل سليم', b:'الإفطار', l:'الغداء', d:'العشاء', phrases:['تم تقديم الرعاية الشخصية', 'تم الاستحمام وتغيير الملابس', 'مناطق الضغط سليمة', 'تم الإجلاس على الكرسي', 'تم إبلاغ الممرض المسؤول', 'تم تحديث العائلة'], tasks:['سحب دم', 'تخطيط قلب (ECG)', 'إعادة العلامات الحيوية', 'فحص السكر', 'مسح المثانة', 'كانيولا'], admits:['طقم أسنان', 'نظارات', 'سماعة طبية', 'مشاية/عكاز', 'هاتف/شاحن', 'مفاتيح', 'نقود/محفظة'] },
-  tr: { setup:'Nöbet Kurulumu', start:'Nöbeti Başlat / Güncelle', summary:'Özet', share:'Arkadaşınla Paylaş', endShift:'Nöbeti Bitir / Verileri Sil', obs:'Vital Bulgular', bm:'Kan Şekeri', bp:'Yatarak/Ayakta KB', fluid:'Sıvı Изlemi', bowel:'Defekasyon', amy:'Cilt ve Pansuman', food:'Beslenme', turn:'Pozisyon', mh:'Ruh Sağlığı', events:'Notlar', reminders:'Görevler', admit:'Yatış Eşyaları', done:'Tamam', markDone:'Tamamlandı', markBed:'Yatak Tamam', pending:'Bekleyenler', showAll:'Tümünü Göster', keepOn:'Ekranı Açık Tut', byBed:'Yatağa Göre', byMod:'Modüle Göre', time:'Saat', intact:'Bütünlüğü Tam', red:'Kızarık', broken:'Bozulmuş', markIntact:'Tümü Sağlam', b:'Kahvaltı', l:'Öğle Yemeği', d:'Akşam Yemeği', phrases:['Kişisel bakım verildi', 'Yıkandı ve giydirildi', 'Bası bölgeleri sağlam', 'Sandalyeye mobilize edildi', 'Sorumlu hemşireye bildirildi', 'Aile bilgilendirildi'], tasks:['Kan Alma', 'EKG', 'Vital Tekrarı', 'Kan Şekeri', 'Mesane Ultrasonu', 'Branül'], admits:['Diş Protezi', 'Gözlük', 'İşitme Cihazı', 'Yürüteç/Baston', 'Telefon/Şarj', 'Anahtar', 'Nakit/Cüzdan'] },
-  fa: { setup:'تنظیمات شیفت', start:'شروع / بروزرسانی شیفت', summary:'خلاصه', share:'اشتراک‌گذاری با همکار', endShift:'پایان شیفت / پاک کردن اطلاعات', obs:'علائم حیاتی', bm:'قند خون', bp:'فشار خون خوابیده/ایستاده', fluid:'جذب و دفع', bowel:'اجابت مزاج', amy:'پوست و پانسمان', food:'رژیم غذایی', turn:'تغییر پوزیشن', mh:'سلامت روان', events:'گزارش پرستاری', reminders:'وظایف', admit:'وسایل بیمار', done:'ثبت شد', markDone:'علامت ثبت', markBed:'تکمیل تخت', pending:'فقط ثبت‌نشده‌ها', showAll:'نمایش همه', keepOn:'روشن ماندن صفحه', byBed:'بر اساس تخت', byMod:'بر اساس بخش', time:'زمان', intact:'سالم', red:'قرمزی', broken:'زخم', markIntact:'همه سالم', b:'صبحانه', l:'ناهار', d:'شام', phrases:['مراقبت شخصی انجام شد', 'شستشو و تعویض لباس انجام شد', 'نواحی تحت فشار سالم است', 'به صندلی منتقل شد', 'به پرستار مسئول اطلاع داده شد', 'به خانواده اطلاع داده شد'], tasks:['نمونه‌گیری خون', 'نوار قلب (ECG)', 'چک مجدد علائم حیاتی', 'تست قند خون', 'اسکن مثانه', 'آنژیوکت'], admits:['دندان مصنوعی', 'عینک', 'سمعک', 'واکر/عصا', 'موبایل/شارژر', 'کلید', 'وجه نقد/کیف پول'] },
-  sw: { setup:'Mpangilio wa Zamu', start:'Anza / Sasisha Zamu', summary:'Muhtasari', share:'Shiriki na Mwenzako', endShift:'Maliza Zamu / Futa Data', obs:'Dalili za Uhai', bm:'Sukari (Glucose)', bp:'BP Kulala/Kusimama', fluid:'Vimiminika', bowel:'Choo Kubwa', amy:'Ngozi na Vidonda', food:'Lishe', turn:'Kugeuza Mgonjwa', mh:'Afya ya Akili', events:'Maelezo', reminders:'Majukumu', admit:'Mali za Mgonjwa', done:'Imekamilika', markDone:'Weka Alama', markBed:'Kitanda Tayari', pending:'Zinazosubiri', showAll:'Onyesha Zote', keepOn:'Washa Skrini', byBed:'Kwa Kitanda', byMod:'Kwa Sehemu', time:'Muda', intact:'Salama', red:' imekuwa Nyekundu', broken:'Michubuko', markIntact:'Zote Salama', b:'Kifungua Kinywa', l:'Chakula cha Mchana', d:'Chakula cha Jioni', phrases:['Huduma ya usafi imetolewa', 'Ameogeshwa na kuvalishwa', 'Sehemu za mgandamizo zipo salama', 'Amehamishwa kwenye kiti', 'Muuguzi (RN) amefahamishwa', 'Familia imejulishwa'], tasks:['Vipimo vya Damu', 'ECG', 'Rudia Vipimo', 'Kipimo cha Sukari', 'Bladder Scan', 'Kanyula'], admits:['Meno ya Bandia', 'Miwani', 'Kifaa cha Kusikia', 'Kitembezi/Fimbo', 'Simu/Chaja', 'Funguo', 'Pesa/Pochi'] }
+const tKeys = [
+  'setup','sub','prefs','theme','shiftHrs','dayShift','nightShift','bmUnit','tempUnit',
+  'savedLay','noLay','addBed','add','del','save','activeMods','saveLay','start','share','endShift',
+  'edit','hide','dark','hiddenTitle','hiddenSub','renameBed','delConfirm',
+  'summary','obs','bm','bp','fluid','bowel','amy','food','turn','mh','events','reminders','admit',
+  'done','markDone','markBed','pending','showAll','keepOn','byBed','byMod',
+  'time','air','context','lying','standing','diff','amt','type','intact','red','broken','markIntact',
+  'dressing','locNotes','date','today','due','b','l','d','refused','nbm',
+  'back','left','right','chair','walking','obsLevel','mood','rest','outcome'
+];
+
+const rawDict = {
+  en: "Shift Setup|100% offline digital shift notepad. Data never leaves your device.|App Preferences & Units|Theme|Shift Hours|Day (07:00)|Night (19:00)|Glucose Unit|Temp Unit|Load Saved Layout|No saved layouts|1. Add Bed / Initials (Max 4 chars)|Add|Del|Save|2. Active Modules & Order|3. Save Layout As|Start / Update Shift|Share Care Digipad with a Colleague|End Shift / Clear Data|Edit|Hide|Dark|Screen Hidden|Tap anywhere to return|Rename / Move Bed|Delete this entry?|Summary|Vitals|Glucose|L/S BP|Fluids|Bowels|Skin & Dressings|Diet|Turning|Mental Health|Notes|Tasks|Admissions|Done|Mark Done|Mark Bed Done|Pending Only|Show All|Keep Screen On|By Bed|By Module|Time|Air|Context|Lying|Standing|Difference|Amount|Type|Intact|Red|Broken|Mark All Intact|Dressing|Location / Notes|Date|Today|Due|Breakfast|Lunch|Dinner|Refused|NBM|Back|Left|Right|Chair|Walking|Observation Level|Mood|Rest|Outcome",
+  es: "Configuración de Turno|Bloc de notas de turno 100% sin conexión. Los datos no salen de tu dispositivo.|Preferencias y Unidades|Tema|Horario de Turno|Día (07:00)|Noche (19:00)|Unidad de Glucosa|Unidad de Temp|Cargar Diseño Guardado|Sin diseños guardados|1. Añadir Cama / Iniciales (Máx 4)|Añadir|Borrar|Guardar|2. Módulos Activos y Orden|3. Guardar Diseño Como|Iniciar / Actualizar Turno|Compartir con un Colega|Finalizar Turno / Borrar|Editar|Ocultar|Oscuro|Pantalla Oculta|Toca para volver|Cambiar Cama|¿Eliminar esta entrada?|Resumen|Signos Vitales|Glucosa|PA Acostado/De Pie|Líquidos|Deposiciones|Piel y Apósito|Dieta|Cambios Posturales|Salud Mental|Notas|Tareas|Admisiones|Hecho|Marcar Hecho|Cama Hecha|Solo Pendientes|Ver Todo|Pantalla Activa|Por Cama|Por Módulo|Hora|Aire|Contexto|Acostado|De Pie|Diferencia|Cantidad|Tipo|Íntegra|Enrojecida|Lesionada|Marcar Todo Íntegro|Apósito|Ubicación / Notas|Fecha|Hoy|Vence|Desayuno|Almuerzo|Cena|Rechazado|NVO|Espalda|Izquierda|Derecha|Sillón|Caminando|Nivel de Observación|Ánimo|Descanso|Resultado",
+  fr: "Configuration de Garde|Bloc-notes de garde 100% hors ligne. Les données restent sur votre appareil.|Préférences et Unités|Thème|Heures de Garde|Jour (07:00)|Nuit (19:00)|Unité Glycémie|Unité Temp|Charger Disposition|Aucune disposition|1. Ajouter Lit / Initiales (Max 4)|Ajouter|Suppr|Sauver|2. Modules Actifs et Ordre|3. Sauver Disposition Sous|Démarrer / Mettre à Jour|Partager avec un Collègue|Fin de Garde / Effacer|Éditer|Masquer|Sombre|Écran Masqué|Touchez pour revenir|Renommer Lit|Supprimer cette entrée ?|Résumé|Constantes|Glycémie|TA Couché/Debout|Bilan Hydrique|Selles|Peau et Pansements|Alimentation|Positionnement|Santé Mentale|Notes|Tâches|Admissions|Fait|Marquer Fait|Lit Terminé|En Attente|Tout Voir|Écran Allumé|Par Lit|Par Module|Heure|Air|Contexte|Couché|Debout|Différence|Quantité|Type|Intacte|Rougeur|Lésée|Tout Marquer Intact|Pansement|Site / Notes|Date|Auj.|Échéance|Petit-déjeuner|Déjeuner|Dîner|Refusé|À jeun|Dos|Gauche|Droite|Fauteuil|Marche|Niveau d’Observation|Humeur|Repos|Résultat",
+  de: "Schicht-Einstellungen|100% Offline-Schichtnotizblock. Daten verlassen nie Ihr Gerät.|Einstellungen & Einheiten|Thema|Schichtzeiten|Tag (07:00)|Nacht (19:00)|Blutzucker-Einheit|Temp-Einheit|Layout Laden|Keine Layouts|1. Bett / Initialen (Max 4)|Hinzuf.|Lösch.|Speich.|2. Aktive Module & Reihenfolge|3. Layout Speichern Als|Schicht Starten / Aktualisieren|Mit Kollegen Teilen|Schicht Beenden / Löschen|Bearb.|Ausbl.|Dunkel|Bildschirm Ausgeblendet|Zum Zurückkehren tippen|Bett Umbenennen|Eintrag löschen?|Übersicht|Vitalzeichen|Blutzucker|RR Liegen/Stehen|Bilanzierung|Stuhlgang|Haut & Verbände|Ernährung|Lagerung|Psychische Gesundheit|Notizen|Aufgaben|Aufnahme|Erledigt|Als Erledigt|Bett Erledigt|Nur Offene|Alle Zeigen|Display An|Nach Bett|Nach Modul|Zeit|Raumluft|Kontext|Liegend|Stehend|Differenz|Menge|Typ|Intakt|Gerötet|Offen|Alle Intakt|Verband|Stelle / Notiz|Datum|Heute|Fällig|Frühstück|Mittagessen|Abendessen|Abgelehnt|Nüchtern|Rücken|Links|Rechts|Stuhl|Gehend|Beobachtungsstufe|Stimmung|Ruhe|Ergebnis",
+  pt: "Configuração de Plantão|Bloco de notas 100% offline. Os dados nunca saem do dispositivo.|Preferências e Unidades|Tema|Horário do Plantão|Dia (07:00)|Noite (19:00)|Unidade Glicemia|Unidade Temp|Carregar Layout|Nenhum layout salvo|1. Adicionar Leito (Máx 4)|Adic.|Excl.|Salvar|2. Módulos Ativos e Ordem|3. Salvar Layout Como|Iniciar / Atualizar Plantão|Compartilhar com Colega|Encerrar Plantão / Limpar|Editar|Ocultar|Escuro|Tela Oculta|Toque para voltar|Mudar Leito|Excluir este registo?|Resumo|Sinais Vitais|Glicemia|PA Deitado/Em Pé|Balanço Hídrico|Evacuação|Pele e Curativos|Dieta|Mudança de Decúbito|Saúde Mental|Notas|Tarefas|Admissão|Feito|Marcar Feito|Leito Concluído|Pendentes|Mostrar Tudo|Manter Tela|Por Leito|Por Módulo|Hora|Ar Amb.|Contexto|Deitado|Em Pé|Diferença|Quantidade|Tipo|Íntegra|Hiperemiada|Lesionada|Marcar Tudo Íntegro|Curativo|Local / Notas|Data|Hoje|Troca|Peq. Almoço|Almoço|Jantar|Recusou|Jejum|Dorso|Esquerda|Direita|Poltrona|Deambulando|Nível de Observação|Humor|Repouso|Resultado",
+  it: "Impostazione Turno|Blocco note 100% offline. I dati non lasciano mai il dispositivo.|Preferenze e Unità|Tema|Orario Turno|Giorno (07:00)|Notte (19:00)|Unità Glicemia|Unità Temp|Carica Layout|Nessun layout|1. Aggiungi Letto (Max 4)|Agg.|Elim.|Salva|2. Moduli Attivi e Ordine|3. Salva Layout Come|Inizia / Aggiorna Turno|Condividi con un Collega|Fine Turno / Cancella|Modif.|Nascondi|Scuro|Schermo Nascosto|Tocca per tornare|Cambia Letto|Eliminare questa voce?|Riepilogo|Parametri Vitali|Glicemia|PA Supino/Ortostatica|Bilancio Idrico|Alvo|Cute e Medicazioni|Vitto|Mobilizzazione|Salute Mentale|Note|Compiti|Accettazione|Fatto|Segna Fatto|Letto Completato|In Sospeso|Mostra Tutto|Schermo Acceso|Per Letto|Per Modulo|Ora|Aria|Contesto|Supino|In Piedi|Differenza|Quantità|Tipo|Integra|Arrossata|Lesionata|Segna Tutto Integro|Medicazione|Sede / Note|Data|Oggi|Scadenza|Colazione|Pranzo|Cena|Rifiutato|Digiuno|Supino|Sinistra|Destra|Poltrona|Cammina|Livello Osservazione|Umore|Riposo|Esito",
+  nl: "Dienst Instellen|100% offline dienstnotitieblok. Gegevens verlaten nooit uw toestel.|Voorkeuren & Eenheden|Thema|Diensturen|Dag (07:00)|Nacht (19:00)|Glucose-eenheid|Temp-eenheid|Lay-out Laden|Geen lay-outs|1. Bed Toevoegen (Max 4)|Toev.|Verw.|Opslaan|2. Actieve Modules & Volgorde|3. Lay-out Opslaan Als|Start / Update Dienst|Deel met een Collega|Dienst Beëindigen / Wissen|Wijzig|Verberg|Donker|Scherm Verborgen|Tik om terug te keren|Bed Wijzigen|Item verwijderen?|Overzicht|Vitale Functies|Glucose|RR Liggend/Staand|Vochtbalans|Defecatie|Huid & Wondzorg|Voeding|Wisselligging|Mentale Gezondheid|Notities|Taken|Opname|Klaar|Markeer Klaar|Bed Klaar|Alleen Open|Toon Alles|Scherm Aan|Per Bed|Per Module|Tijd|Kamerlucht|Context|Liggend|Staand|Verschil|Hoeveelheid|Type|Intact|Rood|Defect|Alles Intact|Verband|Locatie / Notitie|Datum|Vandaag|Vervalt|Ontbijt|Lunch|Avondeten|Geweigerd|Nuchter|Rug|Links|Rechts|Stoel|Lopend|Observatieniveau|Stemming|Rust|Uitkomst",
+  sv: "Passinställning|100% offline anteckningsblock. Data lämnar aldrig din enhet.|Inställningar & Enheter|Tema|Passtider|Dag (07:00)|Natt (19:00)|Glukosenhet|Tempenhet|Ladda Layout|Inga sparade layouter|1. Lägg till Plats (Max 4)|Lägg till|Ta bort|Spara|2. Aktiva Moduler & Ordning|3. Spara Layout Som|Starta / Uppdatera Pass|Dela med en Kollega|Avsluta Pass / Rensa|Ändra|Dölj|Mörkt|Skärm Dold|Tryck för att återgå|Byt Plats|Ta bort denna post?|Översikt|Vitalparametrar|Blodsocker|BT Liggande/Stående|Vätskelista|Avföring|Hud & Förband|Kost|Vändschema|Psykisk Hälsa|Anteckningar|Uppgifter|Inskrivning|Klar|Markera Klar|Plats Klar|Endast Kvar|Visa Alla|Håll Skärm På|Per Plats|Per Modul|Tid|Luft|Kontext|Liggande|Stående|Skillnad|Mängd|Typ|Hel|Rodnad|Skadad|Markera Alla Hela|Förband|Plats / Notering|Datum|Idag|Förfaller|Frukost|Lunch|Middag|Nekat|Fasta|Rygg|Vänster|Höger|Fåtölj|Gående|Observationsnivå|Sinnesstämning|Vila|Utfall",
+  pl: "Ustawienia Dyżuru|Notatnik dyżurowy 100% offline. Dane nie opuszczają urządzenia.|Preferencje i Jednostki|Motyw|Godziny Dyżuru|Dzień (07:00)|Noc (19:00)|Jednostka Glikemii|Jednostka Temp|Wczytaj Układ|Brak układów|1. Dodaj Łóżko (Maks. 4 znaki)|Dodaj|Usuń|Zapisz|2. Aktywne Moduły i Kolejność|3. Zapisz Układ Jako|Rozpocznij / Aktualizuj|Udostępnij Współpracownikowi|Zakończ Dyżur / Wyczyść|Edytuj|Ukryj|Ciemny|Ekran Ukryty|Dotknij, aby wrócić|Zmień Łóżko|Usunąć ten wpis?|Podsumowanie|Parametry|Glikemia|RR Leżąc/Stojąc|Bilans Płynów|Wypróżnienia|Skóra i Opatrunki|Dieta|Zmiana Pozycji|Stan Psychiczny|Notatki|Zadania|Przyjęcie|Gotowe|Oznacz|Łóżko Gotowe|Oczekujące|Pokaż Wszystko|Ekran Włączony|Wg Łóżka|Wg Modułu|Czas|Powietrze|Kontekst|Leżąc|Stojąc|Różnica|Ilość|Typ|Czysta|Zaczerwieniona|Uszkodzona|Wszystko Czyste|Opatrunek|Miejsce / Notatki|Data|Dziś|Termin|Śniadanie|Obiad|Kolacja|Odmowa|Na czczo|Plecy|Lewy bok|Prawy bok|Fotel|Chodzi|Poziom Obserwacji|Nastrój|Odpoczynek|Wynik",
+  ro: "Configurare Tură|Agendă de tură 100% offline. Datele nu părăsesc dispozitivul.|Preferințe și Unități|Temă|Ore Tură|Zi (07:00)|Noapte (19:00)|Unitate Glicemie|Unitate Temp|Încarcă Configurație|Nicio configurație|1. Adaugă Pat (Max 4 caract.)|Adaugă|Șterge|Salvează|2. Module Active și Ordine|3. Salvează Configurația Ca|Începe / Actualizează Tura|Distribuie unui Coleg|Termină Tura / Șterge|Editează|Ascunde|Întunecat|Ecran Ascuns|Atingeți pentru revenire|Schimbă Pat|Ștergeți această înregistrare?|Rezumat|Funcții Vitale|Glicemie|TA Culcat/Ortostatism|Bilanț Hidric|Scaun|Piele și Pansamente|Alimentație|Mobilizare|Sănătate Mintală|Note|Sarcini|Internare|Gata|Marchează|Pat Finalizat|În Așteptare|Arată Tot|Ecran Aprins|După Pat|După Modul|Ora|Aer|Context|Culcat|În Picioare|Diferență|Cantitate|Tip|Integră|Eritem|Leziune|Totul Integru|Pansament|Loc / Note|Data|Azi|Scadent|Mic Dejun|Prânz|Cină|Refuzat|Repaus Alim.|Spate|Stânga|Dreapta|Fotoliu|Merge|Nivel Observație|Dispoziție|Odihnă|Rezultat",
+  uk: "Налаштування Зміни|Офлайн-блокнот зміни. Дані залишаються на пристрої.|Налаштування та Одиниці|Тема|Години Зміни|День (07:00)|Ніч (19:00)|Одиниця Глюкози|Одиниця Темп|Завантажити Шаблон|Немає шаблонів|1. Додати Ліжко (Макс 4 симв.)|Додати|Видал.|Зберегти|2. Активні Модулі та Порядок|3. Зберегти Шаблон Як|Почати / Оновити Зміну|Поділитися з Колегою|Завершити Зміну / Очистити|Редаг.|Сховати|Темний|Екран Приховано|Натисніть для повернення|Змінити Ліжко|Видалити цей запис?|Підсумок|Показники|Глюкоза|АТ Лежачи/Стоячи|Гідробаланс|Випорожнення|Шкіра та Пов’язки|Харчування|Повороти|Психічний Стан|Нотатки|Завдання|Госпіталізація|Готово|Відмітити|Ліжко Готово|Неперенесені|Показати Все|Екран Увімк.|За Ліжком|За Модулем|Час|Повітря|Контекст|Лежачи|Стоячи|Різниця|Кількість|Тип|Ціла|Почервоніння|Пошкоджена|Все Ціле|Пов’язка|Місце / Нотатки|Дата|Сьогодні|Термін|Сніданок|Обід|Вечеря|Відмова|Голод|Спина|Лівий бік|Правий бік|Крісло|Ходить|Рівень Спостереження|Настрій|Сон/Спокій|Результат",
+  ru: "Настройка Смены|Офлайн-блокнот смены. Данные не покидают устройство.|Настройки и Единицы|Тема|Часы Смены|День (07:00)|Ночь (19:00)|Ед. Глюкозы|Ед. Темп|Загрузить Шаблон|Нет шаблонов|1. Добавить Койку (Макс 4 симв.)|Добав.|Удал.|Сохр.|2. Активные Модули и Порядок|3. Сохранить Шаблон Как|Начать / Обновить Смену|Поделиться с Коллегой|Завершить Смену / Очистить|Измен.|Скрыть|Темный|Экран Скрыт|Нажмите для возврата|Изменить Койку|Удалить эту запись?|Сводка|Показатели|Глюкоза|АД Лежа/Стоя|Гидробаланс|Стул|Кожа и Повязки|Питание|Повороты|Психический Статус|Заметки|Задачи|Поступление|Готово|Отметить|Койка Готова|Ожидающие|Показать Все|Экран Вкл.|По Койкам|По Модулям|Время|Воздух|Контекст|Лежа|Стоя|Разница|Количество|Тип|Чистая|Гиперемия|Повреждена|Все Чисто|Повязка|Место / Заметки|Дата|Сегодня|Срок|Завтрак|Обед|Ужин|Отказ|Голод|Спина|Левый бок|Правый бок|Кресло|Ходит|Уровень Наблюдения|Настроение|Покой|Итог",
+  el: "Ρύθμιση Βάρδιας|Σημειωματάριο βάρδιας 100% εκτός σύνδεσης.|Προτιμήσεις & Μονάδες|Θέμα|Ώρες Βάρδιας|Ημέρα (07:00)|Νύχτα (19:00)|Μονάδα Γλυκόζης|Μονάδα Θερμ.|Φόρτωση Διάταξης|Καμία διάταξη|1. Προσθήκη Κλίνης (Έως 4 χαρ.)|Προσθ.|Διαγρ.|Αποθ.|2. Ενεργές Ενότητες & Σειρά|3. Αποθήκευση Διάταξης Ως|Έναρξη / Ενημέρωση Βάρδιας|Κοινοποίηση σε Συνάδελφο|Τέλος Βάρδιας / Διαγραφή|Επεξ.|Κρύψε|Σκούρο|Οθόνη Κρυμμένη|Πατήστε για επιστροφή|Αλλαγή Κλίνης|Διαγραφή αυτής της εγγραφής;|Σύνοψη|Ζωτικά|Γλυκόζη|ΑΠ Ύπτια/Όρθια|Ισοζύγιο Υγρών|Κενώσεις|Δέρμα & Επιθέματα|Δίαιτα|Αλλαγή Θέσης|Ψυχική Υγεία|Σημειώσεις|Εργασίες|Εισαγωγή|Έγινε|Σήμανση|Κλίνη Έτοιμη|Εκκρεμή|Όλα|Οθόνη Ενεργή|Ανά Κλίνη|Ανά Ενότητα|Ώρα|Αέρας|Πλαίσιο|Ύπτια|Όρθια|Διαφορά|Ποσότητα|Τύπος|Ακέραιο|Ερυθρότητα|Λύση|Όλα Ακέραια|Επίθεμα|Θέση / Σημ.|Ημερ.|Σήμερα|Λήξη|Πρωινό|Μεσημεριανό|Βραδινό|Άρνηση|Νηστεία|Ύπτια|Αριστερά|Δεξιά|Καρέκλα|Βάδιση|Επίπεδο Παρακολούθησης|Διάθεση|Ανάπαυση|Αποτέλεσμα",
+  hi: "शिफ्ट सेटअप|100% ऑफ़लाइन डिजिटल शिफ्ट नोटपैड। डेटा आपके फ़ोन में ही रहता है।|ऐप प्राथमिकताएं और इकाइयां|थीम|शिफ्ट का समय|दिन (07:00)|रात (19:00)|ग्लूकोज इकाई|तापमान इकाई|सेव लेआउट लोड करें|कोई सेव लेआउट नहीं|1. बेड / नाम जोड़ें (अधिकतम 4 अक्षर)|जोड़ें|हटाएं|सेव|2. सक्रिय मॉड्यूल और क्रम|3. लेआउट का नाम सेव करें|शिफ्ट शुरू / अपडेट करें|सहकर्मी के साथ साझा करें|शिफ्ट समाप्त / डेटा मिटाएं|बदलें|छुपाएं|डार्क|स्क्रीन छुपी हुई है|वापस जाने के लिए टैप करें|बेड बदलें|क्या यह एंट्री हटाएं?|सारांश|वाइटल्स|ग्लूकोज|L/S बीपी|फ्लूइड|मल त्याग|त्वचा और ड्रेसिंग|आहार|करवट|मानसिक स्वास्थ्य|नोट्स|कार्य|भर्ती|पूर्ण|पूर्ण करें|बेड पूर्ण|केवल बाकी|सभी दिखाएं|स्क्रीन ऑन रखें|बेड अनुसार|मॉड्यूल अनुसार|समय|हवा (Air)|संदर्भ|लेटकर|खड़े होकर|अंतर|मात्रा|प्रकार|सुरक्षित|लाल|घाव/टूटी|सभी सुरक्षित|ड्रेसिंग|स्थान / नोट्स|तारीख|आज|देय|नाश्ता|दोपहर का भोजन|रात का भोजन|मना किया|NBM|पीठ के बल|बाएं|दाएं|कुर्सी|चलना|निगरानी स्तर|मूड|आराम|परिणाम",
+  bn: "শিফট সেটআপ|১০০% অফলাইন ডিজিটাল নোটপ্যাড। ডেটা আপনার ফোনেই থাকে।|পছন্দ এবং একক|থিম|শিফটের সময়|দিন (07:00)|রাত (19:00)|গ্লুকোজ একক|তাপমাত্রা একক|লেআউট লোড করুন|কোনো লেআউট নেই|১. বেড যোগ করুন (সর্বোচ্চ ৪ অক্ষর)|যোগ|মুছুন|সেভ|২. সক্রিয় মডিউল ও ক্রম|৩. লেআউট সেভ করুন|শিফট শুরু / আপডেট|সহকর্মীর সাথে শেয়ার করুন|শিফট শেষ / মুছুন|এডিট|লুকান|ডার্ক|স্ক্রিন লুকানো|ফিরে যেতে ট্যাপ করুন|বেড পরিবর্তন|এই তথ্যটি মুছে ফেলবেন?|সারাংশ|ভাইটালস|গ্লুকোজ|শোয়া/দাঁড়ানো বিপি|ফ্লুইড|মলত্যাগ|ত্বক ও ড্রেসিং|খাবার|পাশ ফেরানো|মানসিক স্বাস্থ্য|নোট|কাজ|ভর্তি|সম্পন্ন|সম্পন্ন করুন|বেড সম্পন্ন|বাকিগুলো|সব দেখান|স্ক্রিন চালু|বেড অনুযায়ী|মডিউল অনুযায়ী|সময়|বাতাস (Air)|প্রসঙ্গ|শোয়া|দাঁড়ানো|পার্থক্য|পরিমাণ|ধরন|অক্ষত|লালচে|ক্ষত|সব অক্ষত|ড্রেসিং|স্থান / নোট|তারিখ|আজ|পরবর্তী|সকালের নাস্তা|দুপুরের খাবার|রাতের খাবার|প্রত্যাখ্যান|NBM|চিত হয়ে|বাম|ডান|চেয়ার|হাঁটা|পর্যবেক্ষণ স্তর|মেজাজ|বিশ্রাম|ফলাফল",
+  pa: "ਸ਼ਿਫਟ ਸੈੱਟਅੱਪ|100% ਆਫਲਾਈਨ ਡਿਜੀਟਲ ਸ਼ਿਫਟ ਨੋਟਪੈਡ।|ਪਸੰਦ ਅਤੇ ਇਕਾਈਆਂ|ਥੀਮ|ਸ਼ਿਫਟ ਦਾ ਸਮਾਂ|ਦਿਨ (07:00)|ਰਾਤ (19:00)|ਗਲੂਕੋਜ਼ ਇਕਾਈ|ਤਾਪਮਾਨ ਇਕਾਈ|ਸੇਵ ਲੇਆਉਟ ਲੋਡ ਕਰੋ|ਕੋਈ ਲੇਆਉਟ ਨਹੀਂ|1. ਬੈੱਡ ਜੋੜੋ (ਵੱਧ ਤੋਂ ਵੱਧ 4 ਅੱਖਰ)|ਜੋੜੋ|ਮਿਟਾਓ|ਸੇਵ|2. ਐਕਟਿਵ ਮੋਡੀਊਲ ਅਤੇ ਕ੍ਰਮ|3. ਲੇਆਉਟ ਸੇਵ ਕਰੋ|ਸ਼ਿਫਟ ਸ਼ੁਰੂ / ਅਪਡੇਟ ਕਰੋ|ਸਹਿਕਰਮੀ ਨਾਲ ਸਾਂਝਾ ਕਰੋ|ਸ਼ਿਫਟ ਖਤਮ / ਡਾਟਾ ਮਿਟਾਓ|ਬਦਲੋ|ਲੁਕਾਓ|ਡਾਰਕ|ਸਕ੍ਰੀਨ ਲੁਕਵੀਂ ਹੈ|ਵਾਪਸ ਜਾਣ ਲਈ ਟੈਪ ਕਰੋ|ਬੈੱਡ ਬਦਲੋ|ਕੀ ਇਹ ਐਂਟਰੀ ਮਿਟਾਉਣੀ ਹੈ?|ਸੰਖੇਪ|ਵਾਈਟਲਸ|ਗਲੂਕੋਜ਼|ਲੇਟ ਕੇ/ਖੜ੍ਹੇ ਬੀਪੀ|ਤਰਲ (Fluids)|ਟੱਟੀ (Bowels)|ਚਮੜੀ ਅਤੇ ਪੱਟੀ|ਖੁਰਾਕ|ਪਾਸਾ ਬਦਲਣਾ|ਮਾਨਸਿਕ ਸਿਹਤ|ਨੋਟਸ|ਕੰਮ|ਦਾਖਲਾ|ਪੂਰਾ|ਪੂਰਾ ਕਰੋ|ਬੈੱਡ ਪੂਰਾ|ਬਾਕੀ ਰਹਿੰਦੇ|ਸਭ ਦਿਖਾਓ|ਸਕ੍ਰੀਨ ਚਾਲੂ|ਬੈੱਡ ਅਨੁਸਾਰ|ਮੋਡੀਊਲ ਅਨੁਸਾਰ|ਸਮਾਂ|ਹਵਾ (Air)|ਸੰਦਰਭ|ਲੇਟ ਕੇ|ਖੜ੍ਹੇ ਹੋ ਕੇ|ਫਰਕ|ਮਾਤਰਾ|ਕਿਸਮ|ਠੀਕ|ਲਾਲ|ਜ਼ਖ਼ਮ|ਸਾਰੇ ਠੀਕ|ਪੱਟੀ|ਥਾਂ / ਨੋਟਸ|ਮਿਤੀ|ਅੱਜ|ਬਕਾਇਆ|ਨਾਸ਼ਤਾ|ਦੁਪਹਿਰ ਦਾ ਖਾਣਾ|ਰਾਤ ਦਾ ਖਾਣਾ|ਮਨ੍ਹਾ ਕੀਤਾ|NBM|ਪਿੱਠ ਭਾਰ|ਖੱਬੇ|ਸੱਜੇ|ਕੁਰਸੀ|ਤੁਰਨਾ|ਨਿਗਰਾਨੀ ਪੱਧਰ|ਮੂਡ|ਆਰਾਮ|ਨਤੀਜਾ",
+  ur: "شفٹ سیٹ اپ|100% آف لائن ڈیجیٹل شفٹ نوٹ پیڈ۔ ڈیٹا آپ کے فون میں محفوظ رہتا ہے۔|ترجیحات اور اکائیاں|تھیم|شفٹ کے اوقات|دن (07:00)|رات (19:00)|شوگر یونٹ|درجہ حرارت یونٹ|محفوظ لے آؤٹ لوڈ کریں|کوئی لے آؤٹ نہیں|1. بیڈ شامل کریں (زیادہ سے زیادہ 4 حروف)|شامل|حذف|محفوظ|2. فعال ماڈیولز اور ترتیب|3. لے آؤٹ محفوظ کریں|شفٹ شروع / اپ ڈیٹ کریں|ساتھی کے ساتھ شیئر کریں|شفٹ ختم / ڈیٹا صاف کریں|ترمیم|چھپائیں|ڈارک|اسکرین پوشیدہ ہے|واپس جانے کے لیے ٹیپ کریں|بیڈ تبدیل کریں|کیا یہ اندراج حذف کریں؟|خلاصہ|وائٹلز|شوگر|لیٹے/کھڑے بی پی|فلوئڈز|اجابت|جلد اور پٹی|خوراک|کروٹ بدلنا|ذہنی صحت|نوٹس|کام|داخلہ|مکمل|مکمل کریں|بیڈ مکمل|صرف بقایا|سب دکھائیں|اسکرین آن رکھیں|بلحاظ بیڈ|بلحاظ ماڈیول|وقت|ہوا (Air)|سیاق|لیٹے ہوئے|کھڑے ہوئے|فرق|مقدار|قسم|محفوظ|سرخ|زخم|سب محفوظ|پٹی|مقام / نوٹس|تاریخ|آج|مقررہ|ناشتہ|دوپہر کا کھانا|رات کا کھانا|انکار|NBM|سیدھا|بائیں|دائیں|کرسی|چلنا|مشاہداتی سطح|مزاج|آرام|نتیجہ",
+  ta: "ஷிப்ட் அமைப்பு|100% ஆஃப்லைன் டிஜிட்டல் குறிப்பேடு.|விருப்பங்கள் & அலகுகள்|தீம்|ஷிப்ட் நேரம்|பகல் (07:00)|இரவு (19:00)|குளுக்கோஸ் அலகு|வெப்பநிலை அலகு|வடிவமைப்பை ஏற்று|வடிவமைப்பு இல்லை|1. படுக்கை சேர் (அதிகபட்சம் 4 எழுத்து)|சேர்|நீக்கு|சேமி|2. செயல்பாட்டு பிரிவுகள்|3. வடிவமைப்பை சேமி|ஷிப்ட் தொடங்கு / புதுப்பி|சக ஊழியருடன் பகிர்|ஷிப்ட் முடிவு / அழி|திருத்து|மறை|டார்க்|திரை மறைக்கப்பட்டுள்ளது|திரும்பத் தட்டவும்|படுக்கை மாற்று|இந்த பதிவை நீக்கவா?|சுருக்கம்|வைட்டல்ஸ்|குளுக்கோஸ்|படுத்த/நின்ற BP|திரவ அளவு|மலம் கழித்தல்|தோல் & கட்டு|உணவு|புரட்டி படுக்க வைத்தல்|மனநலம்|குறிப்புகள்|பணிகள்|சேர்க்கை|முடிந்தது|முடிந்ததாக குறி|படுக்கை முடிந்தது|நிலுவையில் உள்ளவை|அனைத்தும் காட்டு|திரை ఆನ್|படுக்கை வாரியாக|பிரிவு வாரியாக|நேரம்|காற்று (Air)|சூழல்|படுத்த|நின்ற|வித்தியாசம்|அளவு|வகை|நல்ல நிலை|சிவப்பு|புண்|அனைத்தும் நல்ல நிலை|கட்டு|இடம் / குறிப்பு|தேதி|இன்று|மாற்றும் நாள்|காலை உணவு|மதிய உணவு|இரவு உணவு|மறுப்பு|NBM|மல்லாந்து|இடது|வலது|நாற்காலி|நடை|கண்காணிப்பு நிலை|मनநிலை|ஓய்வு|முடிவு",
+  ml: "ഷിഫ്റ്റ് ക്രമീകരണം|100% ഓഫ്‌ലൈൻ ഡിജിറ്റൽ നോട്ട്പാഡ്.|ക്രമീകരണങ്ങളും യൂണിറ്റുകളും|തീം|ഷിഫ്റ്റ് സമയം|പകൽ (07:00)|രാത്രി (19:00)|ഗ്ലൂക്കോസ് യൂണിറ്റ്|താപനില യൂണിറ്റ്|ലേഔട്ട് ലോഡ് ചെയ്യുക|ലേഔട്ടുകൾ ഇല്ല|1. ബെഡ് ചേർക്കുക (പരമാവധി 4 അക്ഷരം)|ചേർക്കുക|നീക്കുക|സേവ്|2. സജീവ വിഭാഗങ്ങളും ക്രമവും|3. ലേഔട്ട് സേവ് ചെയ്യുക|ഷിഫ്റ്റ് തുടങ്ങുക / പുതുക്കുക|സഹപ്രവർത്തകരുമായി പങ്കിടുക|ഷിഫ്റ്റ് അവസാനിപ്പിക്കുക|മാറ്റുക|മറയ്ക്കുക|ഡാർക്ക്|സ്ക്രീൻ മറച്ചിരിക്കുന്നു|തിരികെ വരാൻ ടാപ്പ് ചെയ്യുക|ബെഡ് മാറ്റുക|ഈ എൻട്രി നീക്കം ചെയ്യണോ?|സംഗ്രഹം|വൈറ്റൽസ്|ഗ്ലൂക്കോസ്|L/S ബിപി|ഫ്ലൂയിഡ്സ്|ശോധന|ചർമ്മവും ഡ്രസ്സിംഗും|ഭക്ഷണം|തിരിച്ചുകിടത്തൽ|മാനസികാരോഗ്യം|കുറിപ്പുകൾ|ചുമതലകൾ|അഡ്മിഷൻ|പൂർത്തിയായി|പൂർത്തിയാക്കുക|ബെഡ് പൂർത്തിയായി|ബാക്കിയുള്ളവ|എല്ലാം കാണിക്കുക|സ്ക്രീൻ ഓൺ|ബെഡ് ക്രമത്തിൽ|വിഭാഗം ക്രമത്തിൽ|സമയം|വായു (Air)|സന്ദർഭം|കിടന്ന്|നിന്ന്|വ്യത്യാസം|അളവ്|തരം|കുഴപ്പമില്ല|ചുവപ്പ്|മുറിവ്|എല്ലാം കുഴപ്പമില്ല|ഡ്രസ്സിംഗ്|സ്ഥലം / കുറിപ്പ്|തീയതി|ഇന്ന്|അടുത്തത്|പ്രഭാതഭക്ഷണം|ഉച്ചഭക്ഷണം|അത്താഴം|നിരസിച്ചു|NBM|മലർന്ന്|ഇടത്|വലത്|കസേര|നടത്തം|നിരീക്ഷണ നില|മനോഭാവം|വിശ്രമം|ഫലം",
+  zh: "班次设置|100% 离线数字交班记事本。数据绝不离开您的设备。|偏好设置与单位|主题颜色|班次时间|白班 (07:00)|夜班 (19:00)|血糖单位|体温单位|加载已存布局|无保存的布局|1. 添加床号 (最多4个字符)|添加|删除|保存|2. 启用模块与排序|3. 保存布局为|开始 / 更新班次|与同事分享应用|结束班次 / 清除数据|编辑|隐藏|深色|屏幕已隐藏|点击任意处返回|更换床号|确定删除此记录？|汇总|生命体征|血糖|卧/立位血压|出入量|排便|皮肤与敷料|饮食|翻身|心理健康|护理记录|待办任务|入院物品|已录|标记已录|整床已录|仅看未录|显示全部|屏幕常亮|按床位|按模块|时间|空气|场景|卧位|立位|差值|量|类型|完好|发红|破损|全部完好|敷料|部位 / 备注|日期|今天|到期|早餐|午餐|晚餐|拒食|禁食|平卧|左侧|右侧|坐椅|步行|护理观察级别|情绪|休息状态|结果",
+  'zh-tw': "班次設定|100% 離線數位交班記事本。資料絕不離開您的裝置。|偏好設定與單位|主題顏色|班次時間|白班 (07:00)|夜班 (19:00)|血糖單位|體溫單位|載入已存版面|無儲存的版面|1. 新增床號 (最多4個字元)|新增|刪除|儲存|2. 啟用模組與排序|3. 儲存版面為|開始 / 更新班次|與同事分享應用程式|結束班次 / 清除資料|編輯|隱藏|深色|螢幕已隱藏|點擊任意處返回|更換床號|確定刪除此紀錄？|總覽|生命徵象|血糖|臥/立位血壓|出入量|排便|皮膚與敷料|飲食|翻身|心理健康|護理紀錄|待辦任務|入院物品|已錄|標記已錄|整床已錄|僅看未錄|顯示全部|螢幕常亮|按床位|按模組|時間|空氣|情境|臥位|立位|差值|量|類型|完整|發紅|破損|全部完整|敷料|部位 / 備註|日期|今天|到期|早餐|午餐|晚餐|拒食|禁食|平躺|左側|右側|坐椅|步行|護理觀察級別|情緒|休息狀態|結果",
+  ja: "シフト設定|100%オフラインのシフトメモ帳。データは端末内にのみ保存されます。|設定と単位|テーマ|シフト時間|日勤 (07:00)|夜勤 (19:00)|血糖単位|体温単位|レイアウト読込|保存なし|1. ベッド追加 (最大4文字)|追加|削除|保存|2. 有効な項目と並び順|3. レイアウト保存|シフト開始 / 更新|同僚にアプリを共有|シフト終了 / データ消去|編集|隠す|ダーク|画面非表示中|タップして戻る|ベッド変更|この記録を削除しますか？|サマリー|バイタル|血糖値|臥位/立位血圧|水分出納|排便|皮膚・創傷処置|食事|体位変換|精神状態|メモ|タスク|入院持参品|済|済にする|ベッド完了|未転記のみ|すべて表示|画面常時オン|ベッド別|項目別|時間|室内気|タイミング|臥位|立位|差|量|性状|異常なし|発赤|損傷|すべて異常なし|創傷処置|部位 / メモ|日付|今日|交換日|朝食|昼食|夕食|拒否|絶飲食|仰臥位|左側臥位|右側臥位|端坐位/車椅子|歩行|観察レベル|様子|睡眠/安静|結果",
+  ko: "근무 설정|100% 오프라인 근무 수첩. 데이터는 기기 외부로 전송되지 않습니다.|환경설정 및 단위|테마|근무 시간대|주간 (07:00)|야간 (19:00)|혈당 단위|체온 단위|저장된 배치 불러오기|저장된 배치 없음|1. 병상 추가 (최대 4자)|추가|삭제|저장|2. 활성 항목 및 순서|3. 배치 이름 저장|근무 시작 / 업데이트|동료에게 앱 공유|근무 종료 / 데이터 삭제|편집|숨김|다크|화면 숨김|돌아가려면 터치하세요|병상 변경|이 기록을 삭제하시겠습니까?|요약|활력징후|혈당|와위/기립 혈압|수분 섭취/배설|배변|피부 및 드레싱|식이|체위변경|정신건강|메모|업무|입원 물품|완료|완료 표시|병상 완료|미기록만|전체 보기|화면 켜짐 유지|병상별|항목별|시간|실내공기|구분|와위(누움)|기립(섬)|차이|양|양상|온전함|발적|손상|모두 온전함|드레싱|부위 / 메모|날짜|오늘|예정일|아침|점심|저녁|거부|금식(NPO)|앙와위|좌측와위|우측와위|의자|보행|관찰 단계|상태|수면/안정|결과",
+  tl: "Setup ng Shift|100% offline digital shift notepad. Nananatili ang data sa iyong telepono.|Mga Preference at Unit|Tema|Oras ng Shift|Araw (07:00)|Gabi (19:00)|Unit ng Glucose|Unit ng Temp|I-load ang Layout|Walang naka-save|1. Magdagdag ng Kama (Max 4)|Idagdag|Burahin|I-save|2. Mga Active Module at Ayos|3. I-save ang Layout Bilang|Simulan / I-update ang Shift|Ibahagi sa Katrabaho|Tapusin ang Shift / Burahin|I-edit|Itago|Dark|Nakatago ang Screen|I-tap kahit saan para bumalik|Palitan ang Kama|Burahin ang entry na ito?|Buod|Vital Signs|Glucose|L/S BP|Fluids|Pagdumi|Balat at Dressing|Pagkain|Pagpihit|Mental Health|Mga Tala|Mga Gawain|Admissions|Tapos|Markahan|Kama Tapos Na|Pending Lang|Ipakita Lahat|Screen Naka-on|Bawat Kama|Bawat Module|Oras|Hangin|Konteksto|Nakahiga|Nakatayo|Pagkakaiba|Dami|Uri|Intact|Mapula|May Sugat|Lahat Intact|Dressing|Lokasyon / Tala|Petsa|Ngayon|Due|Almusal|Tanghalian|Hapunan|Tumanggi|NPO/NBM|Likod|Kaliwa|Kanan|Upuan|Naglalakad|Antas ng Obserbasyon|Mood|Pahinga|Resulta",
+  id: "Pengaturan Shift|Catatan shift digital 100% offline. Data tetap di perangkat Anda.|Preferensi & Satuan|Tema|Jam Shift|Siang (07:00)|Malam (19:00)|Satuan Glukosa|Satuan Suhu|Muat Tata Letak|Tidak ada tata letak|1. Tambah Bed (Maks 4 karakter)|Tambah|Hapus|Simpan|2. Modul Aktif & Urutan|3. Simpan Tata Letak Sebagai|Mulai / Perbarui Shift|Bagikan ke Rekan Kerja|Akhiri Shift / Hapus Data|Edit|Sembunyi|Gelap|Layar Disembunyikan|Ketuk untuk kembali|Ubah Bed|Hapus entri ini?|Ringkasan|Tanda Vital|Glukosa|TD Berbaring/Berdiri|Cairan|BAB|Kulit & Balutan|Diet|Miring Kanan/Kiri|Kesehatan Mental|Catatan|Tugas|Admisi|Selesai|Tandai Selesai|Bed Selesai|Belum Selesai|Tampilkan Semua|Layar Menyala|Per Bed|Per Modul|Waktu|Udara|Konteks|Berbaring|Berdiri|Selisih|Jumlah|Tipe|Utuh|Kemerahan|Luka/Lecet|Semua Utuh|Balutan|Lokasi / Catatan|Tanggal|Hari Ini|Jatuh Tempo|Sarapan|Makan Siang|Makan Malam|Menolak|Puasa|Telentang|Kiri|Kanan|Kursi|Jalan|Tingkat Observasi|Suasana Hati|Istirahat|Hasil",
+  vi: "Thiết Lập Ca Trực|Sổ tay ca trực ngoại tuyến 100%. Dữ liệu luôn ở trên máy của bạn.|Tùy Chọn & Đơn Vị|Giao Diện|Giờ Ca Trực|Ca Ngày (07:00)|Ca Đêm (19:00)|Đơn Vị Đường Huyết|Đơn Vị Nhiệt Độ|Tải Sơ Đồ Đã Lưu|Chưa có sơ đồ|1. Thêm Giường (Tối đa 4 ký tự)|Thêm|Xóa|Lưu|2. Các Mục & Thứ Tự|3. Lưu Sơ Đồ Tên|Bắt Đầu / Cập Nhật Ca|Chia Sẻ Với Đồng Nghiệp|Kết Thúc Ca / Xóa Dữ Liệu|Sửa|Ẩn|Tối|Đã Ẩn Màn Hình|Chạm bất kỳ để quay lại|Đổi Giường|Xóa mục này?|Tóm Tắt|Sinh Hiệu|Đường Huyết|HA Nằm/Đứng|Dịch Xuất Nhập|Đại Tiện|Da & Băng Vết Thương|Dinh Dưỡng|Xoay Trở|Sức Khỏe Tâm Thần|Ghi Chú|Công Việc|Nhập Viện|Xong|Đánh Dấu Xong|Xong Giường Này|Chưa Chép|Hiện Tất Cả|Giữ Sáng Màn Hình|Theo Giường|Theo Mục|Giờ|Khí Trời|Thời Điểm|Nằm|Đứng|Chênh Lệch|Lượng|Loại|Nguyên Vẹn|Đỏ Da|Trầy Loét|Tất Cả Nguyên Vẹn|Băng|Vị Trí / Ghi Chú|Ngày|Hôm Nay|Hạn Thay|Bữa Sáng|Bữa Trưa|Bữa Tối|Từ Chối|Nhịn Ăn|Nằm Ngửa|Nghiêng Trái|Nghiêng Phải|Ngồi Ghế|Đi Lại|Mức Theo Dõi|Tâm Trạng|Nghỉ Ngơi|Kết Quả",
+  ar: "إعداد المناوبة|مفكرة مناوبة رقمية تعمل بدون إنترنت 100%.|التفضيلات والوحدات|المظهر|ساعات المناوبة|نهاري (07:00)|ليلي (19:00)|وحدة السكر|وحدة الحرارة|تحميل تخطيط محفوظ|لا توجد تخطيطات|1. إضافة سرير (بحد أقصى 4 أحرف)|إضافة|حذف|حفظ|2. الأقسام النشطة والترتيب|3. حفظ التخطيط باسم|بدء / تحديث المناوبة|مشاركة التطبيق مع زميل|إنهاء المناوبة / مسح البيانات|تعديل|إخفاء|داكن|الشاشة مخفية|اضغط في أي مكان للعودة|تغيير السرير|حذف هذا الإدخال؟|الملخص|العلامات الحيوية|سكر الدم|الضغط مستلقياً/واقفاً|السوائل|الإخراج|الجلد والضمادات|التغذية|التقليب|الصحة النفسية|ملاحظات|المهام|مقتنيات الدخول|تم|تحديد كـ تم|إتمام السرير|قيد الانتظار|عرض الكل|إبقاء الشاشة مضاءة|حسب السرير|حسب القسم|الوقت|هواء الغرفة|السياق|مستلقٍ|واقف|الفرق|الكمية|النوع|سليم|احمرار|متقرح|تحديد الكل سليم|ضماد|الموقع / ملاحظات|التاريخ|اليوم|الاستحقاق|الإفطار|الغداء|العشاء|رفض|صائم|ظهر|يسار|يمين|كرسي|مشي|مستوى الملاحظة|المزاج|الراحة|النتيجة",
+  tr: "Nöbet Kurulumu|%100 çevrimdışı dijital nöbet not defteri.|Tercihler ve Birimler|Tema|Nöbet Saatleri|Gündüz (07:00)|Gece (19:00)|Şeker Birimi|Sıcaklık Birimi|Kayıtlı Düzeni Yükle|Kayıtlı düzen yok|1. Yatak Ekle (Maks 4 karakter)|Ekle|Sil|Kaydet|2. Aktif Modüller ve Sıralama|3. Düzeni Farklı Kaydet|Nöbeti Başlat / Güncelle|Arkadaşınla Paylaş|Nöbeti Bitir / Verileri Sil|Düzenle|Gizle|Koyu|Ekran Gizlendi|Dönmek için dokunun|Yatak Değiştir|Bu kayıt silinsin mi?|Özet|Vital Bulgular|Kan Şekeri|Yatarak/Ayakta KB|Sıvı İzlemi|Defekasyon|Cilt ve Pansuman|Beslenme|Pozisyon|Ruh Sağlığı|Notlar|Görevler|Yatış Eşyaları|Tamam|Tamamlandı|Yatak Tamam|Bekleyenler|Tümünü Göster|Ekranı Açık Tut|Yatağa Göre|Modüle Göre|Saat|Oda Havası|Bağlam|Yatarak|Ayakta|Fark|Miktar|Tip|Bütünlüğü Tam|Kızarık|Bozulmuş|Tümü Sağlam|Pansuman|Bölge / Notlar|Tarih|Bugün|Değişim|Kahvaltı|Öğle Yemeği|Akşam Yemeği|Reddetti|Oral Стоп|Sırtüstü|Sol|Sağ|Sandalye|Yürüyüş|Gözlem Seviyesi|Durum|Dinlenme|Sonuç",
+  fa: "تنظیمات شیفت|دفترچه یادداشت شیفت ۱۰۰٪ آفلاین. اطلاعات در گوشی شما می‌ماند.|تنظیمات و واحدها|پوسته|ساعات شیفت|روز (07:00)|شب (19:00)|واحد قند|واحد دما|بارگذاری چیدمان|چیدمانی ذخیره نشده|۱. افزودن تخت (حداکثر ۴ حرف)|افزودن|حذف|ذخیره|۲. بخش‌های فعال و ترتیب|۳. ذخیره چیدمان با نام|شروع / بروزرسانی شیفت|اشتراک‌گذاری با همکار|پایان شیفت / پاک کردن اطلاعات|ویرایش|مخفی|تیره|صفحه مخفی شد|برای بازگشت لمس کنید|تغییر تخت|این مورد حذف شود؟|خلاصه|علائم حیاتی|قند خون|فشار خون خوابیده/ایستاده|جذب و دفع|اجابت مزاج|پوست و پانسمان|رژیم غذایی|تغییر پوزیشن|سلامت روان|گزارش پرستاری|وظایف|وسایل بیمار|ثبت شد|علامت ثبت|تکمیل تخت|فقط ثبت‌نشده‌ها|نمایش همه|روشن ماندن صفحه|بر اساس تخت|بر اساس بخش|زمان|هوای اتاق|زمان‌بندی|خوابیده|ایستاده|تفاوت|مقدار|نوع|سالم|قرمزی|زخم|همه سالم|پانسمان|ناحیه / یادداشت|تاریخ|امروز|موعد|صبحانه|ناهار|شام|امتناع|NPO|طاق‌باز|چپ|راست|صندلی|راه رفتن|سطح تحت نظر|خلق|استراحت|نتیجه",
+  sw: "Mpangilio wa Zamu|Daftari la zamu la kidijitali lisilotumia mtandao 100%.|Mapendeleo na Vipimo|Mandhari|Saa za Zamu|Mchana (07:00)|Usiku (19:00)|Kipimo cha Sukari|Kipimo cha Joto|Pakia Mpangilio|Hakuna mpangilio|1. Ongeza Kitanda (Herufi 4)|Ongeza|Futa|Hifadhi|2. Sehemu Zinazotumika|3. Hifadhi Mpangilio Kama|Anza / Sasisha Zamu|Shiriki na Mwenzako|Maliza Zamu / Futa Data|Hariri|Ficha|Giza|Skrini Imefichwa|Gusa popote kurudi|Badili Kitanda|Futa kipengele hiki?|Muhtasari|Dalili za Uhai|Sukari|BP Kulala/Kusimama|Vimiminika|Choo Kubwa|Ngozi na Vidonda|Lishe|Kugeuza Mgonjwa|Afya ya Akili|Maelezo|Majukumu|Mali za Mgonjwa|Tayari|Weka Alama|Kitanda Tayari|Zinazosubiri|Onyesha Zote|Washa Skrini|Kwa Kitanda|Kwa Sehemu|Muda|Hewa|Muktadha|Kulala|Kusimama|Tofauti|Kiasi|Aina|Salama|Nyekundu|Michubuko|Zote Salama|Kidonda|Mahali / Maelezo|Tarehe|Leo|Inatarajiwa|Kifungua Kinywa|Chakula cha Mchana|Chakula cha Jioni|Amekataa|NBM|Chali|Kushoto|Kulia|Kiti|Kutembea|Kiwango cha Uangalizi|Hali|Mapumziko|Matokeo"
 };
+
+const chipDict = {
+  en: { phrases:['Personal care given', 'Washed & dressed', 'Pressure areas intact', 'Mobilised to chair', 'Escalated to RN', 'Family updated'], tasks:['Bloods', 'ECG', 'Repeat Obs', 'BM', 'Bladder Scan', 'Cannula'], admits:['Dentures', 'Glasses', 'Hearing Aid', 'Frame/Stick', 'Phone/Charger', 'Keys', 'Cash/Wallet'] },
+  es: { phrases:['Aseo personal realizado', 'Lavado y vestido', 'Zonas de presión íntegras', 'Movilizado a sillón', 'Informado a enfermera', 'Familia informada'], tasks:['Analítica', 'ECG', 'Repetir Constantes', 'Glucemia', 'Ecografía Vesical', 'Vía Venosa'], admits:['Prótesis Dental', 'Gafas', 'Audífono', 'Andador/Bastón', 'Móvil/Cargador', 'Llaves', 'Efectivo/Cartera'] },
+  fr: { phrases:['Soins d’hygiène effectués', 'Lavé et habillé', 'Points d’appui intacts', 'Installé au fauteuil', 'Transmis à l’IDE', 'Famille informée'], tasks:['Bilan Sanguin', 'ECG', 'Contrôle Constantes', 'Glycémie', 'Bladder Scan', 'Cathéter'], admits:['Prothèse Dentaire', 'Lunettes', 'Appareil Auditif', 'Déambulateur/Canne', 'Téléphone/Chargeur', 'Clés', 'Espèces/Portefeuille'] },
+  de: { phrases:['Körperpflege durchgeführt', 'Gewaschen & angekleidet', 'Druckstellen intakt', 'In den Stuhl mobilisiert', 'An Pflegefachkraft gemeldet', 'Angehörige informiert'], tasks:['Blutentnahme', 'EKG', 'Vitalzeichen-Kontrolle', 'BZ-Kontrolle', 'Blasenscan', 'Venenverweilkanüle'], admits:['Zahnprothese', 'Brille', 'Hörgerät', 'Rollator/Gehstock', 'Handy/Ladegerät', 'Schlüssel', 'Bargeld/Geldbörse'] },
+  pt: { phrases:['Cuidados de higiene realizados', 'Banho e troca realizados', 'Zonas de pressão íntegras', 'Mobilizado para poltrona', 'Comunicado ao enfermeiro', 'Família atualizada'], tasks:['Exames de Sangue', 'ECG', 'Repetir Sinais Vitais', 'Glicemia Capilar', 'Bladder Scan', 'Acesso Venoso'], admits:['Prótese Dentária', 'Óculos', 'Aparelho Auditivo', 'Andador/Bengala', 'Telemóvel/Carregador', 'Chaves', 'Dinheiro/Carteira'] },
+  it: { phrases:['Cure igieniche effettuate', 'Lavato e vestito', 'Zone di pressione integre', 'Mobilizzato in poltrona', 'Segnalato all’infermiere', 'Famiglia aggiornata'], tasks:['Prelievo Ematico', 'ECG', 'Controllo Parametri', 'Glicemia', 'Bladder Scan', 'CVP/Cannula'], admits:['Protesi Dentaria', 'Occhiali', 'Apparecchio Acustico', 'Deambulatore/Bastone', 'Telefono/Caricabatterie', 'Chiavi', 'Contanti/Portafoglio'] },
+  nl: { phrases:['Persoonlijke verzorging gegeven', 'Gewassen en aangekleed', 'Drukplekken intact', 'Gemobiliseerd naar stoel', 'Gemeld aan verpleegkundige', 'Familie geïnformeerd'], tasks:['Bloedafname', 'ECG', 'Herhaal Controles', 'Bloedsuiker', 'Bladderscan', 'Infuus/Canule'], admits:['Gebitsprothese', 'Bril', 'Gehoorapparaat', 'Rollator/Wandelstok', 'Telefoon/Oplader', 'Sleutels', 'Contanten/Portemonnee'] },
+  sv: { phrases:['Personlig omvårdnad utförd', 'Tvättad och påklädd', 'Tryckytor intakta', 'Mobiliserad till fåtölj', 'Rapporterat till SSK', 'Närstående informerade'], tasks:['Blodprov', 'EKG', 'Nya Kontroller', 'B-Glukos', 'BladderScan', 'PVK'], admits:['Tandprotes', 'Glasögon', 'Hörapparat', 'Rollator/Käpp', 'Mobil/Laddare', 'Nycklar', 'Kontanter/Plånbok'] },
+  pl: { phrases:['Wykonano toaletę ciała', 'Umyto i przebrano', 'Miejsca ucisku bez zmian', 'Posadzono w fotelu', 'Zgłoszono pielęgniarce', 'Poinformowano rodzinę'], tasks:['Badania Krwi', 'EKG', 'Kontrola Parametrów', 'Glikemia', 'USG Pęcherza', 'Wenflon'], admits:['Proteza Zębowa', 'Okulary', 'Aparat Słuchowy', 'Chodzik/Laska', 'Telefon/Ładowarka', 'Klucze', 'Gotówka/Portfel'] },
+  ro: { phrases:['Igienă personală efectuată', 'Spălat și schimbat', 'Zone de presiune integre', 'Mobilizat în fotoliu', 'Anunțat asistentul medical', 'Familie informată'], tasks:['Analize Sânge', 'EKG', 'Repetare Funcții Vitale', 'Glicemie', 'Scanare Vezicală', 'Branulă'], admits:['Proteză Dentară', 'Ochelari', 'Aparat Auditiv', 'Cadru/Baston', 'Telefon/Încărcător', 'Chei', 'Bani/Portofel'] },
+  uk: { phrases:['Проведено особисту гігієну', 'Вмитий та переодягнений', 'Місця тиску неушкоджені', 'Пересаджено в крісло', 'Повідомлено медсестру', 'Родину поінформовано'], tasks:['Аналіз Крові', 'ЕКГ', 'Повторити Показники', 'Глюкоза Крові', 'УЗД Сечового', 'Катетер'], admits:['Зубні Протези', 'Окуляри', 'Слуховий Апарат', 'Ходунки/Тростина', 'Телефон/Зарядка', 'Ключі', 'Готівка/Гаманець'] },
+  ru: { phrases:['Гигиенический уход выполнен', 'Умыт и переодет', 'Точки давления без изменений', 'Пересажен в кресло', 'Доложено медсестре', 'Родственники информированы'], tasks:['Забор Крови', 'ЭКГ', 'Повтор Показателей', 'Глюкометрия', 'УЗИ Мочевого', 'Канюля'], admits:['Зубные Протезы', 'Очки', 'Слуховой Аппарат', 'Ходунки/Трость', 'Телефон/Зарядка', 'Ключи', 'Наличные/Кошелек'] },
+  el: { phrases:['Δόθηκε ατομική φροντίδα', 'Πλύθηκε και ντύθηκε', 'Σημεία πίεσης ακέραια', 'Κινητοποιήθηκε σε καρέκλα', 'Ενημερώθηκε νοσηλευτής', 'Ενημερώθηκε η οικογένεια'], tasks:['Αιμοληψία', 'ΗΚΓ', 'Επανάληψη Ζωτικών', 'Σάκχαρο', 'Υπέρηχος Κύστης', 'Φλεβοκαθετήρας'], admits:['Οδοντοστοιχία', 'Γυαλιά', 'Ακουστικό', 'Πι/Μπαστούνι', 'Τηλέφωνο/Φορτιστής', 'Κλειδιά', 'Μετρητά/Πορτοφόλι'] },
+  hi: { phrases:['व्यक्तिगत देखभाल दी गई', 'स्नान और कपड़े बदले गए', 'दबाव वाले हिस्से सुरक्षित हैं', 'कुर्सी पर बैठाया गया', 'नर्स (RN) को सूचित किया', 'परिवार को जानकारी दी गई'], tasks:['ब्लड टेस्ट', 'ECG', 'दोबारा वाइटल्स', 'शुगर जांच (BM)', 'ब्लैडर स्कैन', 'कैनुला'], admits:['नकली दांत', 'चश्मा', 'हियरिंग एड', 'वॉकर/छड़ी', 'फोन/चार्जर', 'चाबियां', 'नकद/पर्स'] },
+  bn: { phrases:['ব্যক্তিগত পরিচর্যা দেওয়া হয়েছে', 'পরিষ্কার ও পোশাক পরিবর্তন করা হয়েছে', 'চাপের স্থানগুলো অক্ষত আছে', 'চেয়ারে বসানো হয়েছে', 'নার্সকে (RN) জানানো হয়েছে', 'পরিবারকে আপডেট দেওয়া হয়েছে'], tasks:['রক্ত পরীক্ষা', 'ইসিজি (ECG)', 'পুনরায় ভাইটালস', 'ব্লাড সুগার', 'ব্লাডার স্ক্যান', 'ক্যানুলা'], admits:['নকল দাঁত', 'চশমা', 'হিয়ারিং এইড', 'ওয়াকার/লাঠি', 'ফোন/চার্জার', 'চাবি', 'নগদ টাকা/মানিব্যাগ'] },
+  pa: { phrases:['ਨਿੱਜੀ ਦੇਖਭਾਲ ਦਿੱਤੀ ਗਈ', 'ਨਹਾਇਆ ਅਤੇ ਕੱਪੜੇ ਬਦਲੇ', 'ਦਬਾਅ ਵਾਲੇ ਹਿੱਸੇ ਠੀਕ ਹਨ', 'ਕੁਰਸੀ ਤੇ ਬਿਠਾਇਆ ਗਿਆ', 'ਨਰਸ (RN) ਨੂੰ ਦੱਸਿਆ ਗਿਆ', 'ਪਰਿਵਾਰ ਨੂੰ ਜਾਣਕਾਰੀ ਦਿੱਤੀ'], tasks:['ਖੂਨ ਦੀ ਜਾਂਚ', 'ECG', 'ਦੁਬਾਰਾ ਵਾਈਟਲਸ', 'ਸ਼ੂਗਰ ਜਾਂਚ', 'ਬਲੈਡਰ ਸਕੈਨ', 'ਕੈਨੂਲਾ'], admits:['ਨਕਲੀ ਦੰਦ', 'ਐਨਕਾਂ', 'ਸੁਣਨ ਵਾਲੀ ਮਸ਼ੀਨ', 'ਵਾਕਰ/ਸੋਟੀ', 'ਫੋਨ/ਚਾਰਜਰ', 'ਚਾਬੀਆਂ', 'ਨਕਦੀ/ਪਰਸ'] },
+  ur: { phrases:['ذاتی نگہداشت فراہم کی گئی', 'غسل اور لباس تبدیل کیا گیا', 'دباؤ والے حصے محفوظ ہیں', 'کرسی پر بٹھایا گیا', 'نرس (RN) کو مطلع کیا گیا', 'اہل خانہ کو آگاہ کیا گیا'], tasks:['بلڈ ٹیسٹ', 'ECG', 'دوبارہ وائٹلز', 'شوگر چیک', 'بلیڈر اسکین', 'کینولا'], admits:['مصنوعی دانت', 'عینک', 'آلہ سماعت', 'واکر/چھڑی', 'فون/چارجر', 'چابیاں', 'نقدی/بٹوہ'] },
+  ta: { phrases:['தனிப்பட்ட பராமரிப்பு வழங்கப்பட்டது', 'குளிப்பாட்டி உடை மாற்றப்பட்டது', 'அழுத்தப் பகுதிகள் பாதிப்பில்லை', 'நாற்காலியில் அமர வைக்கப்பட்டார்', 'செவிலியரிடம் (RN) தெரிவிக்கப்பட்டது', 'குடும்பத்தினருக்கு தகவல் அளிக்கப்பட்டது'], tasks:['இரத்தப் பரிசோதனை', 'ECG', 'மீண்டும் வைட்டல்ஸ்', 'சர்க்கரை அளவு', 'பிளாடர் ஸ்கேன்', 'கானுலா'], admits:['பல் செட்', 'மூக்குக்கண்ணாடி', 'காது கேட்கும் கருவி', 'வாக்கர்/கைத்தடி', 'போன்/சார்ஜர்', 'சாவிகள்', 'பணம்/பர்ஸ்'] },
+  ml: { phrases:['വ്യക്തിഗത പരിചരണം നൽകി', 'കുളിപ്പിച്ച് വസ്ത്രം മാറ്റി', 'പ്രഷർ ഏരിയകൾക്ക് കുഴപ്പമില്ല', 'കസേരയിലേക്ക് മാറ്റിയിരുത്തി', 'നഴ്സിനെ (RN) അറിയിച്ചു', 'കുടുംബത്തെ വിവരമറിയിച്ചു'], tasks:['രക്തപരിശോധന', 'ECG', 'വൈറ്റൽസ് ആവർത്തിക്കുക', 'ഷുഗർ (BM)', 'ബ്ലാഡർ സ്കാൻ', 'കാനുല'], admits:['വെപ്പുപല്ല്', 'കണ്ണട', 'ഹിയറിംഗ് എയ്ഡ്', 'വാക്കർ/വടി', 'ഫോൺ/ചാർജർ', 'താക്കോൽ', 'പണം/പേഴ്സ്'] },
+  zh: { phrases:['已完成个人护理', '已擦浴并更换衣物', '受压部位皮肤完好', '已协助移至座椅', '已上报责任护士(RN)', '已向家属沟通病情'], tasks:['抽血', '心电图 (ECG)', '复测生命体征', '测血糖', '膀胱扫描', '留置针护理'], admits:['假牙', '眼镜', '助听器', '助行器/拐杖', '手机/充电器', '钥匙', '现金/钱包'] },
+  'zh-tw': { phrases:['已完成個人護理', '已擦澡並更換衣物', '受壓部位皮膚完整', '已協助移至座椅', '已通報負責護理師(RN)', '已向家屬說明近況'], tasks:['抽血', '心電圖 (ECG)', '複測生命徵象', '測血糖', '膀胱掃描', '留置針護理'], admits:['假牙', '眼鏡', '助聽器', '助行器/拐杖', '手機/充電器', '鑰匙', '現金/錢包'] },
+  ja: { phrases:['清潔ケア実施', '清拭・更衣完了', '褥瘡好発部位異常なし', '車椅子・椅子へ離床', '看護師へ報告済', '家族へ連絡済'], tasks:['採血', '心電図 (ECG)', 'バイタル再検', '血糖測定', 'ブラダースキャン', '末梢ルート'], admits:['義歯', '眼鏡', '補聴器', '歩行器・杖', '携帯電話・充電器', '鍵', '現金・財布'] },
+  ko: { phrases:['개인 위생 간호 시행', '세안 및 환의 교체', '욕창 부위 피부 온전함', '의자로 이동 보조', '담당 간호사(RN) 보고됨', '보호자 설명 완료'], tasks:['채혈', '심전도 (ECG)', '활력징후 재측정', '혈당(BST)', '방광 스캔', '정맥 주사관'], admits:['틀니', '안경', '보청기', '보행기/지팡이', '휴대폰/충전기', '열쇠', '현금/지갑'] },
+  tl: { phrases:['Nabigyan ng personal care', 'Napaliguan at nabihisan', 'Intact ang pressure areas', 'Nailipat sa upuan', 'Na-escalate sa RN', 'Na-update ang pamilya'], tasks:['Bloods', 'ECG', 'Ulitin ang Obs', 'BM', 'Bladder Scan', 'Cannula'], admits:['Pustiso', 'Salamin', 'Hearing Aid', 'Walker/Tungkod', 'Cellphone/Charger', 'Susi', 'Pera/Pitaka'] },
+  id: { phrases:['Perawatan diri diberikan', 'Sudah dimandikan & ganti pakaian', 'Area tekan utuh/intact', 'Mobilisasi ke kursi', 'Dilaporkan ke perawat (RN)', 'Keluarga sudah diinformasikan'], tasks:['Cek Darah', 'EKG', 'Ulang Tanda Vital', 'Gula Darah', 'Bladder Scan', 'Kanula/Infus'], admits:['Gigi Palsu', 'Kacamata', 'Alat Bantu Dengar', 'Walker/Tongkat', 'HP/Charger', 'Kunci', 'Uang/Dompet'] },
+  vi: { phrases:['Đã chăm sóc vệ sinh cá nhân', 'Đã tắm rửa & thay đồ', 'Vùng tỳ đè nguyên vẹn', 'Hỗ trợ ngồi ghế', 'Đã báo điều dưỡng (RN)', 'Đã cập nhật cho gia đình'], tasks:['Lấy Máu', 'Điện Tim (ECG)', 'Đo Lại Sinh Hiệu', 'Đường Huyết', 'Siêu Âm Bàng Quang', 'Kim Luồn'], admits:['Răng Giả', 'Mắt Kính', 'Máy Trợ Thính', 'Khung Tập Đi/Gậy', 'Điện Thoại/Sạc', 'Chìa Khóa', 'Tiền Mặt/Ví'] },
+  ar: { phrases:['تم تقديم الرعاية الشخصية', 'تم الاستحمام وتغيير الملابس', 'مناطق الضغط سليمة', 'تم الإجلاس على الكرسي', 'تم إبلاغ الممرض المسؤول', 'تم تحديث العائلة'], tasks:['سحب دم', 'تخطيط قلب (ECG)', 'إعادة العلامات الحيوية', 'فحص السكر', 'مسح المثانة', 'كانيولا'], admits:['طقم أسنان', 'نظارات', 'سماعة طبية', 'مشاية/عكاز', 'هاتف/شاحن', 'مفاتيح', 'نقود/محفظة'] },
+  tr: { phrases:['Kişisel bakım verildi', 'Yıkandı ve giydirildi', 'Bası bölgeleri sağlam', 'Sandalyeye mobilize edildi', 'Sorumlu hemşireye bildirildi', 'Aile bilgilendirildi'], tasks:['Kan Alma', 'EKG', 'Vital Tekrarı', 'Kan Şekeri', 'Mesane Ultrasonu', 'Branül'], admits:['Diş Protezi', 'Gözlük', 'İşitme Cihazı', 'Yürüteç/Baston', 'Telefon/Şarj', 'Anahtar', 'Nakit/Cüzdan'] },
+  fa: { phrases:['مراقبت شخصی انجام شد', 'شستشو و تعویض لباس انجام شد', 'نواحی تحت فشار سالم است', 'به صندلی منتقل شد', 'به پرستار مسئول اطلاع داده شد', 'به خانواده اطلاع داده شد'], tasks:['نمونه‌گیری خون', 'نوار قلب (ECG)', 'چک مجدد علائم حیاتی', 'تست قند خون', 'اسکن مثانه', 'آنژیوکت'], admits:['دندان مصنوعی', 'عینک', 'سمعک', 'واکر/عصا', 'موبایل/شارژر', 'کلید', 'وجه نقد/کیف پول'] },
+  sw: { phrases:['Huduma ya usafi imetolewa', 'Ameogeshwa na kuvalishwa', 'Sehemu za mgandamizo zipo salama', 'Amehamishwa kwenye kiti', 'Muuguzi (RN) amefahamishwa', 'Familia imejulishwa'], tasks:['Vipimo vya Damu', 'ECG', 'Rudia Vipimo', 'Kipimo cha Sukari', 'Bladder Scan', 'Kanyula'], admits:['Meno ya Bandia', 'Miwani', 'Kifaa cha Kusikia', 'Kitembezi/Fimbo', 'Simu/Chaja', 'Funguo', 'Pesa/Pochi'] }
+};
+
+const i18n = {};
+Object.keys(rawDict).forEach(lang => {
+  i18n[lang] = { ...(chipDict[lang] || chipDict.en) };
+  const parts = rawDict[lang].split('|');
+  tKeys.forEach((k, idx) => { i18n[lang][k] = parts[idx] || ''; });
+});
 
 let defaultMods = [
   {id:'obs', lbl:'Vitals', on:true, pro:false},
@@ -402,26 +463,41 @@ function applyPrefsUI() {
   document.documentElement.dir = rtlLangs.includes(prefs.lang) ? 'rtl' : 'ltr';
   document.getElementById('prefLang').value = prefs.lang;
   document.getElementById('prefTheme').value = isPro ? prefs.theme : 'teal';
+  document.getElementById('prefShift').value = prefs.shift || 'day';
   document.getElementById('prefBm').value = prefs.bmUnit;
   document.getElementById('prefTemp').value = prefs.tempUnit;
   document.body.setAttribute('data-color', isPro ? prefs.theme : 'teal');
-  document.getElementById('lblSetupTitle').textContent = t('setup');
-  document.getElementById('btnStartShift').textContent = t('start');
-  document.getElementById('btnShare').textContent = t('share');
-  const endBtn = document.getElementById('btnEndShift');
-  if (endBtn) endBtn.textContent = t('endShift');
+  document.body.setAttribute('data-theme', prefs.dark ? 'night' : 'day');
+  const dt = document.getElementById('darkToggle');
+  if (dt) dt.checked = !!prefs.dark;
+
+  const mapIds = {
+    lblSetupTitle:'setup', lblSetupSub:'sub', lblPrefs:'prefs', lblThemeTxt:'theme',
+    lblShiftType:'shiftHrs', optDayShift:'dayShift', optNightShift:'nightShift',
+    lblBmUnit:'bmUnit', lblTempUnit:'tempUnit', lblSavedLayouts:'savedLay',
+    lblAddBed:'addBed', btnAddBed:'add', btnDelLayout:'del', btnSaveLayout:'save',
+    lblActiveMods:'activeMods', lblSaveLayout:'saveLay', btnStartShift:'start',
+    btnShare:'share', btnEndShift:'endShift', btnHdrEdit:'edit', btnHdrHide:'hide',
+    lblHdrDark:'dark', lblHiddenTitle:'hiddenTitle', lblHiddenSub:'hiddenSub'
+  };
+  Object.keys(mapIds).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(mapIds[id]);
+  });
 
   if (isPro) {
     document.getElementById('proBox').classList.add('hidden');
     const badge = document.getElementById('tierBadge');
-    badge.textContent = 'PRO UNLOCKED';
+    badge.textContent = 'PRO';
     badge.style.background = 'var(--teal)';
     ['themeProTag', 'layoutProTag', 'saveProTag'].forEach(id => document.getElementById(id).classList.add('hidden'));
   }
+  updateLayoutDropdown();
 }
 
 function savePrefs() {
   prefs.lang = document.getElementById('prefLang').value;
+  prefs.shift = document.getElementById('prefShift').value;
   prefs.bmUnit = document.getElementById('prefBm').value;
   prefs.tempUnit = document.getElementById('prefTemp').value;
   localStorage.setItem('cdu_prefs', JSON.stringify(prefs));
@@ -431,7 +507,7 @@ function savePrefs() {
 
 function changeTheme(val) {
   if (!isPro && val !== 'teal') {
-    alert('Custom colour themes are a Care Digipad Pro feature. Unlock Pro for £9.99 to personalise your app.');
+    alert('PRO (£9.99)');
     document.getElementById('prefTheme').value = 'teal';
     return;
   }
@@ -441,16 +517,15 @@ function changeTheme(val) {
 
 function unlockPro() {
   const key = document.getElementById('proKeyInput').value.trim().toUpperCase();
-  if (!key) return alert('Please enter a licence key.');
+  if (!key) return;
   if (key === 'CARE-PRO-2026' || (key.startsWith('CDP-') && key.length >= 12)) {
     isPro = true;
     localStorage.setItem('cdu_pro', 'true');
     activeMods.forEach(m => { if (['reminders','bowel','amy','turn'].includes(m.id)) m.on = true; });
     applyPrefsUI();
     renderMods();
-    alert('Care Digipad Pro unlocked! All features are now active.');
   } else {
-    alert('Invalid licence key. Please check your purchase email and try again.');
+    alert('Invalid key.');
   }
 }
 
@@ -462,11 +537,10 @@ function toggleBlur(show) {
 
 function shareApp() {
   const shareUrl = window.location.origin + window.location.pathname;
-  const shareText = `I have been using Care Digipad as an offline shift notepad instead of scrap paper. Try it here: ${shareUrl}`;
   if (navigator.share) {
-    navigator.share({ title: 'Care Digipad', text: shareText, url: shareUrl }).catch(() => {});
+    navigator.share({ title: 'Care Digipad', url: shareUrl }).catch(() => {});
   } else {
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
   }
 }
 
@@ -483,7 +557,6 @@ function generateTimeOpts(sel) {
 
 function initSetup() {
   applyPrefsUI();
-  updateLayoutDropdown();
   if (localStorage.getItem('cdu_alloc')) {
     renderSetupGrid();
     renderMods();
@@ -505,8 +578,8 @@ function renderMods() {
     <div class="mod-item" style="${locked?'opacity:0.65;':''}">
       <input type="checkbox" ${m.on && !locked?'checked':''} onchange="toggleMod(${i}, this)" style="width:20px; height:20px; margin-inline-end:12px;">
       <span style="flex:1; font-weight:600; color:var(--text);">${t(m.id)} ${locked?'<span class="pro-tag">PRO</span>':''}</span>
-      <button class="btn btn-subtle btn-sm" style="padding:4px 10px;" onclick="moveMod(${i}, -1)">Up</button>
-      <button class="btn btn-subtle btn-sm" style="padding:4px 10px; margin-inline-start:4px;" onclick="moveMod(${i}, 1)">Down</button>
+      <button class="btn btn-subtle btn-sm" style="padding:4px 12px; font-weight:800;" onclick="moveMod(${i}, -1)">&uarr;</button>
+      <button class="btn btn-subtle btn-sm" style="padding:4px 12px; margin-inline-start:4px; font-weight:800;" onclick="moveMod(${i}, 1)">&darr;</button>
     </div>`;
   }).join('');
 }
@@ -514,7 +587,7 @@ function renderMods() {
 function toggleMod(i, el) {
   if (activeMods[i].pro && !isPro) {
     el.checked = false;
-    alert('This specialist module is part of Care Digipad Pro (£9.99 lifetime unlock).');
+    alert('PRO (£9.99)');
     return;
   }
   activeMods[i].on = el.checked;
@@ -530,14 +603,15 @@ function moveMod(i, dir) {
 
 function updateLayoutDropdown() {
   const sel = document.getElementById('savedLayoutsDropdown');
+  if (!sel) return;
   sel.innerHTML = Object.keys(savedLayouts).map(k => `<option value="${k}">${k}</option>`).join('');
-  if(Object.keys(savedLayouts).length === 0) sel.innerHTML = '<option value="">No saved layouts</option>';
+  if(Object.keys(savedLayouts).length === 0) sel.innerHTML = `<option value="">${t('noLay')}</option>`;
 }
 
 function saveLayout() {
-  if (!isPro) return alert('Saving ward layouts for one-tap loading is a Care Digipad Pro feature (£9.99 lifetime unlock).');
+  if (!isPro) return alert('PRO (£9.99)');
   const name = document.getElementById('layoutNameInput').value.trim();
-  if(!name) return alert('Enter a layout name.');
+  if(!name) return;
   savedLayouts[name] = { beds: [...currentLayoutBeds], mods: [...activeMods] };
   localStorage.setItem('cdu_layouts', JSON.stringify(savedLayouts));
   updateLayoutDropdown();
@@ -546,8 +620,7 @@ function saveLayout() {
 }
 
 function loadLayout(name) {
-  if (!isPro) return alert('Loading saved layouts is a Care Digipad Pro feature.');
-  if(!savedLayouts[name]) return;
+  if (!isPro || !savedLayouts[name]) return;
   if(Array.isArray(savedLayouts[name])) {
     currentLayoutBeds = [...savedLayouts[name]];
     activeMods = JSON.parse(JSON.stringify(defaultMods));
@@ -562,7 +635,7 @@ function loadLayout(name) {
 
 function deleteLayout() {
   const name = document.getElementById('savedLayoutsDropdown').value;
-  if(!name || !confirm(`Delete layout ${name}?`)) return;
+  if(!name || !confirm(t('delConfirm'))) return;
   delete savedLayouts[name];
   localStorage.setItem('cdu_layouts', JSON.stringify(savedLayouts));
   currentLayoutBeds = []; alloc = [];
@@ -570,9 +643,7 @@ function deleteLayout() {
 }
 
 function addNewBed() {
-  if (!isPro && currentLayoutBeds.length >= 4) {
-    return alert('Free tier includes up to 4 beds per shift. Unlock Care Digipad Pro (£9.99 one-off) for unlimited beds.');
-  }
+  if (!isPro && currentLayoutBeds.length >= 4) return alert('PRO (£9.99)');
   const input = document.getElementById('newBedInput');
   const val = input.value.trim().toUpperCase().substring(0, 4);
   if (val && !currentLayoutBeds.includes(val)) {
@@ -598,9 +669,7 @@ function renderSetupGrid() {
 }
 
 function toggleAlloc(bed) {
-  if (!alloc.includes(bed) && !isPro && alloc.length >= 4) {
-    return alert('Free tier allows up to 4 active beds. Unlock Pro for unlimited beds.');
-  }
+  if (!alloc.includes(bed) && !isPro && alloc.length >= 4) return alert('PRO (£9.99)');
   if(alloc.includes(bed)) alloc = alloc.filter(b => b !== bed);
   else alloc.push(bed);
   renderSetupGrid();
@@ -608,7 +677,7 @@ function toggleAlloc(bed) {
 
 function startShift(auto = false) {
   if (!auto) {
-    if (alloc.length === 0) return alert('Select at least one bed.');
+    if (alloc.length === 0) return;
     currentLayoutBeds.sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
     alloc.sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
     localStorage.setItem('cdu_alloc', JSON.stringify(alloc));
@@ -644,11 +713,40 @@ function startShift(auto = false) {
   startAlertTimer();
 }
 function saveDB() { localStorage.setItem('cdu_db', JSON.stringify(db)); }
-function toggleNight(val) { isNight = val; document.body.setAttribute('data-theme', isNight ? 'night' : 'day'); renderUI(); }
+
+function toggleDark(val) {
+  prefs.dark = val;
+  localStorage.setItem('cdu_prefs', JSON.stringify(prefs));
+  document.body.setAttribute('data-theme', val ? 'night' : 'day');
+}
+
 function setBed(b) { curBed = b; showSummary = false; releaseWakeLock(); renderUI(); }
 function setSec(s) { curSec = s; showSummary = false; releaseWakeLock(); renderUI(); }
 function toggleSummary() { showSummary = true; renderUI(); }
 function editBeds() { releaseWakeLock(); document.getElementById('mainView').classList.add('hidden'); document.getElementById('setupView').classList.remove('hidden'); applyPrefsUI(); renderSetupGrid(); renderMods(); }
+
+function renameCurrentBed() {
+  const newCode = prompt(t('renameBed') + ` (${curBed}):`, curBed);
+  if (!newCode) return;
+  const clean = newCode.trim().toUpperCase().substring(0, 4);
+  if (!clean || clean === curBed) return;
+  if (alloc.includes(clean)) return alert('Bed already exists.');
+  db[clean] = db[curBed];
+  delete db[curBed];
+  alloc = alloc.map(b => b === curBed ? clean : b);
+  currentLayoutBeds = currentLayoutBeds.map(b => b === curBed ? clean : b);
+  curBed = clean;
+  localStorage.setItem('cdu_alloc', JSON.stringify(alloc));
+  localStorage.setItem('cdu_ward', JSON.stringify(currentLayoutBeds));
+  saveDB();
+  renderUI();
+}
+
+function bedHasOverdue(b) {
+  if (!db[b] || !db[b].reminders) return false;
+  const now = tNow();
+  return db[b].reminders.some(r => !r.outcome && r.time && r.time <= now);
+}
 
 async function requestWakeLock() {
   if ('wakeLock' in navigator) {
@@ -659,7 +757,6 @@ async function requestWakeLock() {
       keepAwake = false;
     }
   } else {
-    alert('Screen Wake Lock is not supported on this browser.');
     keepAwake = false;
   }
 }
@@ -673,11 +770,8 @@ function releaseWakeLock() {
 }
 
 async function toggleKeepAwake() {
-  if (keepAwake) {
-    releaseWakeLock();
-  } else {
-    await requestWakeLock();
-  }
+  if (keepAwake) releaseWakeLock();
+  else await requestWakeLock();
   renderContent();
 }
 
@@ -744,21 +838,34 @@ function trSkin(val) {
   return val;
 }
 
+function trTurn(val) {
+  const map = { Back:'back', Left:'left', Right:'right', Chair:'chair', Walking:'walking', Refused:'refused' };
+  return map[val] ? t(map[val]) : val;
+}
+
 function getBedSectionHtml(b, secId) {
   const d = db[b];
   if (!d) return '';
   if (!d.td) d.td = {};
+  const isNightShift = prefs.shift === 'night';
 
   if (secId === 'obs' && d.obs && d.obs.length > 0) {
-    return d.obs.map((l,i) => rowUI(`<b>${l.time||'--:--'}</b> - RR <b>${l.rr||'-'}</b>, SpO2 <b>${l.spo2||'-'}%</b> (<b>${l.o2||'Air'}</b>), BP <b>${l.sys||'-'}/${l.dia||'-'}</b>, HR <b>${l.hr||'-'}</b>, <b>${l.acvpu||'Alert'}</b>, Temp <b>${l.t||'-'}${prefs.tempUnit}</b>`, b, 'obs', i)).filter(Boolean).join('');
+    return d.obs.map((l,i) => {
+      const o2Txt = l.o2 === 'O2' ? `O2${l.o2f ? ' ' + l.o2f : ''}` : t('air');
+      return rowUI(`<b>${l.time||'--:--'}</b> - RR <b>${l.rr||'-'}</b>, SpO2 <b>${l.spo2||'-'}%</b> (<b>${o2Txt}</b>), BP <b>${l.sys||'-'}/${l.dia||'-'}</b>, HR <b>${l.hr||'-'}</b>, <b>${l.acvpu||'A'}</b>, Temp <b>${l.t||'-'}${prefs.tempUnit}</b>`, b, 'obs', i);
+    }).filter(Boolean).join('');
   }
   if (secId === 'bm' && d.bm && d.bm.length > 0) {
-    return d.bm.map((l,i) => rowUI(`<b>${l.time||'--:--'}</b> - <b>${l.val||'-'} ${prefs.bmUnit}</b> (<b>${l.meal||'Unspecified'}</b>)`, b, 'bm', i)).filter(Boolean).join('');
+    return d.bm.map((l,i) => rowUI(`<b>${l.time||'--:--'}</b> - <b>${l.val||'-'} ${prefs.bmUnit}</b> (<b>${l.meal||'-'}</b>)`, b, 'bm', i)).filter(Boolean).join('');
   }
   if (secId === 'bp' && d.bp && (d.bp.lsys || d.bp.ldia || d.bp.ssys || d.bp.sdia)) {
-    let txt = `Lying: <b>${d.bp.lsys||'-'}/${d.bp.ldia||'-'}</b> | Standing: <b>${d.bp.ssys||'-'}/${d.bp.sdia||'-'}</b>`;
+    let txt = `${t('lying')}: <b>${d.bp.lsys||'-'}/${d.bp.ldia||'-'}</b> | ${t('standing')}: <b>${d.bp.ssys||'-'}/${d.bp.sdia||'-'}</b>`;
     const lsys = parseFloat(d.bp.lsys)||0, ssys = parseFloat(d.bp.ssys)||0;
-    if (lsys && ssys) txt += `<br>Difference: <b>${lsys - ssys}</b>`;
+    const ldia = parseFloat(d.bp.ldia)||0, sdia = parseFloat(d.bp.sdia)||0;
+    if (lsys && ssys) {
+      const diaDiff = (ldia && sdia) ? ` / Dia: <b>${ldia - sdia}</b>` : '';
+      txt += `<br>${t('diff')} - Sys: <b>${lsys - ssys}</b>${diaDiff}`;
+    }
     return flatUI(txt, b, 'bp');
   }
   if (secId === 'fluid' && d.fluid) {
@@ -794,19 +901,19 @@ function getBedSectionHtml(b, secId) {
     if (d.amy && d.amy.elbows) skinP.push(`Elbows (<b>${trSkin(d.amy.elbows)}</b>)`);
     if (skinP.length > 0) out += flatUI(skinP.join(', '), b, 'amy');
     if (d.dressings && d.dressings.length > 0) {
-      out += d.dressings.map((dr,i) => rowUI(`<b>${dr.val || 'Dressing'}</b> (Due: <b>${calcDue(dr.date)}</b>)`, b, 'dressings', i)).filter(Boolean).join('');
+      out += d.dressings.map((dr,i) => rowUI(`<b>${dr.val || t('dressing')}</b> (${t('due')}: <b>${calcDue(dr.date)}</b>)`, b, 'dressings', i)).filter(Boolean).join('');
     }
     return out;
   }
   if (secId === 'turn' && d.turn && d.turn.some(t => t !== '')) {
-    const tTimes = isNight ? ['20:00','22:00','00:00','02:00','04:00','06:00'] : ['08:00','10:00','12:00','14:00','16:00','18:00'];
-    return d.turn.map((tr,i) => tr !== '' ? rowUI(`<b>${tTimes[i]}</b> - <b>${tr}</b>`, b, 'turn', i) : '').filter(Boolean).join('');
+    const tTimes = isNightShift ? ['20:00','22:00','00:00','02:00','04:00','06:00'] : ['08:00','10:00','12:00','14:00','16:00','18:00'];
+    return d.turn.map((tr,i) => tr !== '' ? rowUI(`<b>${tTimes[i]}</b> - <b>${trTurn(tr)}</b>`, b, 'turn', i) : '').filter(Boolean).join('');
   }
   if (secId === 'mh' && (d.mhLevel || (d.mh && d.mh.length > 0))) {
     let out = '';
-    if (d.mhLevel) out += flatUI(`Level: <b>${d.mhLevel}</b>`, b, 'mhLevel');
+    if (d.mhLevel) out += flatUI(`${t('obsLevel')}: <b>${d.mhLevel}</b>`, b, 'mhLevel');
     if (d.mh && d.mh.length > 0) {
-      out += d.mh.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.mood||'-'}</b> | <b>${r.sleep||'-'}</b><br>Context: <b>${r.risks||'None'}</b><br><span style="white-space:pre-wrap;"><b>${r.note||'-'}</b></span>`, b, 'mh', i)).filter(Boolean).join('');
+      out += d.mh.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.mood||'-'}</b> | <b>${r.sleep||'-'}</b><br>${t('context')}: <b>${r.risks||'-'}</b><br><span style="white-space:pre-wrap;"><b>${r.note||'-'}</b></span>`, b, 'mh', i)).filter(Boolean).join('');
     }
     return out;
   }
@@ -814,7 +921,7 @@ function getBedSectionHtml(b, secId) {
     return d.events.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <span style="white-space:pre-wrap;"><b>${r.val||''}</b></span>`, b, 'events', i)).filter(Boolean).join('');
   }
   if (secId === 'reminders' && d.reminders && d.reminders.length > 0) {
-    return d.reminders.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.task||'Task'}</b>: <b>${r.outcome||'Pending'}</b>`, b, 'reminders', i)).filter(Boolean).join('');
+    return d.reminders.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.task||'-'}</b>: <b>${r.outcome||'-'}</b>`, b, 'reminders', i)).filter(Boolean).join('');
   }
   if (secId === 'admit' && d.admit && d.admit.length > 0) {
     return d.admit.map((r,i) => rowUI(`- <b>${r.val||''}</b>`, b, 'admit', i)).filter(Boolean).join('');
@@ -824,12 +931,19 @@ function getBedSectionHtml(b, secId) {
 
 function renderUI() {
   let tabsHtml = `<button class="tab-btn ${showSummary ? 'active-summary' : ''}" onclick="toggleSummary()">${t('summary')}</button>`;
-  tabsHtml += alloc.map(b => `<button class="tab-btn ${b===curBed && !showSummary ?'active-bed':''}" onclick="setBed('${b}')">${b}</button>`).join('');
+  tabsHtml += alloc.map(b => {
+    const dot = bedHasOverdue(b) ? '<span class="alert-dot"></span>' : '';
+    return `<button class="tab-btn ${b===curBed && !showSummary ?'active-bed':''}" onclick="setBed('${b}')">${b}${dot}</button>`;
+  }).join('');
   document.getElementById('bedTabs').innerHTML = tabsHtml;
   
   const secOpts = getActiveSections();
   if(secOpts.length > 0 && !secOpts.find(x => x.id === curSec)) curSec = secOpts[0].id;
-  document.getElementById('subNav').innerHTML = showSummary ? '' : secOpts.map(s => `<button class="tab-btn ${s.id===curSec?'active-sec':''}" onclick="setSec('${s.id}')">${t(s.id)}</button>`).join('');
+  const curHasOverdue = bedHasOverdue(curBed);
+  document.getElementById('subNav').innerHTML = showSummary ? '' : secOpts.map(s => {
+    const dot = (s.id === 'reminders' && curHasOverdue) ? '<span class="alert-dot"></span>' : '';
+    return `<button class="tab-btn ${s.id===curSec?'active-sec':''}" onclick="setSec('${s.id}')">${t(s.id)}${dot}</button>`;
+  }).join('');
   
   setTimeout(() => {
     const actTab = document.querySelector('.tab-btn.active-bed') || document.querySelector('.tab-btn.active-summary');
@@ -892,11 +1006,17 @@ function renderContent() {
   }
   if (!db[curBed]) return;
   const d = db[curBed];
-  let h = '';
+  const isNightShift = prefs.shift === 'night';
+  let h = `
+  <div class="bed-bar">
+    <span style="font-weight:800; font-size:1.05rem; color:var(--teal);">${curBed}</span>
+    <button type="button" class="btn-subtle btn-sm" style="padding:4px 10px; font-size:0.78rem; font-weight:600;" onclick="renameCurrentBed()">${t('renameBed')}</button>
+  </div>`;
 
   if (curSec === 'obs') {
     h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('obs')">+ ${t('obs')}</button>`;
     d.obs.forEach((r, i) => {
+      const showO2Flow = r.o2 === 'O2';
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
           <b style="color:var(--text);">${t('obs')}</b>
@@ -908,12 +1028,21 @@ function renderContent() {
           <div><label>SpO2%</label><input type="number" inputmode="numeric" min="0" max="100" value="${r.spo2||''}" oninput="updateField('${curBed}','obs',${i},'spo2',this.value)"></div>
         </div>
         <div class="row">
-          <div><label>Air/O2</label><select onchange="updateField('${curBed}','obs',${i},'o2',this.value)"><option>Air</option><option ${r.o2==='O2'?'selected':''}>O2</option></select></div>
+          <div>
+            <label>${t('air')} / O2</label>
+            <div style="display:flex; gap:6px;">
+              <select onchange="updateField('${curBed}','obs',${i},'o2',this.value); renderContent()">
+                <option value="Air">${t('air')}</option>
+                <option value="O2" ${showO2Flow?'selected':''}>O2</option>
+              </select>
+              ${showO2Flow ? `<input type="text" placeholder="L/min" value="${r.o2f||''}" oninput="updateField('${curBed}','obs',${i},'o2f',this.value)" style="width:85px;">` : ''}
+            </div>
+          </div>
           <div><label>BP (Sys/Dia)</label><div class="bp-pair"><input type="number" inputmode="numeric" value="${r.sys||''}" oninput="bpSysInput(this,'${curBed}','obs',${i},'sys','obs-dia-${i}')"><span>/</span><input type="number" inputmode="numeric" id="obs-dia-${i}" value="${r.dia||''}" oninput="updateField('${curBed}','obs',${i},'dia',this.value)"></div></div>
         </div>
-        <div class="row">
+        <div class="row" style="margin-bottom:0;">
           <div><label>HR</label><input type="number" inputmode="numeric" value="${r.hr||''}" oninput="updateField('${curBed}','obs',${i},'hr',this.value)"></div>
-          <div><label>ACVPU</label><select onchange="updateField('${curBed}','obs',${i},'acvpu',this.value)"><option>Alert</option><option ${r.acvpu==='CVPU'?'selected':''}>CVPU</option></select></div>
+          <div><label>ACVPU</label><select onchange="updateField('${curBed}','obs',${i},'acvpu',this.value)">${opts(['A (Alert)','C (Confusion)','V (Voice)','P (Pain)','U (Unresponsive)'], r.acvpu || 'A (Alert)')}</select></div>
           <div><label>Temp (${prefs.tempUnit})</label><input type="number" inputmode="decimal" step="0.1" value="${r.t||''}" oninput="updateField('${curBed}','obs',${i},'t',this.value)"></div>
         </div>
       </div>`;
@@ -928,9 +1057,9 @@ function renderContent() {
           <b style="color:var(--text);">${t('bm')}</b>
           <button class="btn btn-danger btn-sm" onclick="rmArr('bm', ${i})">X</button>
         </div>
-        <div class="row">
+        <div class="row" style="margin-bottom:0;">
           <div><label>${t('time')}</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','bm',${i},'time',this.value)"></div>
-          <div><label>Context</label><select onchange="updateField('${curBed}','bm',${i},'meal',this.value)">${opts(['','Pre-Breakfast','Post-Breakfast','Pre-Lunch','Post-Lunch','Pre-Dinner','Post-Dinner','Night'], r.meal)}</select></div>
+          <div><label>${t('context')}</label><select onchange="updateField('${curBed}','bm',${i},'meal',this.value)">${opts(['',t('b'),t('l'),t('d'),'Pre-Meal','Post-Meal','Night'], r.meal)}</select></div>
           <div><label>${prefs.bmUnit}</label><input type="number" inputmode="decimal" step="0.1" value="${r.val||''}" oninput="updateField('${curBed}','bm',${i},'val',this.value)"></div>
         </div>
       </div>`;
@@ -940,16 +1069,16 @@ function renderContent() {
   if (curSec === 'bp') {
     h += `<div class="card">
       <div class="row">
-        <div><label>Lying BP (Sys/Dia)</label><div class="bp-pair"><input type="number" inputmode="numeric" value="${d.bp.lsys}" oninput="bpSysInput(this,'${curBed}','bp',null,'lsys','bp-ldia')"><span>/</span><input type="number" inputmode="numeric" id="bp-ldia" value="${d.bp.ldia}" oninput="updateField('${curBed}','bp',null,'ldia',this.value)"></div></div>
+        <div><label>${t('lying')} BP (Sys/Dia)</label><div class="bp-pair"><input type="number" inputmode="numeric" value="${d.bp.lsys}" oninput="bpSysInput(this,'${curBed}','bp',null,'lsys','bp-ldia')"><span>/</span><input type="number" inputmode="numeric" id="bp-ldia" value="${d.bp.ldia}" oninput="updateField('${curBed}','bp',null,'ldia',this.value)"></div></div>
       </div>
-      <div class="row">
-        <div><label>Standing BP (Sys/Dia)</label><div class="bp-pair"><input type="number" inputmode="numeric" value="${d.bp.ssys}" oninput="bpSysInput(this,'${curBed}','bp',null,'ssys','bp-sdia')"><span>/</span><input type="number" inputmode="numeric" id="bp-sdia" value="${d.bp.sdia}" oninput="updateField('${curBed}','bp',null,'sdia',this.value)"></div></div>
+      <div class="row" style="margin-bottom:0;">
+        <div><label>${t('standing')} BP (Sys/Dia)</label><div class="bp-pair"><input type="number" inputmode="numeric" value="${d.bp.ssys}" oninput="bpSysInput(this,'${curBed}','bp',null,'ssys','bp-sdia')"><span>/</span><input type="number" inputmode="numeric" id="bp-sdia" value="${d.bp.sdia}" oninput="updateField('${curBed}','bp',null,'sdia',this.value)"></div></div>
       </div>
     </div>`;
   }
 
   if (curSec === 'fluid') {
-    const times = isNight ? ['19:00','20:00','21:00','22:00','23:00','00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00'] : ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
+    const times = isNightShift ? ['19:00','20:00','21:00','22:00','23:00','00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00'] : ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
     if (activeFluidIdx === null) {
       const curHr = String(new Date().getHours()).padStart(2, '0') + ':00';
       const foundIdx = times.indexOf(curHr);
@@ -967,7 +1096,7 @@ function renderContent() {
           </select>
         </div>
         <button id="quickFluidTypeBtn" type="button" onclick="toggleFluidType()" style="padding:7px 12px; border-radius:6px; border:none; font-weight:700; font-size:0.82rem; cursor:pointer; color:#fff; background:${isOut?'var(--amber)':'var(--teal)'};">
-          ${isOut ? 'Output (Out)' : 'Intake (In)'}
+          ${isOut ? 'Out (ml)' : 'In (ml)'}
         </button>
       </div>
       <div style="display:flex; gap:5px; align-items:center;">
@@ -1000,10 +1129,10 @@ function renderContent() {
         </div>
         <div class="row">
           <div><label>${t('time')}</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','bowel',${i},'time',this.value)"></div>
-          <div><label>Amount</label><select onchange="updateField('${curBed}','bowel',${i},'amt',this.value)">${opts(['','Small','Medium','Large','Smear'], r.amt)}</select></div>
+          <div><label>${t('amt')}</label><select onchange="updateField('${curBed}','bowel',${i},'amt',this.value)">${opts(['','Small','Medium','Large','Smear'], r.amt)}</select></div>
         </div>
-        <div class="row">
-          <div><label>Type</label><select onchange="updateField('${curBed}','bowel',${i},'type',this.value)">${opts(['','Type 1','Type 2','Type 3','Type 4','Type 5','Type 6','Type 7','BNO'], r.type)}</select></div>
+        <div class="row" style="margin-bottom:0;">
+          <div><label>${t('type')}</label><select onchange="updateField('${curBed}','bowel',${i},'type',this.value)">${opts(['','Type 1','Type 2','Type 3','Type 4','Type 5','Type 6','Type 7','BNO'], r.type)}</select></div>
         </div>
       </div>`;
     });
@@ -1016,32 +1145,32 @@ function renderContent() {
       <div><label>Sacrum</label><select onchange="updateField('${curBed}','amy',null,'sac',this.value)">${optsMap(sPairs, d.amy.sac === 'Fine' ? 'Intact' : d.amy.sac)}</select></div>
       <div><label>Groin</label><select onchange="updateField('${curBed}','amy',null,'groin',this.value)">${optsMap(sPairs, d.amy.groin === 'Fine' ? 'Intact' : d.amy.groin)}</select></div>
     </div>
-    <div class="row">
+    <div class="row" style="margin-bottom:0;">
       <div><label>Heels</label><select onchange="updateField('${curBed}','amy',null,'heels',this.value)">${optsMap(sPairs, d.amy.heels === 'Fine' ? 'Intact' : d.amy.heels)}</select></div>
       <div><label>Elbows</label><select onchange="updateField('${curBed}','amy',null,'elbows',this.value)">${optsMap(sPairs, d.amy.elbows === 'Fine' ? 'Intact' : d.amy.elbows)}</select></div>
     </div>
     </div>
-    <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('dressings')">+ Dressing</button>`;
+    <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('dressings')">+ ${t('dressing')}</button>`;
     d.dressings.forEach((r, i) => {
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <b>Dressing</b><button class="btn btn-danger btn-sm" onclick="rmArr('dressings', ${i})">X</button>
+          <b>${t('dressing')}</b><button class="btn btn-danger btn-sm" onclick="rmArr('dressings', ${i})">X</button>
         </div>
         <div class="row">
-          <div><label>Location / Notes</label><input type="text" placeholder="e.g. Sacrum" value="${r.val||''}" oninput="updateField('${curBed}','dressings',${i},'val',this.value)"></div>
+          <div><label>${t('locNotes')}</label><input type="text" value="${r.val||''}" oninput="updateField('${curBed}','dressings',${i},'val',this.value)"></div>
         </div>
         <div class="row" style="align-items:center;">
-          <div><label>Date</label><input type="date" id="dress-date-${i}" value="${r.date||''}" onchange="updateField('${curBed}','dressings',${i},'date',this.value); refreshDressDue(${i})"></div>
-          <div style="flex:0 0 auto;"><button class="btn btn-sm" style="border:1.5px solid var(--input-border);" onclick="setNoDateArr(${i})">Today</button></div>
+          <div><label>${t('date')}</label><input type="date" id="dress-date-${i}" value="${r.date||''}" onchange="updateField('${curBed}','dressings',${i},'date',this.value); refreshDressDue(${i})"></div>
+          <div style="flex:0 0 auto;"><button class="btn btn-sm" style="border:1.5px solid var(--input-border);" onclick="setNoDateArr(${i})">${t('today')}</button></div>
         </div>
-        <div style="font-size:0.85rem; color:var(--text-sub);">Due (+3d): <b id="dress-due-${i}">${calcDue(r.date)}</b></div>
+        <div style="font-size:0.85rem; color:var(--text-sub);">${t('due')} (+3d): <b id="dress-due-${i}">${calcDue(r.date)}</b></div>
       </div>`;
     });
   }
 
   if (curSec === 'food') {
-    const fOps = ['100%','75%','50%','25%','0%','Refused','NBM'];
-    const renderMealBtns = (mealKey, curVal) => fOps.map(op => `<button type="button" class="diet-btn ${curVal===op?'selected':''}" onclick="setDiet('${mealKey}','${op}')">${op}</button>`).join('');
+    const fOps = [['100%','100%'],['75%','75%'],['50%','50%'],['25%','25%'],['0%','0%'],['Refused',t('refused')],['NBM',t('nbm')]];
+    const renderMealBtns = (mealKey, curVal) => fOps.map(([val, lbl]) => `<button type="button" class="diet-btn ${curVal===val?'selected':''}" onclick="setDiet('${mealKey}','${val}')">${lbl}</button>`).join('');
     h += `<div class="card">
       <label style="font-size:0.9rem; margin-bottom:8px;">${t('b')}</label>
       <div class="diet-grid">${renderMealBtns('b', d.food.b)}</div>
@@ -1053,19 +1182,20 @@ function renderContent() {
   }
 
   if (curSec === 'turn') {
-    const tTimes = isNight ? ['20:00','22:00','00:00','02:00','04:00','06:00'] : ['08:00','10:00','12:00','14:00','16:00','18:00'];
+    const tTimes = isNightShift ? ['20:00','22:00','00:00','02:00','04:00','06:00'] : ['08:00','10:00','12:00','14:00','16:00','18:00'];
+    const tPairs = [['',''],['Back',t('back')],['Left',t('left')],['Right',t('right')],['Chair',t('chair')],['Walking',t('walking')],['Refused',t('refused')]];
     h += `<div class="card">`;
     tTimes.forEach((tStr, i) => {
       h += `<div class="row" style="align-items:center; margin-bottom:8px;">
         <span style="width:45px; font-weight:600; font-size:0.9rem;">${tStr}</span>
-        <select onchange="updateField('${curBed}','turn',${i},null,this.value)">${opts(['', 'Back', 'Left', 'Right', 'Chair', 'Walking', 'Refused'], d.turn[i])}</select>
+        <select onchange="updateField('${curBed}','turn',${i},null,this.value)">${optsMap(tPairs, d.turn[i])}</select>
       </div>`;
     });
     h += `</div>`;
   }
   if (curSec === 'mh') {
     h += `<div class="card" style="border: 2px solid var(--teal);">
-            <label style="color:var(--teal); font-size:0.95rem;">Observation Level</label>
+            <label style="color:var(--teal); font-size:0.95rem;">${t('obsLevel')}</label>
             <select style="font-weight:bold; font-size:1.05rem;" onchange="updateField('${curBed}', 'mhLevel', null, null, this.value)">
               ${opts(['', 'Level 1: General', 'Level 2: Intermittent', 'Level 3: Eyesight', "Level 4: Arm's Length"], d.mhLevel)}
             </select>
@@ -1078,11 +1208,11 @@ function renderContent() {
         </div>
         <div class="row">
           <div><label>${t('time')}</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','mh',${i},'time',this.value)"></div>
-          <div><label>Mood</label><select onchange="updateField('${curBed}','mh',${i},'mood',this.value)">${opts(['','Calm','Anxious','Agitated','Low','Elevated','Hostile'], r.mood)}</select></div>
+          <div><label>${t('mood')}</label><select onchange="updateField('${curBed}','mh',${i},'mood',this.value)">${opts(['','Calm','Anxious','Agitated','Low','Elevated','Hostile'], r.mood)}</select></div>
         </div>
         <div class="row">
-          <div><label>Rest</label><select onchange="updateField('${curBed}','mh',${i},'sleep',this.value)">${opts(['','Asleep','Settled','Restless','Out of Bed'], r.sleep)}</select></div>
-          <div><label>Context</label><input type="text" value="${r.risks||''}" oninput="updateField('${curBed}','mh',${i},'risks',this.value)"></div>
+          <div><label>${t('rest')}</label><select onchange="updateField('${curBed}','mh',${i},'sleep',this.value)">${opts(['','Asleep','Settled','Restless','Out of Bed'], r.sleep)}</select></div>
+          <div><label>${t('context')}</label><input type="text" value="${r.risks||''}" oninput="updateField('${curBed}','mh',${i},'risks',this.value)"></div>
         </div>
         <div class="row" style="margin-bottom:0;">
           <div><label>${t('events')}</label><textarea class="auto-expand" rows="3" oninput="autoGrow(this); updateField('${curBed}','mh',${i},'note',this.value)">${r.note||''}</textarea></div>
@@ -1127,7 +1257,7 @@ function renderContent() {
         </div>
         <div class="row" style="margin-bottom:0;">
           <div>
-            <label>Outcome</label>
+            <label>${t('outcome')}</label>
             <div style="display:flex; gap:6px;">
               <input type="text" id="task-out-${i}" value="${r.outcome||''}" oninput="updateField('${curBed}','reminders',${i},'outcome',this.value); refreshTask(${i})">
               <button type="button" class="btn btn-sm" style="background:var(--teal); color:#fff; flex:0 0 auto;" onclick="markTaskDone(${i})">${t('done')}</button>
@@ -1232,7 +1362,7 @@ function updateFluidTargetUI() {
   const btn = document.getElementById('quickFluidTypeBtn');
   if (btn) {
     btn.style.background = isOut ? 'var(--amber)' : 'var(--teal)';
-    btn.textContent = isOut ? 'Output (Out)' : 'Intake (In)';
+    btn.textContent = isOut ? 'Out (ml)' : 'In (ml)';
   }
   document.querySelectorAll('.quick-fluid-btn').forEach(b => {
     if (b.textContent !== 'Clr') b.classList.toggle('out-mode', isOut);
@@ -1275,6 +1405,7 @@ function refreshTask(idx) {
     const isOverdue = (!r.outcome && r.time && r.time <= tNow());
     card.classList.toggle('task-alert', Boolean(isOverdue));
   }
+  renderUI();
 }
 
 function refreshDressDue(idx) {
@@ -1303,9 +1434,7 @@ function startAlertTimer() {
         osc.type = 'sine'; osc.frequency.value = 880; gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
         osc.start(); osc.stop(audioCtx.currentTime + 0.3);
       }
-      if(curSec === 'reminders' && !showSummary) {
-        db[curBed].reminders.forEach((_, idx) => refreshTask(idx));
-      }
+      renderUI();
     }
   }, 60000);
 }
@@ -1319,7 +1448,12 @@ function addArr(k) {
   saveDB(); 
   renderContent(); 
 }
-function rmArr(k, i) { db[curBed][k].splice(i, 1); saveDB(); renderContent(); }
+function rmArr(k, i) {
+  if (!confirm(t('delConfirm'))) return;
+  db[curBed][k].splice(i, 1);
+  saveDB();
+  renderUI();
+}
 function markSkinIntact() { db[curBed].amy.sac = 'Intact'; db[curBed].amy.groin = 'Intact'; db[curBed].amy.heels = 'Intact'; db[curBed].amy.elbows = 'Intact'; saveDB(); renderContent(); }
 function setNoDateArr(i) { 
   const d = new Date(); 
@@ -1331,7 +1465,7 @@ function setNoDateArr(i) {
   refreshDressDue(i);
 }
 function calcDue(val) { if (!val) return '-'; const d = new Date(val); d.setDate(d.getDate() + 3); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; }
-function clearShift() { if (confirm("Clear all shift data and return to setup?")) { releaseWakeLock(); localStorage.removeItem('cdu_alloc'); localStorage.removeItem('cdu_db'); localStorage.removeItem('cdu_start'); localStorage.removeItem('cdu_ward'); localStorage.removeItem('cdu_mods'); location.reload(); } }
+function clearShift() { if (confirm(t('endShift') + "?")) { releaseWakeLock(); localStorage.removeItem('cdu_alloc'); localStorage.removeItem('cdu_db'); localStorage.removeItem('cdu_start'); localStorage.removeItem('cdu_ward'); localStorage.removeItem('cdu_mods'); location.reload(); } }
 function handleSwipe() { 
   if (showSummary || alloc.length <= 1) return; 
   const diffX = touchEndX - touchStartX; 
