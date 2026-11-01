@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
 <title>Care Digipad</title>
+<script src="lang.js" onerror="window.CDU_LANGS = null"></script>
 <style>
   :root {
     --bg: #f4f6f8; --card: #ffffff; --text: #1e293b; --text-sub: #64748b;
@@ -43,13 +44,16 @@
   .sticky-nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
   header { background: var(--navy); color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
   header h1 { font-size: 1.05rem; }
-  .scroll-row { display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px; scrollbar-width: none; scroll-behavior: smooth; }
+  .scroll-row { display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px; scrollbar-width: none; scroll-behavior: smooth; align-items: center; }
   .scroll-row::-webkit-scrollbar { display: none; }
   .tab-btn { padding: 8px 14px; border-radius: 20px; font-weight: 600; border: 1.5px solid var(--input-border); background: var(--card); color: var(--text); font-size: 0.9rem; white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; }
   .tab-btn.active-bed { background: var(--teal); color: #fff; border-color: var(--teal); }
   .tab-btn.active-sec { background: var(--slate); color: #fff; border-color: var(--slate); }
   .tab-btn.active-summary { background: var(--amber); color: #fff; border-color: var(--amber); }
+  .tab-btn-add { padding: 6px 12px; border-radius: 20px; font-weight: 800; border: 1.5px dashed var(--teal); background: transparent; color: var(--teal); font-size: 0.95rem; white-space: nowrap; cursor: pointer; }
   .alert-dot { display: inline-block; width: 8px; height: 8px; background: var(--red); border-radius: 50%; margin-inline-start: 6px; box-shadow: 0 0 0 2px var(--card); }
+  .mod-count { font-size: 0.75rem; background: rgba(100,116,139,0.2); padding: 1px 6px; border-radius: 10px; margin-inline-start: 6px; font-weight: 700; }
+  .active-sec .mod-count, .active-bed .mod-count, .active-summary .mod-count { background: rgba(255,255,255,0.28); color: #fff; }
   .container { padding: 16px; max-width: 600px; margin: 0 auto; }
   .card { background: var(--card); padding: 16px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px; transition: 0.3s; }
   h2 { font-size: 1.1rem; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; color: var(--text); }
@@ -75,7 +79,13 @@
   .tool-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
   .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .chip { padding: 6px 10px; border-radius: 14px; border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--text); font-size: 0.78rem; font-weight: 600; cursor: pointer; }
-  .chip:active { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .chip.active-amber { background: var(--amber); color: #fff; border-color: var(--amber); }
+  .chip.active-red { background: var(--red); color: #fff; border-color: var(--red); }
+  .chip:active { opacity: 0.85; }
+  .mini-Toggle-row { display: flex; gap: 4px; margin-top: 6px; }
+  .mini-btn { flex: 1; padding: 5px 4px; border-radius: 5px; border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--text); font-size: 0.75rem; font-weight: 700; cursor: pointer; text-align: center; }
+  .mini-btn.selected { background: var(--teal); color: #fff; border-color: var(--teal); }
   .quick-fluid-btn { flex: 1; padding: 8px 4px; border-radius: 6px; border: 1.5px solid var(--teal); background: var(--input-bg); color: var(--text); font-weight: 700; font-size: 0.82rem; cursor: pointer; }
   .quick-fluid-btn.out-mode { border-color: var(--amber); }
   .quick-fluid-btn:active { background: var(--teal); color: #fff; }
@@ -84,7 +94,9 @@
   .diet-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
   .diet-btn { flex: 1 1 calc(25% - 6px); padding: 9px 4px; border-radius: 6px; border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--text); font-weight: 600; font-size: 0.85rem; cursor: pointer; text-align: center; }
   .diet-btn.selected { background: var(--teal); color: #fff; border-color: var(--teal); }
-  .bed-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 8px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+  .bed-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 8px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; gap: 8px; flex-wrap: wrap; }
+  .manage-panel { background: var(--card); border: 1.5px solid var(--teal); border-radius: 8px; padding: 12px; margin-bottom: 14px; }
+  .manage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
   .footer { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); padding: 10px 16px; z-index: 100; text-align: center; }
   .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
   .switch input { opacity: 0; width: 0; height: 0; }
@@ -170,12 +182,12 @@
       <div>
         <label><span id="lblThemeTxt">Theme</span> <span id="themeProTag" class="pro-tag">PRO</span></label>
         <select id="prefTheme" onchange="changeTheme(this.value)">
-          <option value="teal" id="optThTeal">Teal</option>
-          <option value="blue" id="optThBlue">Blue</option>
-          <option value="green" id="optThGreen">Green</option>
-          <option value="berry" id="optThBerry">Berry</option>
-          <option value="slate" id="optThSlate">Slate</option>
-          <option value="coral" id="optThCoral">Coral</option>
+          <option value="teal" id="optThTeal">Clinical Teal</option>
+          <option value="blue" id="optThBlue">Healthcare Blue</option>
+          <option value="green" id="optThGreen">Scrub Green</option>
+          <option value="berry" id="optThBerry">Plum & Berry</option>
+          <option value="slate" id="optThSlate">Midnight Slate</option>
+          <option value="coral" id="optThCoral">Warm Coral</option>
         </select>
       </div>
       <div>
@@ -265,6 +277,7 @@
 let isPro = false;
 let prefs = { lang: 'en', theme: 'teal', bmUnit: 'mmol/L', tempUnit: '°C', shift: 'day', dark: false };
 let savedLayouts = {};
+let activeLayoutName = '';
 let currentLayoutBeds = [];
 let alloc = [];
 let db = {};
@@ -277,93 +290,90 @@ let activeFluidIdx = null;
 let activeFluidType = 'i';
 let curBed = '';
 let curSec = 'obs';
+let showBedManage = false;
 let alertTimerId = null;
 
 const rtlLangs = ['ar', 'ur', 'fa'];
 
-const tKeys = [
-  'setup','sub','prefs','theme','shiftHrs','dayShift','nightShift','bmUnit','tempUnit',
-  'savedLay','noLay','addBed','add','del','save','activeMods','saveLay','start','share','endShift',
-  'edit','hide','dark','hiddenTitle','hiddenSub','renameBed','delConfirm',
-  'summary','obs','bm','bp','fluid','bowel','amy','food','turn','mh','events','reminders','admit',
-  'done','markDone','markBed','pending','showAll','keepOn','byBed','byMod',
-  'time','air','context','lying','standing','diff','amt','type','intact','red','broken','markIntact',
-  'dressing','locNotes','date','today','due','b','l','d','refused','nbm',
-  'back','left','right','chair','walking','obsLevel','mood','rest','outcome'
-];
-
-const rawDict = {
-  en: "Shift Setup|100% offline digital shift notepad. Data never leaves your device.|App Preferences & Units|Theme|Shift Hours|Day (07:00)|Night (19:00)|Glucose Unit|Temp Unit|Load Saved Layout|No saved layouts|1. Add Bed / Initials (Max 4 chars)|Add|Del|Save|2. Active Modules & Order|3. Save Layout As|Start / Update Shift|Share Care Digipad with a Colleague|End Shift / Clear Data|Edit|Hide|Dark|Screen Hidden|Tap anywhere to return|Rename / Move Bed|Delete this entry?|Summary|Vitals|Glucose|L/S BP|Fluids|Bowels|Skin & Dressings|Diet|Turning|Mental Health|Notes|Tasks|Admissions|Done|Mark Done|Mark Bed Done|Pending Only|Show All|Keep Screen On|By Bed|By Module|Time|Air|Context|Lying|Standing|Difference|Amount|Type|Intact|Red|Broken|Mark All Intact|Dressing|Location / Notes|Date|Today|Due|Breakfast|Lunch|Dinner|Refused|NBM|Back|Left|Right|Chair|Walking|Observation Level|Mood|Rest|Outcome",
-  es: "Configuración de Turno|Bloc de notas de turno 100% sin conexión. Los datos no salen de tu dispositivo.|Preferencias y Unidades|Tema|Horario de Turno|Día (07:00)|Noche (19:00)|Unidad de Glucosa|Unidad de Temp|Cargar Diseño Guardado|Sin diseños guardados|1. Añadir Cama / Iniciales (Máx 4)|Añadir|Borrar|Guardar|2. Módulos Activos y Orden|3. Guardar Diseño Como|Iniciar / Actualizar Turno|Compartir con un Colega|Finalizar Turno / Borrar|Editar|Ocultar|Oscuro|Pantalla Oculta|Toca para volver|Cambiar Cama|¿Eliminar esta entrada?|Resumen|Signos Vitales|Glucosa|PA Acostado/De Pie|Líquidos|Deposiciones|Piel y Apósito|Dieta|Cambios Posturales|Salud Mental|Notas|Tareas|Admisiones|Hecho|Marcar Hecho|Cama Hecha|Solo Pendientes|Ver Todo|Pantalla Activa|Por Cama|Por Módulo|Hora|Aire|Contexto|Acostado|De Pie|Diferencia|Cantidad|Tipo|Íntegra|Enrojecida|Lesionada|Marcar Todo Íntegro|Apósito|Ubicación / Notas|Fecha|Hoy|Vence|Desayuno|Almuerzo|Cena|Rechazado|NVO|Espalda|Izquierda|Derecha|Sillón|Caminando|Nivel de Observación|Ánimo|Descanso|Resultado",
-  fr: "Configuration de Garde|Bloc-notes de garde 100% hors ligne. Les données restent sur votre appareil.|Préférences et Unités|Thème|Heures de Garde|Jour (07:00)|Nuit (19:00)|Unité Glycémie|Unité Temp|Charger Disposition|Aucune disposition|1. Ajouter Lit / Initiales (Max 4)|Ajouter|Suppr|Sauver|2. Modules Actifs et Ordre|3. Sauver Disposition Sous|Démarrer / Mettre à Jour|Partager avec un Collègue|Fin de Garde / Effacer|Éditer|Masquer|Sombre|Écran Masqué|Touchez pour revenir|Renommer Lit|Supprimer cette entrée ?|Résumé|Constantes|Glycémie|TA Couché/Debout|Bilan Hydrique|Selles|Peau et Pansements|Alimentation|Positionnement|Santé Mentale|Notes|Tâches|Admissions|Fait|Marquer Fait|Lit Terminé|En Attente|Tout Voir|Écran Allumé|Par Lit|Par Module|Heure|Air|Contexte|Couché|Debout|Différence|Quantité|Type|Intacte|Rougeur|Lésée|Tout Marquer Intact|Pansement|Site / Notes|Date|Auj.|Échéance|Petit-déjeuner|Déjeuner|Dîner|Refusé|À jeun|Dos|Gauche|Droite|Fauteuil|Marche|Niveau d’Observation|Humeur|Repos|Résultat",
-  de: "Schicht-Einstellungen|100% Offline-Schichtnotizblock. Daten verlassen nie Ihr Gerät.|Einstellungen & Einheiten|Thema|Schichtzeiten|Tag (07:00)|Nacht (19:00)|Blutzucker-Einheit|Temp-Einheit|Layout Laden|Keine Layouts|1. Bett / Initialen (Max 4)|Hinzuf.|Lösch.|Speich.|2. Aktive Module & Reihenfolge|3. Layout Speichern Als|Schicht Starten / Aktualisieren|Mit Kollegen Teilen|Schicht Beenden / Löschen|Bearb.|Ausbl.|Dunkel|Bildschirm Ausgeblendet|Zum Zurückkehren tippen|Bett Umbenennen|Eintrag löschen?|Übersicht|Vitalzeichen|Blutzucker|RR Liegen/Stehen|Bilanzierung|Stuhlgang|Haut & Verbände|Ernährung|Lagerung|Psychische Gesundheit|Notizen|Aufgaben|Aufnahme|Erledigt|Als Erledigt|Bett Erledigt|Nur Offene|Alle Zeigen|Display An|Nach Bett|Nach Modul|Zeit|Raumluft|Kontext|Liegend|Stehend|Differenz|Menge|Typ|Intakt|Gerötet|Offen|Alle Intakt|Verband|Stelle / Notiz|Datum|Heute|Fällig|Frühstück|Mittagessen|Abendessen|Abgelehnt|Nüchtern|Rücken|Links|Rechts|Stuhl|Gehend|Beobachtungsstufe|Stimmung|Ruhe|Ergebnis",
-  pt: "Configuração de Plantão|Bloco de notas 100% offline. Os dados nunca saem do dispositivo.|Preferências e Unidades|Tema|Horário do Plantão|Dia (07:00)|Noite (19:00)|Unidade Glicemia|Unidade Temp|Carregar Layout|Nenhum layout salvo|1. Adicionar Leito (Máx 4)|Adic.|Excl.|Salvar|2. Módulos Ativos e Ordem|3. Salvar Layout Como|Iniciar / Atualizar Plantão|Compartilhar com Colega|Encerrar Plantão / Limpar|Editar|Ocultar|Escuro|Tela Oculta|Toque para voltar|Mudar Leito|Excluir este registo?|Resumo|Sinais Vitais|Glicemia|PA Deitado/Em Pé|Balanço Hídrico|Evacuação|Pele e Curativos|Dieta|Mudança de Decúbito|Saúde Mental|Notas|Tarefas|Admissão|Feito|Marcar Feito|Leito Concluído|Pendentes|Mostrar Tudo|Manter Tela|Por Leito|Por Módulo|Hora|Ar Amb.|Contexto|Deitado|Em Pé|Diferença|Quantidade|Tipo|Íntegra|Hiperemiada|Lesionada|Marcar Tudo Íntegro|Curativo|Local / Notas|Data|Hoje|Troca|Peq. Almoço|Almoço|Jantar|Recusou|Jejum|Dorso|Esquerda|Direita|Poltrona|Deambulando|Nível de Observação|Humor|Repouso|Resultado",
-  it: "Impostazione Turno|Blocco note 100% offline. I dati non lasciano mai il dispositivo.|Preferenze e Unità|Tema|Orario Turno|Giorno (07:00)|Notte (19:00)|Unità Glicemia|Unità Temp|Carica Layout|Nessun layout|1. Aggiungi Letto (Max 4)|Agg.|Elim.|Salva|2. Moduli Attivi e Ordine|3. Salva Layout Come|Inizia / Aggiorna Turno|Condividi con un Collega|Fine Turno / Cancella|Modif.|Nascondi|Scuro|Schermo Nascosto|Tocca per tornare|Cambia Letto|Eliminare questa voce?|Riepilogo|Parametri Vitali|Glicemia|PA Supino/Ortostatica|Bilancio Idrico|Alvo|Cute e Medicazioni|Vitto|Mobilizzazione|Salute Mentale|Note|Compiti|Accettazione|Fatto|Segna Fatto|Letto Completato|In Sospeso|Mostra Tutto|Schermo Acceso|Per Letto|Per Modulo|Ora|Aria|Contesto|Supino|In Piedi|Differenza|Quantità|Tipo|Integra|Arrossata|Lesionata|Segna Tutto Integro|Medicazione|Sede / Note|Data|Oggi|Scadenza|Colazione|Pranzo|Cena|Rifiutato|Digiuno|Supino|Sinistra|Destra|Poltrona|Cammina|Livello Osservazione|Umore|Riposo|Esito",
-  nl: "Dienst Instellen|100% offline dienstnotitieblok. Gegevens verlaten nooit uw toestel.|Voorkeuren & Eenheden|Thema|Diensturen|Dag (07:00)|Nacht (19:00)|Glucose-eenheid|Temp-eenheid|Lay-out Laden|Geen lay-outs|1. Bed Toevoegen (Max 4)|Toev.|Verw.|Opslaan|2. Actieve Modules & Volgorde|3. Lay-out Opslaan Als|Start / Update Dienst|Deel met een Collega|Dienst Beëindigen / Wissen|Wijzig|Verberg|Donker|Scherm Verborgen|Tik om terug te keren|Bed Wijzigen|Item verwijderen?|Overzicht|Vitale Functies|Glucose|RR Liggend/Staand|Vochtbalans|Defecatie|Huid & Wondzorg|Voeding|Wisselligging|Mentale Gezondheid|Notities|Taken|Opname|Klaar|Markeer Klaar|Bed Klaar|Alleen Open|Toon Alles|Scherm Aan|Per Bed|Per Module|Tijd|Kamerlucht|Context|Liggend|Staand|Verschil|Hoeveelheid|Type|Intact|Rood|Defect|Alles Intact|Verband|Locatie / Notitie|Datum|Vandaag|Vervalt|Ontbijt|Lunch|Avondeten|Geweigerd|Nuchter|Rug|Links|Rechts|Stoel|Lopend|Observatieniveau|Stemming|Rust|Uitkomst",
-  sv: "Passinställning|100% offline anteckningsblock. Data lämnar aldrig din enhet.|Inställningar & Enheter|Tema|Passtider|Dag (07:00)|Natt (19:00)|Glukosenhet|Tempenhet|Ladda Layout|Inga sparade layouter|1. Lägg till Plats (Max 4)|Lägg till|Ta bort|Spara|2. Aktiva Moduler & Ordning|3. Spara Layout Som|Starta / Uppdatera Pass|Dela med en Kollega|Avsluta Pass / Rensa|Ändra|Dölj|Mörkt|Skärm Dold|Tryck för att återgå|Byt Plats|Ta bort denna post?|Översikt|Vitalparametrar|Blodsocker|BT Liggande/Stående|Vätskelista|Avföring|Hud & Förband|Kost|Vändschema|Psykisk Hälsa|Anteckningar|Uppgifter|Inskrivning|Klar|Markera Klar|Plats Klar|Endast Kvar|Visa Alla|Håll Skärm På|Per Plats|Per Modul|Tid|Luft|Kontext|Liggande|Stående|Skillnad|Mängd|Typ|Hel|Rodnad|Skadad|Markera Alla Hela|Förband|Plats / Notering|Datum|Idag|Förfaller|Frukost|Lunch|Middag|Nekat|Fasta|Rygg|Vänster|Höger|Fåtölj|Gående|Observationsnivå|Sinnesstämning|Vila|Utfall",
-  pl: "Ustawienia Dyżuru|Notatnik dyżurowy 100% offline. Dane nie opuszczają urządzenia.|Preferencje i Jednostki|Motyw|Godziny Dyżuru|Dzień (07:00)|Noc (19:00)|Jednostka Glikemii|Jednostka Temp|Wczytaj Układ|Brak układów|1. Dodaj Łóżko (Maks. 4 znaki)|Dodaj|Usuń|Zapisz|2. Aktywne Moduły i Kolejność|3. Zapisz Układ Jako|Rozpocznij / Aktualizuj|Udostępnij Współpracownikowi|Zakończ Dyżur / Wyczyść|Edytuj|Ukryj|Ciemny|Ekran Ukryty|Dotknij, aby wrócić|Zmień Łóżko|Usunąć ten wpis?|Podsumowanie|Parametry|Glikemia|RR Leżąc/Stojąc|Bilans Płynów|Wypróżnienia|Skóra i Opatrunki|Dieta|Zmiana Pozycji|Stan Psychiczny|Notatki|Zadania|Przyjęcie|Gotowe|Oznacz|Łóżko Gotowe|Oczekujące|Pokaż Wszystko|Ekran Włączony|Wg Łóżka|Wg Modułu|Czas|Powietrze|Kontekst|Leżąc|Stojąc|Różnica|Ilość|Typ|Czysta|Zaczerwieniona|Uszkodzona|Wszystko Czyste|Opatrunek|Miejsce / Notatki|Data|Dziś|Termin|Śniadanie|Obiad|Kolacja|Odmowa|Na czczo|Plecy|Lewy bok|Prawy bok|Fotel|Chodzi|Poziom Obserwacji|Nastrój|Odpoczynek|Wynik",
-  ro: "Configurare Tură|Agendă de tură 100% offline. Datele nu părăsesc dispozitivul.|Preferințe și Unități|Temă|Ore Tură|Zi (07:00)|Noapte (19:00)|Unitate Glicemie|Unitate Temp|Încarcă Configurație|Nicio configurație|1. Adaugă Pat (Max 4 caract.)|Adaugă|Șterge|Salvează|2. Module Active și Ordine|3. Salvează Configurația Ca|Începe / Actualizează Tura|Distribuie unui Coleg|Termină Tura / Șterge|Editează|Ascunde|Întunecat|Ecran Ascuns|Atingeți pentru revenire|Schimbă Pat|Ștergeți această înregistrare?|Rezumat|Funcții Vitale|Glicemie|TA Culcat/Ortostatism|Bilanț Hidric|Scaun|Piele și Pansamente|Alimentație|Mobilizare|Sănătate Mintală|Note|Sarcini|Internare|Gata|Marchează|Pat Finalizat|În Așteptare|Arată Tot|Ecran Aprins|După Pat|După Modul|Ora|Aer|Context|Culcat|În Picioare|Diferență|Cantitate|Tip|Integră|Eritem|Leziune|Totul Integru|Pansament|Loc / Note|Data|Azi|Scadent|Mic Dejun|Prânz|Cină|Refuzat|Repaus Alim.|Spate|Stânga|Dreapta|Fotoliu|Merge|Nivel Observație|Dispoziție|Odihnă|Rezultat",
-  uk: "Налаштування Зміни|Офлайн-блокнот зміни. Дані залишаються на пристрої.|Налаштування та Одиниці|Тема|Години Зміни|День (07:00)|Ніч (19:00)|Одиниця Глюкози|Одиниця Темп|Завантажити Шаблон|Немає шаблонів|1. Додати Ліжко (Макс 4 симв.)|Додати|Видал.|Зберегти|2. Активні Модулі та Порядок|3. Зберегти Шаблон Як|Почати / Оновити Зміну|Поділитися з Колегою|Завершити Зміну / Очистити|Редаг.|Сховати|Темний|Екран Приховано|Натисніть для повернення|Змінити Ліжко|Видалити цей запис?|Підсумок|Показники|Глюкоза|АТ Лежачи/Стоячи|Гідробаланс|Випорожнення|Шкіра та Пов’язки|Харчування|Повороти|Психічний Стан|Нотатки|Завдання|Госпіталізація|Готово|Відмітити|Ліжко Готово|Неперенесені|Показати Все|Екран Увімк.|За Ліжком|За Модулем|Час|Повітря|Контекст|Лежачи|Стоячи|Різниця|Кількість|Тип|Ціла|Почервоніння|Пошкоджена|Все Ціле|Пов’язка|Місце / Нотатки|Дата|Сьогодні|Термін|Сніданок|Обід|Вечеря|Відмова|Голод|Спина|Лівий бік|Правий бік|Крісло|Ходить|Рівень Спостереження|Настрій|Сон/Спокій|Результат",
-  ru: "Настройка Смены|Офлайн-блокнот смены. Данные не покидают устройство.|Настройки и Единицы|Тема|Часы Смены|День (07:00)|Ночь (19:00)|Ед. Глюкозы|Ед. Темп|Загрузить Шаблон|Нет шаблонов|1. Добавить Койку (Макс 4 симв.)|Добав.|Удал.|Сохр.|2. Активные Модули и Порядок|3. Сохранить Шаблон Как|Начать / Обновить Смену|Поделиться с Коллегой|Завершить Смену / Очистить|Измен.|Скрыть|Темный|Экран Скрыт|Нажмите для возврата|Изменить Койку|Удалить эту запись?|Сводка|Показатели|Глюкоза|АД Лежа/Стоя|Гидробаланс|Стул|Кожа и Повязки|Питание|Повороты|Психический Статус|Заметки|Задачи|Поступление|Готово|Отметить|Койка Готова|Ожидающие|Показать Все|Экран Вкл.|По Койкам|По Модулям|Время|Воздух|Контекст|Лежа|Стоя|Разница|Количество|Тип|Чистая|Гиперемия|Повреждена|Все Чисто|Повязка|Место / Заметки|Дата|Сегодня|Срок|Завтрак|Обед|Ужин|Отказ|Голод|Спина|Левый бок|Правый бок|Кресло|Ходит|Уровень Наблюдения|Настроение|Покой|Итог",
-  el: "Ρύθμιση Βάρδιας|Σημειωματάριο βάρδιας 100% εκτός σύνδεσης.|Προτιμήσεις & Μονάδες|Θέμα|Ώρες Βάρδιας|Ημέρα (07:00)|Νύχτα (19:00)|Μονάδα Γλυκόζης|Μονάδα Θερμ.|Φόρτωση Διάταξης|Καμία διάταξη|1. Προσθήκη Κλίνης (Έως 4 χαρ.)|Προσθ.|Διαγρ.|Αποθ.|2. Ενεργές Ενότητες & Σειρά|3. Αποθήκευση Διάταξης Ως|Έναρξη / Ενημέρωση Βάρδιας|Κοινοποίηση σε Συνάδελφο|Τέλος Βάρδιας / Διαγραφή|Επεξ.|Κρύψε|Σκούρο|Οθόνη Κρυμμένη|Πατήστε για επιστροφή|Αλλαγή Κλίνης|Διαγραφή αυτής της εγγραφής;|Σύνοψη|Ζωτικά|Γλυκόζη|ΑΠ Ύπτια/Όρθια|Ισοζύγιο Υγρών|Κενώσεις|Δέρμα & Επιθέματα|Δίαιτα|Αλλαγή Θέσης|Ψυχική Υγεία|Σημειώσεις|Εργασίες|Εισαγωγή|Έγινε|Σήμανση|Κλίνη Έτοιμη|Εκκρεμή|Όλα|Οθόνη Ενεργή|Ανά Κλίνη|Ανά Ενότητα|Ώρα|Αέρας|Πλαίσιο|Ύπτια|Όρθια|Διαφορά|Ποσότητα|Τύπος|Ακέραιο|Ερυθρότητα|Λύση|Όλα Ακέραια|Επίθεμα|Θέση / Σημ.|Ημερ.|Σήμερα|Λήξη|Πρωινό|Μεσημεριανό|Βραδινό|Άρνηση|Νηστεία|Ύπτια|Αριστερά|Δεξιά|Καρέκλα|Βάδιση|Επίπεδο Παρακολούθησης|Διάθεση|Ανάπαυση|Αποτέλεσμα",
-  hi: "शिफ्ट सेटअप|100% ऑफ़लाइन डिजिटल शिफ्ट नोटपैड। डेटा आपके फ़ोन में ही रहता है।|ऐप प्राथमिकताएं और इकाइयां|थीम|शिफ्ट का समय|दिन (07:00)|रात (19:00)|ग्लूकोज इकाई|तापमान इकाई|सेव लेआउट लोड करें|कोई सेव लेआउट नहीं|1. बेड / नाम जोड़ें (अधिकतम 4 अक्षर)|जोड़ें|हटाएं|सेव|2. सक्रिय मॉड्यूल और क्रम|3. लेआउट का नाम सेव करें|शिफ्ट शुरू / अपडेट करें|सहकर्मी के साथ साझा करें|शिफ्ट समाप्त / डेटा मिटाएं|बदलें|छुपाएं|डार्क|स्क्रीन छुपी हुई है|वापस जाने के लिए टैप करें|बेड बदलें|क्या यह एंट्री हटाएं?|सारांश|वाइटल्स|ग्लूकोज|L/S बीपी|फ्लूइड|मल त्याग|त्वचा और ड्रेसिंग|आहार|करवट|मानसिक स्वास्थ्य|नोट्स|कार्य|भर्ती|पूर्ण|पूर्ण करें|बेड पूर्ण|केवल बाकी|सभी दिखाएं|स्क्रीन ऑन रखें|बेड अनुसार|मॉड्यूल अनुसार|समय|हवा (Air)|संदर्भ|लेटकर|खड़े होकर|अंतर|मात्रा|प्रकार|सुरक्षित|लाल|घाव/टूटी|सभी सुरक्षित|ड्रेसिंग|स्थान / नोट्स|तारीख|आज|देय|नाश्ता|दोपहर का भोजन|रात का भोजन|मना किया|NBM|पीठ के बल|बाएं|दाएं|कुर्सी|चलना|निगरानी स्तर|मूड|आराम|परिणाम",
-  bn: "শিফট সেটআপ|১০০% অফলাইন ডিজিটাল নোটপ্যাড। ডেটা আপনার ফোনেই থাকে।|পছন্দ এবং একক|থিম|শিফটের সময়|দিন (07:00)|রাত (19:00)|গ্লুকোজ একক|তাপমাত্রা একক|লেআউট লোড করুন|কোনো লেআউট নেই|১. বেড যোগ করুন (সর্বোচ্চ ৪ অক্ষর)|যোগ|মুছুন|সেভ|২. সক্রিয় মডিউল ও ক্রম|৩. লেআউট সেভ করুন|শিফট শুরু / আপডেট|সহকর্মীর সাথে শেয়ার করুন|শিফট শেষ / মুছুন|এডিট|লুকান|ডার্ক|স্ক্রিন লুকানো|ফিরে যেতে ট্যাপ করুন|বেড পরিবর্তন|এই তথ্যটি মুছে ফেলবেন?|সারাংশ|ভাইটালস|গ্লুকোজ|শোয়া/দাঁড়ানো বিপি|ফ্লুইড|মলত্যাগ|ত্বক ও ড্রেসিং|খাবার|পাশ ফেরানো|মানসিক স্বাস্থ্য|নোট|কাজ|ভর্তি|সম্পন্ন|সম্পন্ন করুন|বেড সম্পন্ন|বাকিগুলো|সব দেখান|স্ক্রিন চালু|বেড অনুযায়ী|মডিউল অনুযায়ী|সময়|বাতাস (Air)|প্রসঙ্গ|শোয়া|দাঁড়ানো|পার্থক্য|পরিমাণ|ধরন|অক্ষত|লালচে|ক্ষত|সব অক্ষত|ড্রেসিং|স্থান / নোট|তারিখ|আজ|পরবর্তী|সকালের নাস্তা|দুপুরের খাবার|রাতের খাবার|প্রত্যাখ্যান|NBM|চিত হয়ে|বাম|ডান|চেয়ার|হাঁটা|পর্যবেক্ষণ স্তর|মেজাজ|বিশ্রাম|ফলাফল",
-  pa: "ਸ਼ਿਫਟ ਸੈੱਟਅੱਪ|100% ਆਫਲਾਈਨ ਡਿਜੀਟਲ ਸ਼ਿਫਟ ਨੋਟਪੈਡ।|ਪਸੰਦ ਅਤੇ ਇਕਾਈਆਂ|ਥੀਮ|ਸ਼ਿਫਟ ਦਾ ਸਮਾਂ|ਦਿਨ (07:00)|ਰਾਤ (19:00)|ਗਲੂਕੋਜ਼ ਇਕਾਈ|ਤਾਪਮਾਨ ਇਕਾਈ|ਸੇਵ ਲੇਆਉਟ ਲੋਡ ਕਰੋ|ਕੋਈ ਲੇਆਉਟ ਨਹੀਂ|1. ਬੈੱਡ ਜੋੜੋ (ਵੱਧ ਤੋਂ ਵੱਧ 4 ਅੱਖਰ)|ਜੋੜੋ|ਮਿਟਾਓ|ਸੇਵ|2. ਐਕਟਿਵ ਮੋਡੀਊਲ ਅਤੇ ਕ੍ਰਮ|3. ਲੇਆਉਟ ਸੇਵ ਕਰੋ|ਸ਼ਿਫਟ ਸ਼ੁਰੂ / ਅਪਡੇਟ ਕਰੋ|ਸਹਿਕਰਮੀ ਨਾਲ ਸਾਂਝਾ ਕਰੋ|ਸ਼ਿਫਟ ਖਤਮ / ਡਾਟਾ ਮਿਟਾਓ|ਬਦਲੋ|ਲੁਕਾਓ|ਡਾਰਕ|ਸਕ੍ਰੀਨ ਲੁਕਵੀਂ ਹੈ|ਵਾਪਸ ਜਾਣ ਲਈ ਟੈਪ ਕਰੋ|ਬੈੱਡ ਬਦਲੋ|ਕੀ ਇਹ ਐਂਟਰੀ ਮਿਟਾਉਣੀ ਹੈ?|ਸੰਖੇਪ|ਵਾਈਟਲਸ|ਗਲੂਕੋਜ਼|ਲੇਟ ਕੇ/ਖੜ੍ਹੇ ਬੀਪੀ|ਤਰਲ (Fluids)|ਟੱਟੀ (Bowels)|ਚਮੜੀ ਅਤੇ ਪੱਟੀ|ਖੁਰਾਕ|ਪਾਸਾ ਬਦਲਣਾ|ਮਾਨਸਿਕ ਸਿਹਤ|ਨੋਟਸ|ਕੰਮ|ਦਾਖਲਾ|ਪੂਰਾ|ਪੂਰਾ ਕਰੋ|ਬੈੱਡ ਪੂਰਾ|ਬਾਕੀ ਰਹਿੰਦੇ|ਸਭ ਦਿਖਾਓ|ਸਕ੍ਰੀਨ ਚਾਲੂ|ਬੈੱਡ ਅਨੁਸਾਰ|ਮੋਡੀਊਲ ਅਨੁਸਾਰ|ਸਮਾਂ|ਹਵਾ (Air)|ਸੰਦਰਭ|ਲੇਟ ਕੇ|ਖੜ੍ਹੇ ਹੋ ਕੇ|ਫਰਕ|ਮਾਤਰਾ|ਕਿਸਮ|ਠੀਕ|ਲਾਲ|ਜ਼ਖ਼ਮ|ਸਾਰੇ ਠੀਕ|ਪੱਟੀ|ਥਾਂ / ਨੋਟਸ|ਮਿਤੀ|ਅੱਜ|ਬਕਾਇਆ|ਨਾਸ਼ਤਾ|ਦੁਪਹਿਰ ਦਾ ਖਾਣਾ|ਰਾਤ ਦਾ ਖਾਣਾ|ਮਨ੍ਹਾ ਕੀਤਾ|NBM|ਪਿੱਠ ਭਾਰ|ਖੱਬੇ|ਸੱਜੇ|ਕੁਰਸੀ|ਤੁਰਨਾ|ਨਿਗਰਾਨੀ ਪੱਧਰ|ਮੂਡ|ਆਰਾਮ|ਨਤੀਜਾ",
-  ur: "شفٹ سیٹ اپ|100% آف لائن ڈیجیٹل شفٹ نوٹ پیڈ۔ ڈیٹا آپ کے فون میں محفوظ رہتا ہے۔|ترجیحات اور اکائیاں|تھیم|شفٹ کے اوقات|دن (07:00)|رات (19:00)|شوگر یونٹ|درجہ حرارت یونٹ|محفوظ لے آؤٹ لوڈ کریں|کوئی لے آؤٹ نہیں|1. بیڈ شامل کریں (زیادہ سے زیادہ 4 حروف)|شامل|حذف|محفوظ|2. فعال ماڈیولز اور ترتیب|3. لے آؤٹ محفوظ کریں|شفٹ شروع / اپ ڈیٹ کریں|ساتھی کے ساتھ شیئر کریں|شفٹ ختم / ڈیٹا صاف کریں|ترمیم|چھپائیں|ڈارک|اسکرین پوشیدہ ہے|واپس جانے کے لیے ٹیپ کریں|بیڈ تبدیل کریں|کیا یہ اندراج حذف کریں؟|خلاصہ|وائٹلز|شوگر|لیٹے/کھڑے بی پی|فلوئڈز|اجابت|جلد اور پٹی|خوراک|کروٹ بدلنا|ذہنی صحت|نوٹس|کام|داخلہ|مکمل|مکمل کریں|بیڈ مکمل|صرف بقایا|سب دکھائیں|اسکرین آن رکھیں|بلحاظ بیڈ|بلحاظ ماڈیول|وقت|ہوا (Air)|سیاق|لیٹے ہوئے|کھڑے ہوئے|فرق|مقدار|قسم|محفوظ|سرخ|زخم|سب محفوظ|پٹی|مقام / نوٹس|تاریخ|آج|مقررہ|ناشتہ|دوپہر کا کھانا|رات کا کھانا|انکار|NBM|سیدھا|بائیں|دائیں|کرسی|چلنا|مشاہداتی سطح|مزاج|آرام|نتیجہ",
-  ta: "ஷிப்ட் அமைப்பு|100% ஆஃப்லைன் டிஜிட்டல் குறிப்பேடு.|விருப்பங்கள் & அலகுகள்|தீம்|ஷிப்ட் நேரம்|பகல் (07:00)|இரவு (19:00)|குளுக்கோஸ் அலகு|வெப்பநிலை அலகு|வடிவமைப்பை ஏற்று|வடிவமைப்பு இல்லை|1. படுக்கை சேர் (அதிகபட்சம் 4 எழுத்து)|சேர்|நீக்கு|சேமி|2. செயல்பாட்டு பிரிவுகள்|3. வடிவமைப்பை சேமி|ஷிப்ட் தொடங்கு / புதுப்பி|சக ஊழியருடன் பகிர்|ஷிப்ட் முடிவு / அழி|திருத்து|மறை|டார்க்|திரை மறைக்கப்பட்டுள்ளது|திரும்பத் தட்டவும்|படுக்கை மாற்று|இந்த பதிவை நீக்கவா?|சுருக்கம்|வைட்டல்ஸ்|குளுக்கோஸ்|படுத்த/நின்ற BP|திரவ அளவு|மலம் கழித்தல்|தோல் & கட்டு|உணவு|புரட்டி படுக்க வைத்தல்|மனநலம்|குறிப்புகள்|பணிகள்|சேர்க்கை|முடிந்தது|முடிந்ததாக குறி|படுக்கை முடிந்தது|நிலுவையில் உள்ளவை|அனைத்தும் காட்டு|திரை ఆನ್|படுக்கை வாரியாக|பிரிவு வாரியாக|நேரம்|காற்று (Air)|சூழல்|படுத்த|நின்ற|வித்தியாசம்|அளவு|வகை|நல்ல நிலை|சிவப்பு|புண்|அனைத்தும் நல்ல நிலை|கட்டு|இடம் / குறிப்பு|தேதி|இன்று|மாற்றும் நாள்|காலை உணவு|மதிய உணவு|இரவு உணவு|மறுப்பு|NBM|மல்லாந்து|இடது|வலது|நாற்காலி|நடை|கண்காணிப்பு நிலை|मनநிலை|ஓய்வு|முடிவு",
-  ml: "ഷിഫ്റ്റ് ക്രമീകരണം|100% ഓഫ്‌ലൈൻ ഡിജിറ്റൽ നോട്ട്പാഡ്.|ക്രമീകരണങ്ങളും യൂണിറ്റുകളും|തീം|ഷിഫ്റ്റ് സമയം|പകൽ (07:00)|രാത്രി (19:00)|ഗ്ലൂക്കോസ് യൂണിറ്റ്|താപനില യൂണിറ്റ്|ലേഔട്ട് ലോഡ് ചെയ്യുക|ലേഔട്ടുകൾ ഇല്ല|1. ബെഡ് ചേർക്കുക (പരമാവധി 4 അക്ഷരം)|ചേർക്കുക|നീക്കുക|സേവ്|2. സജീവ വിഭാഗങ്ങളും ക്രമവും|3. ലേഔട്ട് സേവ് ചെയ്യുക|ഷിഫ്റ്റ് തുടങ്ങുക / പുതുക്കുക|സഹപ്രവർത്തകരുമായി പങ്കിടുക|ഷിഫ്റ്റ് അവസാനിപ്പിക്കുക|മാറ്റുക|മറയ്ക്കുക|ഡാർക്ക്|സ്ക്രീൻ മറച്ചിരിക്കുന്നു|തിരികെ വരാൻ ടാപ്പ് ചെയ്യുക|ബെഡ് മാറ്റുക|ഈ എൻട്രി നീക്കം ചെയ്യണോ?|സംഗ്രഹം|വൈറ്റൽസ്|ഗ്ലൂക്കോസ്|L/S ബിപി|ഫ്ലൂയിഡ്സ്|ശോധന|ചർമ്മവും ഡ്രസ്സിംഗും|ഭക്ഷണം|തിരിച്ചുകിടത്തൽ|മാനസികാരോഗ്യം|കുറിപ്പുകൾ|ചുമതലകൾ|അഡ്മിഷൻ|പൂർത്തിയായി|പൂർത്തിയാക്കുക|ബെഡ് പൂർത്തിയായി|ബാക്കിയുള്ളവ|എല്ലാം കാണിക്കുക|സ്ക്രീൻ ഓൺ|ബെഡ് ക്രമത്തിൽ|വിഭാഗം ക്രമത്തിൽ|സമയം|വായു (Air)|സന്ദർഭം|കിടന്ന്|നിന്ന്|വ്യത്യാസം|അളവ്|തരം|കുഴപ്പമില്ല|ചുവപ്പ്|മുറിവ്|എല്ലാം കുഴപ്പമില്ല|ഡ്രസ്സിംഗ്|സ്ഥലം / കുറിപ്പ്|തീയതി|ഇന്ന്|അടുത്തത്|പ്രഭാതഭക്ഷണം|ഉച്ചഭക്ഷണം|അത്താഴം|നിരസിച്ചു|NBM|മലർന്ന്|ഇടത്|വലത്|കസേര|നടത്തം|നിരീക്ഷണ നില|മനോഭാവം|വിശ്രമം|ഫലം",
-  zh: "班次设置|100% 离线数字交班记事本。数据绝不离开您的设备。|偏好设置与单位|主题颜色|班次时间|白班 (07:00)|夜班 (19:00)|血糖单位|体温单位|加载已存布局|无保存的布局|1. 添加床号 (最多4个字符)|添加|删除|保存|2. 启用模块与排序|3. 保存布局为|开始 / 更新班次|与同事分享应用|结束班次 / 清除数据|编辑|隐藏|深色|屏幕已隐藏|点击任意处返回|更换床号|确定删除此记录？|汇总|生命体征|血糖|卧/立位血压|出入量|排便|皮肤与敷料|饮食|翻身|心理健康|护理记录|待办任务|入院物品|已录|标记已录|整床已录|仅看未录|显示全部|屏幕常亮|按床位|按模块|时间|空气|场景|卧位|立位|差值|量|类型|完好|发红|破损|全部完好|敷料|部位 / 备注|日期|今天|到期|早餐|午餐|晚餐|拒食|禁食|平卧|左侧|右侧|坐椅|步行|护理观察级别|情绪|休息状态|结果",
-  'zh-tw': "班次設定|100% 離線數位交班記事本。資料絕不離開您的裝置。|偏好設定與單位|主題顏色|班次時間|白班 (07:00)|夜班 (19:00)|血糖單位|體溫單位|載入已存版面|無儲存的版面|1. 新增床號 (最多4個字元)|新增|刪除|儲存|2. 啟用模組與排序|3. 儲存版面為|開始 / 更新班次|與同事分享應用程式|結束班次 / 清除資料|編輯|隱藏|深色|螢幕已隱藏|點擊任意處返回|更換床號|確定刪除此紀錄？|總覽|生命徵象|血糖|臥/立位血壓|出入量|排便|皮膚與敷料|飲食|翻身|心理健康|護理紀錄|待辦任務|入院物品|已錄|標記已錄|整床已錄|僅看未錄|顯示全部|螢幕常亮|按床位|按模組|時間|空氣|情境|臥位|立位|差值|量|類型|完整|發紅|破損|全部完整|敷料|部位 / 備註|日期|今天|到期|早餐|午餐|晚餐|拒食|禁食|平躺|左側|右側|坐椅|步行|護理觀察級別|情緒|休息狀態|結果",
-  ja: "シフト設定|100%オフラインのシフトメモ帳。データは端末内にのみ保存されます。|設定と単位|テーマ|シフト時間|日勤 (07:00)|夜勤 (19:00)|血糖単位|体温単位|レイアウト読込|保存なし|1. ベッド追加 (最大4文字)|追加|削除|保存|2. 有効な項目と並び順|3. レイアウト保存|シフト開始 / 更新|同僚にアプリを共有|シフト終了 / データ消去|編集|隠す|ダーク|画面非表示中|タップして戻る|ベッド変更|この記録を削除しますか？|サマリー|バイタル|血糖値|臥位/立位血圧|水分出納|排便|皮膚・創傷処置|食事|体位変換|精神状態|メモ|タスク|入院持参品|済|済にする|ベッド完了|未転記のみ|すべて表示|画面常時オン|ベッド別|項目別|時間|室内気|タイミング|臥位|立位|差|量|性状|異常なし|発赤|損傷|すべて異常なし|創傷処置|部位 / メモ|日付|今日|交換日|朝食|昼食|夕食|拒否|絶飲食|仰臥位|左側臥位|右側臥位|端坐位/車椅子|歩行|観察レベル|様子|睡眠/安静|結果",
-  ko: "근무 설정|100% 오프라인 근무 수첩. 데이터는 기기 외부로 전송되지 않습니다.|환경설정 및 단위|테마|근무 시간대|주간 (07:00)|야간 (19:00)|혈당 단위|체온 단위|저장된 배치 불러오기|저장된 배치 없음|1. 병상 추가 (최대 4자)|추가|삭제|저장|2. 활성 항목 및 순서|3. 배치 이름 저장|근무 시작 / 업데이트|동료에게 앱 공유|근무 종료 / 데이터 삭제|편집|숨김|다크|화면 숨김|돌아가려면 터치하세요|병상 변경|이 기록을 삭제하시겠습니까?|요약|활력징후|혈당|와위/기립 혈압|수분 섭취/배설|배변|피부 및 드레싱|식이|체위변경|정신건강|메모|업무|입원 물품|완료|완료 표시|병상 완료|미기록만|전체 보기|화면 켜짐 유지|병상별|항목별|시간|실내공기|구분|와위(누움)|기립(섬)|차이|양|양상|온전함|발적|손상|모두 온전함|드레싱|부위 / 메모|날짜|오늘|예정일|아침|점심|저녁|거부|금식(NPO)|앙와위|좌측와위|우측와위|의자|보행|관찰 단계|상태|수면/안정|결과",
-  tl: "Setup ng Shift|100% offline digital shift notepad. Nananatili ang data sa iyong telepono.|Mga Preference at Unit|Tema|Oras ng Shift|Araw (07:00)|Gabi (19:00)|Unit ng Glucose|Unit ng Temp|I-load ang Layout|Walang naka-save|1. Magdagdag ng Kama (Max 4)|Idagdag|Burahin|I-save|2. Mga Active Module at Ayos|3. I-save ang Layout Bilang|Simulan / I-update ang Shift|Ibahagi sa Katrabaho|Tapusin ang Shift / Burahin|I-edit|Itago|Dark|Nakatago ang Screen|I-tap kahit saan para bumalik|Palitan ang Kama|Burahin ang entry na ito?|Buod|Vital Signs|Glucose|L/S BP|Fluids|Pagdumi|Balat at Dressing|Pagkain|Pagpihit|Mental Health|Mga Tala|Mga Gawain|Admissions|Tapos|Markahan|Kama Tapos Na|Pending Lang|Ipakita Lahat|Screen Naka-on|Bawat Kama|Bawat Module|Oras|Hangin|Konteksto|Nakahiga|Nakatayo|Pagkakaiba|Dami|Uri|Intact|Mapula|May Sugat|Lahat Intact|Dressing|Lokasyon / Tala|Petsa|Ngayon|Due|Almusal|Tanghalian|Hapunan|Tumanggi|NPO/NBM|Likod|Kaliwa|Kanan|Upuan|Naglalakad|Antas ng Obserbasyon|Mood|Pahinga|Resulta",
-  id: "Pengaturan Shift|Catatan shift digital 100% offline. Data tetap di perangkat Anda.|Preferensi & Satuan|Tema|Jam Shift|Siang (07:00)|Malam (19:00)|Satuan Glukosa|Satuan Suhu|Muat Tata Letak|Tidak ada tata letak|1. Tambah Bed (Maks 4 karakter)|Tambah|Hapus|Simpan|2. Modul Aktif & Urutan|3. Simpan Tata Letak Sebagai|Mulai / Perbarui Shift|Bagikan ke Rekan Kerja|Akhiri Shift / Hapus Data|Edit|Sembunyi|Gelap|Layar Disembunyikan|Ketuk untuk kembali|Ubah Bed|Hapus entri ini?|Ringkasan|Tanda Vital|Glukosa|TD Berbaring/Berdiri|Cairan|BAB|Kulit & Balutan|Diet|Miring Kanan/Kiri|Kesehatan Mental|Catatan|Tugas|Admisi|Selesai|Tandai Selesai|Bed Selesai|Belum Selesai|Tampilkan Semua|Layar Menyala|Per Bed|Per Modul|Waktu|Udara|Konteks|Berbaring|Berdiri|Selisih|Jumlah|Tipe|Utuh|Kemerahan|Luka/Lecet|Semua Utuh|Balutan|Lokasi / Catatan|Tanggal|Hari Ini|Jatuh Tempo|Sarapan|Makan Siang|Makan Malam|Menolak|Puasa|Telentang|Kiri|Kanan|Kursi|Jalan|Tingkat Observasi|Suasana Hati|Istirahat|Hasil",
-  vi: "Thiết Lập Ca Trực|Sổ tay ca trực ngoại tuyến 100%. Dữ liệu luôn ở trên máy của bạn.|Tùy Chọn & Đơn Vị|Giao Diện|Giờ Ca Trực|Ca Ngày (07:00)|Ca Đêm (19:00)|Đơn Vị Đường Huyết|Đơn Vị Nhiệt Độ|Tải Sơ Đồ Đã Lưu|Chưa có sơ đồ|1. Thêm Giường (Tối đa 4 ký tự)|Thêm|Xóa|Lưu|2. Các Mục & Thứ Tự|3. Lưu Sơ Đồ Tên|Bắt Đầu / Cập Nhật Ca|Chia Sẻ Với Đồng Nghiệp|Kết Thúc Ca / Xóa Dữ Liệu|Sửa|Ẩn|Tối|Đã Ẩn Màn Hình|Chạm bất kỳ để quay lại|Đổi Giường|Xóa mục này?|Tóm Tắt|Sinh Hiệu|Đường Huyết|HA Nằm/Đứng|Dịch Xuất Nhập|Đại Tiện|Da & Băng Vết Thương|Dinh Dưỡng|Xoay Trở|Sức Khỏe Tâm Thần|Ghi Chú|Công Việc|Nhập Viện|Xong|Đánh Dấu Xong|Xong Giường Này|Chưa Chép|Hiện Tất Cả|Giữ Sáng Màn Hình|Theo Giường|Theo Mục|Giờ|Khí Trời|Thời Điểm|Nằm|Đứng|Chênh Lệch|Lượng|Loại|Nguyên Vẹn|Đỏ Da|Trầy Loét|Tất Cả Nguyên Vẹn|Băng|Vị Trí / Ghi Chú|Ngày|Hôm Nay|Hạn Thay|Bữa Sáng|Bữa Trưa|Bữa Tối|Từ Chối|Nhịn Ăn|Nằm Ngửa|Nghiêng Trái|Nghiêng Phải|Ngồi Ghế|Đi Lại|Mức Theo Dõi|Tâm Trạng|Nghỉ Ngơi|Kết Quả",
-  ar: "إعداد المناوبة|مفكرة مناوبة رقمية تعمل بدون إنترنت 100%.|التفضيلات والوحدات|المظهر|ساعات المناوبة|نهاري (07:00)|ليلي (19:00)|وحدة السكر|وحدة الحرارة|تحميل تخطيط محفوظ|لا توجد تخطيطات|1. إضافة سرير (بحد أقصى 4 أحرف)|إضافة|حذف|حفظ|2. الأقسام النشطة والترتيب|3. حفظ التخطيط باسم|بدء / تحديث المناوبة|مشاركة التطبيق مع زميل|إنهاء المناوبة / مسح البيانات|تعديل|إخفاء|داكن|الشاشة مخفية|اضغط في أي مكان للعودة|تغيير السرير|حذف هذا الإدخال؟|الملخص|العلامات الحيوية|سكر الدم|الضغط مستلقياً/واقفاً|السوائل|الإخراج|الجلد والضمادات|التغذية|التقليب|الصحة النفسية|ملاحظات|المهام|مقتنيات الدخول|تم|تحديد كـ تم|إتمام السرير|قيد الانتظار|عرض الكل|إبقاء الشاشة مضاءة|حسب السرير|حسب القسم|الوقت|هواء الغرفة|السياق|مستلقٍ|واقف|الفرق|الكمية|النوع|سليم|احمرار|متقرح|تحديد الكل سليم|ضماد|الموقع / ملاحظات|التاريخ|اليوم|الاستحقاق|الإفطار|الغداء|العشاء|رفض|صائم|ظهر|يسار|يمين|كرسي|مشي|مستوى الملاحظة|المزاج|الراحة|النتيجة",
-  tr: "Nöbet Kurulumu|%100 çevrimdışı dijital nöbet not defteri.|Tercihler ve Birimler|Tema|Nöbet Saatleri|Gündüz (07:00)|Gece (19:00)|Şeker Birimi|Sıcaklık Birimi|Kayıtlı Düzeni Yükle|Kayıtlı düzen yok|1. Yatak Ekle (Maks 4 karakter)|Ekle|Sil|Kaydet|2. Aktif Modüller ve Sıralama|3. Düzeni Farklı Kaydet|Nöbeti Başlat / Güncelle|Arkadaşınla Paylaş|Nöbeti Bitir / Verileri Sil|Düzenle|Gizle|Koyu|Ekran Gizlendi|Dönmek için dokunun|Yatak Değiştir|Bu kayıt silinsin mi?|Özet|Vital Bulgular|Kan Şekeri|Yatarak/Ayakta KB|Sıvı İzlemi|Defekasyon|Cilt ve Pansuman|Beslenme|Pozisyon|Ruh Sağlığı|Notlar|Görevler|Yatış Eşyaları|Tamam|Tamamlandı|Yatak Tamam|Bekleyenler|Tümünü Göster|Ekranı Açık Tut|Yatağa Göre|Modüle Göre|Saat|Oda Havası|Bağlam|Yatarak|Ayakta|Fark|Miktar|Tip|Bütünlüğü Tam|Kızarık|Bozulmuş|Tümü Sağlam|Pansuman|Bölge / Notlar|Tarih|Bugün|Değişim|Kahvaltı|Öğle Yemeği|Akşam Yemeği|Reddetti|Oral Стоп|Sırtüstü|Sol|Sağ|Sandalye|Yürüyüş|Gözlem Seviyesi|Durum|Dinlenme|Sonuç",
-  fa: "تنظیمات شیفت|دفترچه یادداشت شیفت ۱۰۰٪ آفلاین. اطلاعات در گوشی شما می‌ماند.|تنظیمات و واحدها|پوسته|ساعات شیفت|روز (07:00)|شب (19:00)|واحد قند|واحد دما|بارگذاری چیدمان|چیدمانی ذخیره نشده|۱. افزودن تخت (حداکثر ۴ حرف)|افزودن|حذف|ذخیره|۲. بخش‌های فعال و ترتیب|۳. ذخیره چیدمان با نام|شروع / بروزرسانی شیفت|اشتراک‌گذاری با همکار|پایان شیفت / پاک کردن اطلاعات|ویرایش|مخفی|تیره|صفحه مخفی شد|برای بازگشت لمس کنید|تغییر تخت|این مورد حذف شود؟|خلاصه|علائم حیاتی|قند خون|فشار خون خوابیده/ایستاده|جذب و دفع|اجابت مزاج|پوست و پانسمان|رژیم غذایی|تغییر پوزیشن|سلامت روان|گزارش پرستاری|وظایف|وسایل بیمار|ثبت شد|علامت ثبت|تکمیل تخت|فقط ثبت‌نشده‌ها|نمایش همه|روشن ماندن صفحه|بر اساس تخت|بر اساس بخش|زمان|هوای اتاق|زمان‌بندی|خوابیده|ایستاده|تفاوت|مقدار|نوع|سالم|قرمزی|زخم|همه سالم|پانسمان|ناحیه / یادداشت|تاریخ|امروز|موعد|صبحانه|ناهار|شام|امتناع|NPO|طاق‌باز|چپ|راست|صندلی|راه رفتن|سطح تحت نظر|خلق|استراحت|نتیجه",
-  sw: "Mpangilio wa Zamu|Daftari la zamu la kidijitali lisilotumia mtandao 100%.|Mapendeleo na Vipimo|Mandhari|Saa za Zamu|Mchana (07:00)|Usiku (19:00)|Kipimo cha Sukari|Kipimo cha Joto|Pakia Mpangilio|Hakuna mpangilio|1. Ongeza Kitanda (Herufi 4)|Ongeza|Futa|Hifadhi|2. Sehemu Zinazotumika|3. Hifadhi Mpangilio Kama|Anza / Sasisha Zamu|Shiriki na Mwenzako|Maliza Zamu / Futa Data|Hariri|Ficha|Giza|Skrini Imefichwa|Gusa popote kurudi|Badili Kitanda|Futa kipengele hiki?|Muhtasari|Dalili za Uhai|Sukari|BP Kulala/Kusimama|Vimiminika|Choo Kubwa|Ngozi na Vidonda|Lishe|Kugeuza Mgonjwa|Afya ya Akili|Maelezo|Majukumu|Mali za Mgonjwa|Tayari|Weka Alama|Kitanda Tayari|Zinazosubiri|Onyesha Zote|Washa Skrini|Kwa Kitanda|Kwa Sehemu|Muda|Hewa|Muktadha|Kulala|Kusimama|Tofauti|Kiasi|Aina|Salama|Nyekundu|Michubuko|Zote Salama|Kidonda|Mahali / Maelezo|Tarehe|Leo|Inatarajiwa|Kifungua Kinywa|Chakula cha Mchana|Chakula cha Jioni|Amekataa|NBM|Chali|Kushoto|Kulia|Kiti|Kutembea|Kiwango cha Uangalizi|Hali|Mapumziko|Matokeo"
+const enDict = {
+  setup: "Shift Setup",
+  sub: "100% offline digital shift notepad. Data never leaves your device.",
+  proTitle: "Unlock Care Digipad Pro (£9.99 Lifetime)",
+  proSub: "Unlocks unlimited beds, saved ward layouts, custom themes, task alarms and all specialist modules.",
+  proPlaceholder: "Enter licence key",
+  unlock: "Unlock",
+  getPro: "Get a Lifetime Licence Key \u2192",
+  prefs: "App Preferences & Units",
+  theme: "Theme",
+  thTeal: "Clinical Teal", thBlue: "Healthcare Blue", thGreen: "Scrub Green", thBerry: "Plum & Berry", thSlate: "Midnight Slate", thCoral: "Warm Coral",
+  shiftHrs: "Shift Hours",
+  dayShift: "Day (07:00)", nightShift: "Night (19:00)",
+  bmUnit: "Glucose Unit", tempUnit: "Temp Unit",
+  savedLay: "Load Saved Layout", noLay: "No saved layouts",
+  addBed: "1. Add Bed / Initials (Max 4 chars)", add: "Add", del: "Del", save: "Save",
+  activeMods: "2. Active Modules & Order",
+  saveLay: "3. Save Layout As",
+  start: "Start / Update Shift",
+  share: "Share Care Digipad with a Colleague",
+  endShift: "End Shift / Clear Data",
+  edit: "Edit", hide: "Hide", dark: "Dark",
+  hiddenTitle: "Screen Hidden", hiddenSub: "Tap anywhere to return to shift notes",
+  delConfirm: "Delete this entry?",
+  manageBed: "Manage Bed",
+  renameBed: "Rename Bed",
+  transferBed: "Transfer / Swap Patient",
+  transferPrompt: "Enter destination bed (max 4 chars):",
+  swapConfirm: "is occupied. Swap patients? (Cancel = Overwrite destination)",
+  clearBed: "Clear Bed (Discharge)",
+  clearBedConfirm: "Clear all shift data for this bed?",
+  removeBed: "Remove Bed from Shift",
+  removeBedConfirm: "Remove this bed and its data from the shift?",
+  updLayout: "Save to Layout",
+  layoutSaved: "Saved to layout",
+  quickAddBedPrompt: "Add Bed to Shift (max 4 chars):",
+  summary: "Summary",
+  obs: "Vitals", bm: "Glucose", bp: "L/S BP", fluid: "Fluids", bowel: "Bowels", amy: "Skin & Dressings", food: "Diet", turn: "Turning", mh: "Mental Health", events: "Notes", reminders: "Tasks", admit: "Admissions",
+  done: "Done", markDone: "Mark Done", markBed: "Mark Bed Done",
+  pending: "Pending Only", showAll: "Show All", keepOn: "Keep Screen On",
+  byBed: "By Bed", byMod: "By Module",
+  time: "Time", air: "Air", context: "Context", pain: "Pain",
+  o2Nasal: "Nasal", o2Mask: "Mask", o2Venturi: "Venturi",
+  preMeal: "Pre-Meal", postMeal: "Post-Meal", night: "Night",
+  hypoTreated: "Hypo Treated", ketones: "Ketones Checked", escRn: "Escalated to RN",
+  lying: "Lying", standing: "Standing", diff: "Difference",
+  noSym: "No Symptoms", dizzy: "Dizzy / Lightheaded", unableStand: "Unable to Stand",
+  flIn: "In", flOut: "Out", flNet: "Net", flTotal: "Total", flClr: "Clr",
+  wetPad: "Wet Pad", srcPu: "PU / Urine", srcCath: "Catheter", srcBowel: "Bowels", srcVomit: "Vomit",
+  amt: "Amount", type: "Type", bno: "BNO", method: "Method",
+  small: "Small", medium: "Medium", large: "Large", smear: "Smear",
+  type1: "Type 1", type2: "Type 2", type3: "Type 3", type4: "Type 4", type5: "Type 5", type6: "Type 6", type7: "Type 7",
+  mToilet: "Toilet", mCommode: "Commode", mBedpan: "Bedpan", mPad: "Pad",
+  sacrum: "Sacrum", groin: "Groin", heels: "Heels", elbows: "Elbows",
+  intact: "Intact", blanching: "Blanching (Red)", nonBlanch: "Non-Blanching", moisture: "Moisture / Excoriated", broken: "Broken / Cavity", tear: "Skin Tear / Bruise", drySkin: "Dry / Fragile",
+  markIntact: "Mark All Intact", addSite: "+ Add Body Site", sitePrompt: "Body site (e.g. Left Hip, Right Shin, Spine):",
+  sideL: "Left", sideR: "Right", sideBoth: "Both",
+  cBarrier: "Barrier Cream", cOffload: "Repositioned / Offloaded", cBoots: "Heel Boots / Pillows",
+  dressing: "Dressing", locNotes: "Location / Notes", dueIn: "Due In", date: "Date", today: "Today", due: "Due",
+  drIntact: "Intact & Dry", drChanged: "Changed Today", drLeak: "Strikethrough / Leaking", drLift: "Lifting",
+  b: "Breakfast", l: "Lunch", d: "Dinner", supp: "Supplements / Snacks", taken: "Taken", refused: "Refused", nbm: "NBM",
+  dIndep: "Independent", dAssist: "Assisted", dPrompt: "Prompted", dThick: "Thickened Fluids",
+  back: "Back", left: "Left", right: "Right", chair: "Chair", walking: "Walking",
+  turnNow: "+ Turn Now", tBell: "Call Bell in Reach", tRails: "Bed Rails Up", tMattress: "Air Mattress Checked",
+  obsLevel: "Observation Level",
+  lvl1: "Level 1: General", lvl2: "Level 2: Intermittent", lvl3: "Level 3: Eyesight", lvl4: "Level 4: Arm's Length",
+  mood: "Mood", calm: "Calm", anxious: "Anxious", agitated: "Agitated", low: "Low", elevated: "Elevated", hostile: "Hostile",
+  rest: "Rest", asleep: "Asleep", settled: "Settled", restless: "Restless", outOfBed: "Out of Bed",
+  outcome: "Outcome",
+  weight: "Weight (kg)", height: "Height (cm)", wristband: "ID Wristband On",
+  locPt: "With Patient", locSafe: "In Safe", locHome: "Sent Home",
+  acvpu: ["A (Alert)", "C (Confusion)", "V (Voice)", "P (Pain)", "U (Unresponsive)"],
+  phrases: ["Personal care given", "Washed & dressed", "Pressure areas intact", "Mobilised to chair", "Escalated to RN", "Family updated"],
+  tasks: ["Bloods", "ECG", "Repeat Obs", "BM", "Bladder Scan", "Cannula"],
+  admits: ["Dentures", "Glasses", "Hearing Aid", "Frame/Stick", "Phone/Charger", "Keys", "Cash/Wallet"],
+  drSites: ["Sacrum", "L Heel", "R Heel", "L Leg", "R Leg", "Abdomen"]
 };
 
-const chipDict = {
-  en: { phrases:['Personal care given', 'Washed & dressed', 'Pressure areas intact', 'Mobilised to chair', 'Escalated to RN', 'Family updated'], tasks:['Bloods', 'ECG', 'Repeat Obs', 'BM', 'Bladder Scan', 'Cannula'], admits:['Dentures', 'Glasses', 'Hearing Aid', 'Frame/Stick', 'Phone/Charger', 'Keys', 'Cash/Wallet'] },
-  es: { phrases:['Aseo personal realizado', 'Lavado y vestido', 'Zonas de presión íntegras', 'Movilizado a sillón', 'Informado a enfermera', 'Familia informada'], tasks:['Analítica', 'ECG', 'Repetir Constantes', 'Glucemia', 'Ecografía Vesical', 'Vía Venosa'], admits:['Prótesis Dental', 'Gafas', 'Audífono', 'Andador/Bastón', 'Móvil/Cargador', 'Llaves', 'Efectivo/Cartera'] },
-  fr: { phrases:['Soins d’hygiène effectués', 'Lavé et habillé', 'Points d’appui intacts', 'Installé au fauteuil', 'Transmis à l’IDE', 'Famille informée'], tasks:['Bilan Sanguin', 'ECG', 'Contrôle Constantes', 'Glycémie', 'Bladder Scan', 'Cathéter'], admits:['Prothèse Dentaire', 'Lunettes', 'Appareil Auditif', 'Déambulateur/Canne', 'Téléphone/Chargeur', 'Clés', 'Espèces/Portefeuille'] },
-  de: { phrases:['Körperpflege durchgeführt', 'Gewaschen & angekleidet', 'Druckstellen intakt', 'In den Stuhl mobilisiert', 'An Pflegefachkraft gemeldet', 'Angehörige informiert'], tasks:['Blutentnahme', 'EKG', 'Vitalzeichen-Kontrolle', 'BZ-Kontrolle', 'Blasenscan', 'Venenverweilkanüle'], admits:['Zahnprothese', 'Brille', 'Hörgerät', 'Rollator/Gehstock', 'Handy/Ladegerät', 'Schlüssel', 'Bargeld/Geldbörse'] },
-  pt: { phrases:['Cuidados de higiene realizados', 'Banho e troca realizados', 'Zonas de pressão íntegras', 'Mobilizado para poltrona', 'Comunicado ao enfermeiro', 'Família atualizada'], tasks:['Exames de Sangue', 'ECG', 'Repetir Sinais Vitais', 'Glicemia Capilar', 'Bladder Scan', 'Acesso Venoso'], admits:['Prótese Dentária', 'Óculos', 'Aparelho Auditivo', 'Andador/Bengala', 'Telemóvel/Carregador', 'Chaves', 'Dinheiro/Carteira'] },
-  it: { phrases:['Cure igieniche effettuate', 'Lavato e vestito', 'Zone di pressione integre', 'Mobilizzato in poltrona', 'Segnalato all’infermiere', 'Famiglia aggiornata'], tasks:['Prelievo Ematico', 'ECG', 'Controllo Parametri', 'Glicemia', 'Bladder Scan', 'CVP/Cannula'], admits:['Protesi Dentaria', 'Occhiali', 'Apparecchio Acustico', 'Deambulatore/Bastone', 'Telefono/Caricabatterie', 'Chiavi', 'Contanti/Portafoglio'] },
-  nl: { phrases:['Persoonlijke verzorging gegeven', 'Gewassen en aangekleed', 'Drukplekken intact', 'Gemobiliseerd naar stoel', 'Gemeld aan verpleegkundige', 'Familie geïnformeerd'], tasks:['Bloedafname', 'ECG', 'Herhaal Controles', 'Bloedsuiker', 'Bladderscan', 'Infuus/Canule'], admits:['Gebitsprothese', 'Bril', 'Gehoorapparaat', 'Rollator/Wandelstok', 'Telefoon/Oplader', 'Sleutels', 'Contanten/Portemonnee'] },
-  sv: { phrases:['Personlig omvårdnad utförd', 'Tvättad och påklädd', 'Tryckytor intakta', 'Mobiliserad till fåtölj', 'Rapporterat till SSK', 'Närstående informerade'], tasks:['Blodprov', 'EKG', 'Nya Kontroller', 'B-Glukos', 'BladderScan', 'PVK'], admits:['Tandprotes', 'Glasögon', 'Hörapparat', 'Rollator/Käpp', 'Mobil/Laddare', 'Nycklar', 'Kontanter/Plånbok'] },
-  pl: { phrases:['Wykonano toaletę ciała', 'Umyto i przebrano', 'Miejsca ucisku bez zmian', 'Posadzono w fotelu', 'Zgłoszono pielęgniarce', 'Poinformowano rodzinę'], tasks:['Badania Krwi', 'EKG', 'Kontrola Parametrów', 'Glikemia', 'USG Pęcherza', 'Wenflon'], admits:['Proteza Zębowa', 'Okulary', 'Aparat Słuchowy', 'Chodzik/Laska', 'Telefon/Ładowarka', 'Klucze', 'Gotówka/Portfel'] },
-  ro: { phrases:['Igienă personală efectuată', 'Spălat și schimbat', 'Zone de presiune integre', 'Mobilizat în fotoliu', 'Anunțat asistentul medical', 'Familie informată'], tasks:['Analize Sânge', 'EKG', 'Repetare Funcții Vitale', 'Glicemie', 'Scanare Vezicală', 'Branulă'], admits:['Proteză Dentară', 'Ochelari', 'Aparat Auditiv', 'Cadru/Baston', 'Telefon/Încărcător', 'Chei', 'Bani/Portofel'] },
-  uk: { phrases:['Проведено особисту гігієну', 'Вмитий та переодягнений', 'Місця тиску неушкоджені', 'Пересаджено в крісло', 'Повідомлено медсестру', 'Родину поінформовано'], tasks:['Аналіз Крові', 'ЕКГ', 'Повторити Показники', 'Глюкоза Крові', 'УЗД Сечового', 'Катетер'], admits:['Зубні Протези', 'Окуляри', 'Слуховий Апарат', 'Ходунки/Тростина', 'Телефон/Зарядка', 'Ключі', 'Готівка/Гаманець'] },
-  ru: { phrases:['Гигиенический уход выполнен', 'Умыт и переодет', 'Точки давления без изменений', 'Пересажен в кресло', 'Доложено медсестре', 'Родственники информированы'], tasks:['Забор Крови', 'ЭКГ', 'Повтор Показателей', 'Глюкометрия', 'УЗИ Мочевого', 'Канюля'], admits:['Зубные Протезы', 'Очки', 'Слуховой Аппарат', 'Ходунки/Трость', 'Телефон/Зарядка', 'Ключи', 'Наличные/Кошелек'] },
-  el: { phrases:['Δόθηκε ατομική φροντίδα', 'Πλύθηκε και ντύθηκε', 'Σημεία πίεσης ακέραια', 'Κινητοποιήθηκε σε καρέκλα', 'Ενημερώθηκε νοσηλευτής', 'Ενημερώθηκε η οικογένεια'], tasks:['Αιμοληψία', 'ΗΚΓ', 'Επανάληψη Ζωτικών', 'Σάκχαρο', 'Υπέρηχος Κύστης', 'Φλεβοκαθετήρας'], admits:['Οδοντοστοιχία', 'Γυαλιά', 'Ακουστικό', 'Πι/Μπαστούνι', 'Τηλέφωνο/Φορτιστής', 'Κλειδιά', 'Μετρητά/Πορτοφόλι'] },
-  hi: { phrases:['व्यक्तिगत देखभाल दी गई', 'स्नान और कपड़े बदले गए', 'दबाव वाले हिस्से सुरक्षित हैं', 'कुर्सी पर बैठाया गया', 'नर्स (RN) को सूचित किया', 'परिवार को जानकारी दी गई'], tasks:['ब्लड टेस्ट', 'ECG', 'दोबारा वाइटल्स', 'शुगर जांच (BM)', 'ब्लैडर स्कैन', 'कैनुला'], admits:['नकली दांत', 'चश्मा', 'हियरिंग एड', 'वॉकर/छड़ी', 'फोन/चार्जर', 'चाबियां', 'नकद/पर्स'] },
-  bn: { phrases:['ব্যক্তিগত পরিচর্যা দেওয়া হয়েছে', 'পরিষ্কার ও পোশাক পরিবর্তন করা হয়েছে', 'চাপের স্থানগুলো অক্ষত আছে', 'চেয়ারে বসানো হয়েছে', 'নার্সকে (RN) জানানো হয়েছে', 'পরিবারকে আপডেট দেওয়া হয়েছে'], tasks:['রক্ত পরীক্ষা', 'ইসিজি (ECG)', 'পুনরায় ভাইটালস', 'ব্লাড সুগার', 'ব্লাডার স্ক্যান', 'ক্যানুলা'], admits:['নকল দাঁত', 'চশমা', 'হিয়ারিং এইড', 'ওয়াকার/লাঠি', 'ফোন/চার্জার', 'চাবি', 'নগদ টাকা/মানিব্যাগ'] },
-  pa: { phrases:['ਨਿੱਜੀ ਦੇਖਭਾਲ ਦਿੱਤੀ ਗਈ', 'ਨਹਾਇਆ ਅਤੇ ਕੱਪੜੇ ਬਦਲੇ', 'ਦਬਾਅ ਵਾਲੇ ਹਿੱਸੇ ਠੀਕ ਹਨ', 'ਕੁਰਸੀ ਤੇ ਬਿਠਾਇਆ ਗਿਆ', 'ਨਰਸ (RN) ਨੂੰ ਦੱਸਿਆ ਗਿਆ', 'ਪਰਿਵਾਰ ਨੂੰ ਜਾਣਕਾਰੀ ਦਿੱਤੀ'], tasks:['ਖੂਨ ਦੀ ਜਾਂਚ', 'ECG', 'ਦੁਬਾਰਾ ਵਾਈਟਲਸ', 'ਸ਼ੂਗਰ ਜਾਂਚ', 'ਬਲੈਡਰ ਸਕੈਨ', 'ਕੈਨੂਲਾ'], admits:['ਨਕਲੀ ਦੰਦ', 'ਐਨਕਾਂ', 'ਸੁਣਨ ਵਾਲੀ ਮਸ਼ੀਨ', 'ਵਾਕਰ/ਸੋਟੀ', 'ਫੋਨ/ਚਾਰਜਰ', 'ਚਾਬੀਆਂ', 'ਨਕਦੀ/ਪਰਸ'] },
-  ur: { phrases:['ذاتی نگہداشت فراہم کی گئی', 'غسل اور لباس تبدیل کیا گیا', 'دباؤ والے حصے محفوظ ہیں', 'کرسی پر بٹھایا گیا', 'نرس (RN) کو مطلع کیا گیا', 'اہل خانہ کو آگاہ کیا گیا'], tasks:['بلڈ ٹیسٹ', 'ECG', 'دوبارہ وائٹلز', 'شوگر چیک', 'بلیڈر اسکین', 'کینولا'], admits:['مصنوعی دانت', 'عینک', 'آلہ سماعت', 'واکر/چھڑی', 'فون/چارجر', 'چابیاں', 'نقدی/بٹوہ'] },
-  ta: { phrases:['தனிப்பட்ட பராமரிப்பு வழங்கப்பட்டது', 'குளிப்பாட்டி உடை மாற்றப்பட்டது', 'அழுத்தப் பகுதிகள் பாதிப்பில்லை', 'நாற்காலியில் அமர வைக்கப்பட்டார்', 'செவிலியரிடம் (RN) தெரிவிக்கப்பட்டது', 'குடும்பத்தினருக்கு தகவல் அளிக்கப்பட்டது'], tasks:['இரத்தப் பரிசோதனை', 'ECG', 'மீண்டும் வைட்டல்ஸ்', 'சர்க்கரை அளவு', 'பிளாடர் ஸ்கேன்', 'கானுலா'], admits:['பல் செட்', 'மூக்குக்கண்ணாடி', 'காது கேட்கும் கருவி', 'வாக்கர்/கைத்தடி', 'போன்/சார்ஜர்', 'சாவிகள்', 'பணம்/பர்ஸ்'] },
-  ml: { phrases:['വ്യക്തിഗത പരിചരണം നൽകി', 'കുളിപ്പിച്ച് വസ്ത്രം മാറ്റി', 'പ്രഷർ ഏരിയകൾക്ക് കുഴപ്പമില്ല', 'കസേരയിലേക്ക് മാറ്റിയിരുത്തി', 'നഴ്സിനെ (RN) അറിയിച്ചു', 'കുടുംബത്തെ വിവരമറിയിച്ചു'], tasks:['രക്തപരിശോധന', 'ECG', 'വൈറ്റൽസ് ആവർത്തിക്കുക', 'ഷുഗർ (BM)', 'ബ്ലാഡർ സ്കാൻ', 'കാനുല'], admits:['വെപ്പുപല്ല്', 'കണ്ണട', 'ഹിയറിംഗ് എയ്ഡ്', 'വാക്കർ/വടി', 'ഫോൺ/ചാർജർ', 'താക്കോൽ', 'പണം/പേഴ്സ്'] },
-  zh: { phrases:['已完成个人护理', '已擦浴并更换衣物', '受压部位皮肤完好', '已协助移至座椅', '已上报责任护士(RN)', '已向家属沟通病情'], tasks:['抽血', '心电图 (ECG)', '复测生命体征', '测血糖', '膀胱扫描', '留置针护理'], admits:['假牙', '眼镜', '助听器', '助行器/拐杖', '手机/充电器', '钥匙', '现金/钱包'] },
-  'zh-tw': { phrases:['已完成個人護理', '已擦澡並更換衣物', '受壓部位皮膚完整', '已協助移至座椅', '已通報負責護理師(RN)', '已向家屬說明近況'], tasks:['抽血', '心電圖 (ECG)', '複測生命徵象', '測血糖', '膀胱掃描', '留置針護理'], admits:['假牙', '眼鏡', '助聽器', '助行器/拐杖', '手機/充電器', '鑰匙', '現金/錢包'] },
-  ja: { phrases:['清潔ケア実施', '清拭・更衣完了', '褥瘡好発部位異常なし', '車椅子・椅子へ離床', '看護師へ報告済', '家族へ連絡済'], tasks:['採血', '心電図 (ECG)', 'バイタル再検', '血糖測定', 'ブラダースキャン', '末梢ルート'], admits:['義歯', '眼鏡', '補聴器', '歩行器・杖', '携帯電話・充電器', '鍵', '現金・財布'] },
-  ko: { phrases:['개인 위생 간호 시행', '세안 및 환의 교체', '욕창 부위 피부 온전함', '의자로 이동 보조', '담당 간호사(RN) 보고됨', '보호자 설명 완료'], tasks:['채혈', '심전도 (ECG)', '활력징후 재측정', '혈당(BST)', '방광 스캔', '정맥 주사관'], admits:['틀니', '안경', '보청기', '보행기/지팡이', '휴대폰/충전기', '열쇠', '현금/지갑'] },
-  tl: { phrases:['Nabigyan ng personal care', 'Napaliguan at nabihisan', 'Intact ang pressure areas', 'Nailipat sa upuan', 'Na-escalate sa RN', 'Na-update ang pamilya'], tasks:['Bloods', 'ECG', 'Ulitin ang Obs', 'BM', 'Bladder Scan', 'Cannula'], admits:['Pustiso', 'Salamin', 'Hearing Aid', 'Walker/Tungkod', 'Cellphone/Charger', 'Susi', 'Pera/Pitaka'] },
-  id: { phrases:['Perawatan diri diberikan', 'Sudah dimandikan & ganti pakaian', 'Area tekan utuh/intact', 'Mobilisasi ke kursi', 'Dilaporkan ke perawat (RN)', 'Keluarga sudah diinformasikan'], tasks:['Cek Darah', 'EKG', 'Ulang Tanda Vital', 'Gula Darah', 'Bladder Scan', 'Kanula/Infus'], admits:['Gigi Palsu', 'Kacamata', 'Alat Bantu Dengar', 'Walker/Tongkat', 'HP/Charger', 'Kunci', 'Uang/Dompet'] },
-  vi: { phrases:['Đã chăm sóc vệ sinh cá nhân', 'Đã tắm rửa & thay đồ', 'Vùng tỳ đè nguyên vẹn', 'Hỗ trợ ngồi ghế', 'Đã báo điều dưỡng (RN)', 'Đã cập nhật cho gia đình'], tasks:['Lấy Máu', 'Điện Tim (ECG)', 'Đo Lại Sinh Hiệu', 'Đường Huyết', 'Siêu Âm Bàng Quang', 'Kim Luồn'], admits:['Răng Giả', 'Mắt Kính', 'Máy Trợ Thính', 'Khung Tập Đi/Gậy', 'Điện Thoại/Sạc', 'Chìa Khóa', 'Tiền Mặt/Ví'] },
-  ar: { phrases:['تم تقديم الرعاية الشخصية', 'تم الاستحمام وتغيير الملابس', 'مناطق الضغط سليمة', 'تم الإجلاس على الكرسي', 'تم إبلاغ الممرض المسؤول', 'تم تحديث العائلة'], tasks:['سحب دم', 'تخطيط قلب (ECG)', 'إعادة العلامات الحيوية', 'فحص السكر', 'مسح المثانة', 'كانيولا'], admits:['طقم أسنان', 'نظارات', 'سماعة طبية', 'مشاية/عكاز', 'هاتف/شاحن', 'مفاتيح', 'نقود/محفظة'] },
-  tr: { phrases:['Kişisel bakım verildi', 'Yıkandı ve giydirildi', 'Bası bölgeleri sağlam', 'Sandalyeye mobilize edildi', 'Sorumlu hemşireye bildirildi', 'Aile bilgilendirildi'], tasks:['Kan Alma', 'EKG', 'Vital Tekrarı', 'Kan Şekeri', 'Mesane Ultrasonu', 'Branül'], admits:['Diş Protezi', 'Gözlük', 'İşitme Cihazı', 'Yürüteç/Baston', 'Telefon/Şarj', 'Anahtar', 'Nakit/Cüzdan'] },
-  fa: { phrases:['مراقبت شخصی انجام شد', 'شستشو و تعویض لباس انجام شد', 'نواحی تحت فشار سالم است', 'به صندلی منتقل شد', 'به پرستار مسئول اطلاع داده شد', 'به خانواده اطلاع داده شد'], tasks:['نمونه‌گیری خون', 'نوار قلب (ECG)', 'چک مجدد علائم حیاتی', 'تست قند خون', 'اسکن مثانه', 'آنژیوکت'], admits:['دندان مصنوعی', 'عینک', 'سمعک', 'واکر/عصا', 'موبایل/شارژر', 'کلید', 'وجه نقد/کیف پول'] },
-  sw: { phrases:['Huduma ya usafi imetolewa', 'Ameogeshwa na kuvalishwa', 'Sehemu za mgandamizo zipo salama', 'Amehamishwa kwenye kiti', 'Muuguzi (RN) amefahamishwa', 'Familia imejulishwa'], tasks:['Vipimo vya Damu', 'ECG', 'Rudia Vipimo', 'Kipimo cha Sukari', 'Bladder Scan', 'Kanyula'], admits:['Meno ya Bandia', 'Miwani', 'Kifaa cha Kusikia', 'Kitembezi/Fimbo', 'Simu/Chaja', 'Funguo', 'Pesa/Pochi'] }
-};
-
-const i18n = {};
-Object.keys(rawDict).forEach(lang => {
-  i18n[lang] = { ...(chipDict[lang] || chipDict.en) };
-  const parts = rawDict[lang].split('|');
-  tKeys.forEach((k, idx) => { i18n[lang][k] = parts[idx] || ''; });
-});
+const i18n = window.CDU_LANGS ? { en: enDict, ...window.CDU_LANGS } : { en: enDict };
 
 let defaultMods = [
   {id:'obs', lbl:'Vitals', on:true, pro:false},
@@ -407,30 +417,16 @@ try {
   const sPrefs = localStorage.getItem('cdu_prefs');
   if (sPrefs) {
     prefs = { ...prefs, ...JSON.parse(sPrefs) };
-  } else {
-    const rawLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
-    if (rawLang === 'zh-tw' || rawLang === 'zh-hk' || rawLang === 'zh-hant') {
-      prefs.lang = 'zh-tw';
-    } else {
-      let shortLang = rawLang.slice(0, 2);
-      if (shortLang === 'ms') shortLang = 'id';
-      if (shortLang === 'fi' && rawLang.startsWith('fil')) shortLang = 'tl';
-      if (i18n[shortLang]) prefs.lang = shortLang;
-    }
   }
-  
   const sLayouts = localStorage.getItem('cdu_layouts');
   if (sLayouts) savedLayouts = JSON.parse(sLayouts);
-  
+  activeLayoutName = localStorage.getItem('cdu_act_layout') || '';
   const savedAlloc = localStorage.getItem('cdu_alloc');
   if (savedAlloc) alloc = JSON.parse(savedAlloc);
-  
   const savedWard = localStorage.getItem('cdu_ward');
   if (savedWard) currentLayoutBeds = JSON.parse(savedWard);
-  
   const savedMods = localStorage.getItem('cdu_mods');
   if (savedMods) activeMods = JSON.parse(savedMods);
-  
   const savedDb = localStorage.getItem('cdu_db');
   if (savedDb) db = JSON.parse(savedDb);
   
@@ -449,13 +445,13 @@ try {
 if (alloc.length > 0) curBed = alloc[0];
 
 function t(key) {
-  const dict = i18n[prefs.lang] || i18n.en;
-  return dict[key] || i18n.en[key] || key;
+  const dict = i18n[prefs.lang] || enDict;
+  return dict[key] || enDict[key] || key;
 }
 
 function getLangList(listKey) {
-  const dict = i18n[prefs.lang] || i18n.en;
-  return dict[listKey] || i18n.en[listKey] || [];
+  const dict = i18n[prefs.lang] || enDict;
+  return dict[listKey] || enDict[listKey] || [];
 }
 
 function applyPrefsUI() {
@@ -472,7 +468,9 @@ function applyPrefsUI() {
   if (dt) dt.checked = !!prefs.dark;
 
   const mapIds = {
-    lblSetupTitle:'setup', lblSetupSub:'sub', lblPrefs:'prefs', lblThemeTxt:'theme',
+    lblSetupTitle:'setup', lblSetupSub:'sub', lblProTitle:'proTitle', lblProSub:'proSub',
+    btnUnlock:'unlock', lnkGetPro:'getPro', lblPrefs:'prefs', lblThemeTxt:'theme',
+    optThTeal:'thTeal', optThBlue:'thBlue', optThGreen:'thGreen', optThBerry:'thBerry', optThSlate:'thSlate', optThCoral:'thCoral',
     lblShiftType:'shiftHrs', optDayShift:'dayShift', optNightShift:'nightShift',
     lblBmUnit:'bmUnit', lblTempUnit:'tempUnit', lblSavedLayouts:'savedLay',
     lblAddBed:'addBed', btnAddBed:'add', btnDelLayout:'del', btnSaveLayout:'save',
@@ -484,6 +482,8 @@ function applyPrefsUI() {
     const el = document.getElementById(id);
     if (el) el.textContent = t(mapIds[id]);
   });
+  const pk = document.getElementById('proKeyInput');
+  if (pk) pk.placeholder = t('proPlaceholder');
 
   if (isPro) {
     document.getElementById('proBox').classList.add('hidden');
@@ -563,7 +563,7 @@ function initSetup() {
     startShift(true);
   } else {
     if (isPro && Object.keys(savedLayouts).length > 0) {
-      loadLayout(Object.keys(savedLayouts)[0]);
+      loadLayout(activeLayoutName && savedLayouts[activeLayoutName] ? activeLayoutName : Object.keys(savedLayouts)[0]);
     }
     renderSetupGrid();
     renderMods();
@@ -604,7 +604,7 @@ function moveMod(i, dir) {
 function updateLayoutDropdown() {
   const sel = document.getElementById('savedLayoutsDropdown');
   if (!sel) return;
-  sel.innerHTML = Object.keys(savedLayouts).map(k => `<option value="${k}">${k}</option>`).join('');
+  sel.innerHTML = Object.keys(savedLayouts).map(k => `<option value="${k}" ${k===activeLayoutName?'selected':''}>${k}</option>`).join('');
   if(Object.keys(savedLayouts).length === 0) sel.innerHTML = `<option value="">${t('noLay')}</option>`;
 }
 
@@ -612,6 +612,8 @@ function saveLayout() {
   if (!isPro) return alert('PRO (£9.99)');
   const name = document.getElementById('layoutNameInput').value.trim();
   if(!name) return;
+  activeLayoutName = name;
+  localStorage.setItem('cdu_act_layout', activeLayoutName);
   savedLayouts[name] = { beds: [...currentLayoutBeds], mods: [...activeMods] };
   localStorage.setItem('cdu_layouts', JSON.stringify(savedLayouts));
   updateLayoutDropdown();
@@ -621,6 +623,8 @@ function saveLayout() {
 
 function loadLayout(name) {
   if (!isPro || !savedLayouts[name]) return;
+  activeLayoutName = name;
+  localStorage.setItem('cdu_act_layout', activeLayoutName);
   if(Array.isArray(savedLayouts[name])) {
     currentLayoutBeds = [...savedLayouts[name]];
     activeMods = JSON.parse(JSON.stringify(defaultMods));
@@ -637,6 +641,10 @@ function deleteLayout() {
   const name = document.getElementById('savedLayoutsDropdown').value;
   if(!name || !confirm(t('delConfirm'))) return;
   delete savedLayouts[name];
+  if (activeLayoutName === name) {
+    activeLayoutName = '';
+    localStorage.removeItem('cdu_act_layout');
+  }
   localStorage.setItem('cdu_layouts', JSON.stringify(savedLayouts));
   currentLayoutBeds = []; alloc = [];
   updateLayoutDropdown(); renderSetupGrid(); renderMods();
@@ -675,6 +683,30 @@ function toggleAlloc(bed) {
   renderSetupGrid();
 }
 
+function initBedObj(b) {
+  if(!db[b]) db[b] = {};
+  if(!db[b].obs) db[b].obs = [];
+  if(!db[b].bm) db[b].bm = [];
+  if(!db[b].events) db[b].events = [];
+  if(!db[b].admit) db[b].admit = [];
+  if(!db[b].admitInfo) db[b].admitInfo = {wt:'', ht:'', band:false};
+  if(!db[b].bowel) db[b].bowel = [];
+  if(!db[b].dressings) db[b].dressings = [];
+  if(!db[b].bp) db[b].bp = {lsys:'', ldia:'', ssys:'', sdia:'', sym:''};
+  if(!db[b].amy) db[b].amy = {sac:'', groin:'', heels:'', heelsSide:'', elbows:'', elbowsSide:''};
+  if(!db[b].amySites) db[b].amySites = [];
+  if(!db[b].amyCare) db[b].amyCare = [];
+  if(!db[b].food) db[b].food = {b:'', l:'', d:'', s:'', assist:[]};
+  if(!db[b].turn) db[b].turn = Array(6).fill('');
+  if(!db[b].turnCustom) db[b].turnCustom = [];
+  if(!db[b].turnChecks) db[b].turnChecks = [];
+  if(!db[b].fluid) db[b].fluid = Array(13).fill(null).map(()=>({i:'', o:'', pad:0, src:''}));
+  if(!db[b].reminders) db[b].reminders = [];
+  if(!db[b].mh) db[b].mh = [];
+  if(!db[b].mhLevel) db[b].mhLevel = '';
+  if(!db[b].td) db[b].td = {};
+}
+
 function startShift(auto = false) {
   if (!auto) {
     if (alloc.length === 0) return;
@@ -686,24 +718,7 @@ function startShift(auto = false) {
     if (!localStorage.getItem('cdu_start')) localStorage.setItem('cdu_start', Date.now().toString());
   }
   
-  alloc.forEach(b => {
-    if(!db[b]) db[b] = {};
-    if(!db[b].obs) db[b].obs = [];
-    if(!db[b].bm) db[b].bm = [];
-    if(!db[b].events) db[b].events = [];
-    if(!db[b].admit) db[b].admit = [];
-    if(!db[b].bowel) db[b].bowel = [];
-    if(!db[b].dressings) db[b].dressings = [];
-    if(!db[b].bp) db[b].bp = {lsys:'', ldia:'', ssys:'', sdia:''};
-    if(!db[b].amy) db[b].amy = {sac:'', groin:'', heels:'', elbows:''};
-    if(!db[b].food) db[b].food = {b:'', l:'', d:''};
-    if(!db[b].turn) db[b].turn = Array(6).fill('');
-    if(!db[b].fluid) db[b].fluid = Array(13).fill(null).map(()=>({i:'', o:''}));
-    if(!db[b].reminders) db[b].reminders = [];
-    if(!db[b].mh) db[b].mh = [];
-    if(!db[b].mhLevel) db[b].mhLevel = '';
-    if(!db[b].td) db[b].td = {};
-  });
+  alloc.forEach(b => initBedObj(b));
   saveDB();
   
   if (!alloc.includes(curBed)) curBed = alloc[0];
@@ -720,26 +735,138 @@ function toggleDark(val) {
   document.body.setAttribute('data-theme', val ? 'night' : 'day');
 }
 
-function setBed(b) { curBed = b; showSummary = false; releaseWakeLock(); renderUI(); }
+function setBed(b) { curBed = b; showSummary = false; showBedManage = false; releaseWakeLock(); renderUI(); }
 function setSec(s) { curSec = s; showSummary = false; releaseWakeLock(); renderUI(); }
-function toggleSummary() { showSummary = true; renderUI(); }
+function toggleSummary() { showSummary = true; showBedManage = false; renderUI(); }
 function editBeds() { releaseWakeLock(); document.getElementById('mainView').classList.add('hidden'); document.getElementById('setupView').classList.remove('hidden'); applyPrefsUI(); renderSetupGrid(); renderMods(); }
+
+function toggleBedManage() {
+  showBedManage = !showBedManage;
+  renderContent();
+}
+
+function syncBedStorage() {
+  currentLayoutBeds.sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
+  alloc.sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
+  localStorage.setItem('cdu_alloc', JSON.stringify(alloc));
+  localStorage.setItem('cdu_ward', JSON.stringify(currentLayoutBeds));
+  saveDB();
+}
+
+function quickAddBedMidShift() {
+  if (!isPro && alloc.length >= 4) return alert('PRO (£9.99)');
+  const raw = prompt(t('quickAddBedPrompt'));
+  if (!raw) return;
+  const clean = raw.trim().toUpperCase().substring(0, 4);
+  if (!clean) return;
+  if (!currentLayoutBeds.includes(clean)) currentLayoutBeds.push(clean);
+  if (!alloc.includes(clean)) alloc.push(clean);
+  initBedObj(clean);
+  curBed = clean;
+  showSummary = false;
+  showBedManage = false;
+  syncBedStorage();
+  renderUI();
+}
 
 function renameCurrentBed() {
   const newCode = prompt(t('renameBed') + ` (${curBed}):`, curBed);
   if (!newCode) return;
   const clean = newCode.trim().toUpperCase().substring(0, 4);
   if (!clean || clean === curBed) return;
-  if (alloc.includes(clean)) return alert('Bed already exists.');
+  if (alloc.includes(clean)) return alert('Bed already active. Use Transfer / Swap Patient instead.');
   db[clean] = db[curBed];
   delete db[curBed];
   alloc = alloc.map(b => b === curBed ? clean : b);
-  currentLayoutBeds = currentLayoutBeds.map(b => b === curBed ? clean : b);
+  if (currentLayoutBeds.includes(curBed)) {
+    currentLayoutBeds = currentLayoutBeds.map(b => b === curBed ? clean : b);
+  } else if (!currentLayoutBeds.includes(clean)) {
+    currentLayoutBeds.push(clean);
+  }
   curBed = clean;
-  localStorage.setItem('cdu_alloc', JSON.stringify(alloc));
-  localStorage.setItem('cdu_ward', JSON.stringify(currentLayoutBeds));
+  showBedManage = false;
+  syncBedStorage();
+  renderUI();
+}
+
+function bedHasAnyData(b) {
+  if (!db[b]) return false;
+  for (let m of defaultMods) {
+    if (getModuleCount(b, m.id) > 0) return true;
+  }
+  return false;
+}
+
+function transferCurrentBed() {
+  const raw = prompt(`${t('transferBed')} (${curBed}) -> ${t('transferPrompt')}`);
+  if (!raw) return;
+  const dest = raw.trim().toUpperCase().substring(0, 4);
+  if (!dest || dest === curBed) return;
+  if (!alloc.includes(dest) && !isPro && alloc.length >= 4) return alert('PRO (£9.99)');
+
+  if (!currentLayoutBeds.includes(dest)) currentLayoutBeds.push(dest);
+  if (!alloc.includes(dest)) alloc.push(dest);
+  initBedObj(dest);
+
+  if (bedHasAnyData(dest)) {
+    if (confirm(`${dest} ${t('swapConfirm')}`)) {
+      const temp = db[dest];
+      db[dest] = db[curBed];
+      db[curBed] = temp;
+    } else {
+      db[dest] = db[curBed];
+      delete db[curBed];
+      initBedObj(curBed);
+    }
+  } else {
+    db[dest] = db[curBed];
+    delete db[curBed];
+    initBedObj(curBed);
+  }
+  curBed = dest;
+  showBedManage = false;
+  syncBedStorage();
+  renderUI();
+}
+
+function clearCurrentBedData() {
+  if (!confirm(`${curBed}: ${t('clearBedConfirm')}`)) return;
+  delete db[curBed];
+  initBedObj(curBed);
+  showBedManage = false;
   saveDB();
   renderUI();
+}
+
+function removeCurrentBedMidShift() {
+  if (alloc.length <= 1) return;
+  if (!confirm(`${curBed}: ${t('removeBedConfirm')}`)) return;
+  delete db[curBed];
+  alloc = alloc.filter(b => b !== curBed);
+  curBed = alloc[0];
+  showBedManage = false;
+  syncBedStorage();
+  renderUI();
+}
+
+function saveCurrentToActiveLayout() {
+  if (!isPro) return alert('PRO (£9.99)');
+  let targetName = activeLayoutName;
+  if (!targetName) {
+    const inp = prompt(t('saveLay') + ':', 'Ward');
+    if (!inp || !inp.trim()) return;
+    targetName = inp.trim();
+    activeLayoutName = targetName;
+    localStorage.setItem('cdu_act_layout', activeLayoutName);
+  }
+  currentLayoutBeds = [...new Set([...currentLayoutBeds, ...alloc])];
+  currentLayoutBeds.sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
+  savedLayouts[targetName] = { beds: [...currentLayoutBeds], mods: [...activeMods] };
+  localStorage.setItem('cdu_layouts', JSON.stringify(savedLayouts));
+  localStorage.setItem('cdu_ward', JSON.stringify(currentLayoutBeds));
+  showBedManage = false;
+  alert(`${t('layoutSaved')}: ${targetName}`);
+  renderContent();
 }
 
 function bedHasOverdue(b) {
@@ -748,24 +875,50 @@ function bedHasOverdue(b) {
   return db[b].reminders.some(r => !r.outcome && r.time && r.time <= now);
 }
 
+function getModuleCount(b, secId) {
+  const d = db[b];
+  if (!d) return 0;
+  if (secId === 'obs') return d.obs ? d.obs.length : 0;
+  if (secId === 'bm') return d.bm ? d.bm.length : 0;
+  if (secId === 'bp') return (d.bp && (d.bp.lsys || d.bp.ssys || d.bp.sym)) ? 1 : 0;
+  if (secId === 'fluid') {
+    let count = 0;
+    if (d.fluid) d.fluid.forEach(f => { if (f.i || f.o || f.pad) count++; });
+    return count;
+  }
+  if (secId === 'food') return (d.food && (d.food.b || d.food.l || d.food.d || d.food.s || (d.food.assist && d.food.assist.length))) ? 1 : 0;
+  if (secId === 'bowel') return d.bowel ? d.bowel.length : 0;
+  if (secId === 'amy') {
+    let c = (d.dressings ? d.dressings.length : 0) + (d.amySites ? d.amySites.length : 0);
+    if (d.amy && (d.amy.sac || d.amy.groin || d.amy.heels || d.amy.elbows)) c++;
+    if (d.amyCare && d.amyCare.length > 0 && c === 0) c++;
+    return c;
+  }
+  if (secId === 'turn') {
+    let c = d.turn ? d.turn.filter(x => x !== '').length : 0;
+    if (d.turnCustom) c += d.turnCustom.length;
+    return c;
+  }
+  if (secId === 'mh') return (d.mhLevel ? 1 : 0) + (d.mh ? d.mh.length : 0);
+  if (secId === 'events') return d.events ? d.events.length : 0;
+  if (secId === 'reminders') return d.reminders ? d.reminders.length : 0;
+  if (secId === 'admit') {
+    let c = d.admit ? d.admit.length : 0;
+    if (d.admitInfo && (d.admitInfo.wt || d.admitInfo.ht || d.admitInfo.band)) c++;
+    return c;
+  }
+  return 0;
+}
+
 async function requestWakeLock() {
   if ('wakeLock' in navigator) {
-    try {
-      wakeLock = await navigator.wakeLock.request('screen');
-      keepAwake = true;
-    } catch (e) {
-      keepAwake = false;
-    }
-  } else {
-    keepAwake = false;
-  }
+    try { wakeLock = await navigator.wakeLock.request('screen'); keepAwake = true; }
+    catch (e) { keepAwake = false; }
+  } else { keepAwake = false; }
 }
 
 function releaseWakeLock() {
-  if (wakeLock !== null) {
-    wakeLock.release().catch(() => {});
-    wakeLock = null;
-  }
+  if (wakeLock !== null) { wakeLock.release().catch(() => {}); wakeLock = null; }
   keepAwake = false;
 }
 
@@ -775,26 +928,19 @@ async function toggleKeepAwake() {
   renderContent();
 }
 
-function toggleSummaryMode() {
-  summaryMode = summaryMode === 'bed' ? 'mod' : 'bed';
-  renderContent();
-}
-
-function toggleHideDone() {
-  hideDone = !hideDone;
-  renderContent();
-}
+function toggleSummaryMode() { summaryMode = summaryMode === 'bed' ? 'mod' : 'bed'; renderContent(); }
+function toggleHideDone() { hideDone = !hideDone; renderContent(); }
 
 function markBedDone(b) {
   const d = db[b];
   if (!d) return;
   if (!d.td) d.td = {};
-  ['obs', 'bm', 'bowel', 'dressings', 'mh', 'events', 'reminders', 'admit'].forEach(k => {
+  ['obs', 'bm', 'bowel', 'dressings', 'amySites', 'turnCustom', 'mh', 'events', 'reminders', 'admit'].forEach(k => {
     if (d[k]) d[k].forEach(item => { if (typeof item === 'object' && item !== null) item.done = true; });
   });
-  ['bp', 'food', 'amy', 'mhLevel'].forEach(k => { d.td[k] = true; });
+  ['bp', 'food', 'amy', 'mhLevel', 'admitInfo', 'turnChecks'].forEach(k => { d.td[k] = true; });
   if (d.turn) d.turn.forEach((tr, i) => { if (tr !== '') d.td[`turn_${i}`] = true; });
-  if (d.fluid) d.fluid.forEach((f, i) => { if (f.i || f.o) d.td[`fl_${i}`] = true; });
+  if (d.fluid) d.fluid.forEach((f, i) => { if (f.i || f.o || f.pad) d.td[`fl_${i}`] = true; });
   saveDB();
   renderContent();
 }
@@ -811,7 +957,7 @@ function tRow(b, s, i) {
   renderContent();
 }
 function tFlat(b, s) { db[b].td[s] = !db[b].td[s]; saveDB(); renderContent(); }
-function tFluid(b) { db[b].fluid.forEach((f,i)=>{ if(f.i||f.o) db[b].td[`fl_${i}`]=true; }); saveDB(); renderContent(); }
+function tFluid(b) { db[b].fluid.forEach((f,i)=>{ if(f.i||f.o||f.pad) db[b].td[`fl_${i}`]=true; }); saveDB(); renderContent(); }
 
 function rowUI(txt, b, s, i) {
   const item = db[b][s] && db[b][s][i];
@@ -830,17 +976,25 @@ function flatUI(txt, b, s) {
   return `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); transition:0.3s; ${style}"><div style="flex:1;">${txt}</div>${btn}</div>`;
 }
 
-function trSkin(val) {
+function trCode(val) {
   if (!val) return '';
-  if (val === 'Fine' || val === 'Intact') return t('intact');
-  if (val === 'Red') return t('red');
-  if (val === 'Broken') return t('broken');
-  return val;
+  const legacyMap = {
+    Fine:'intact', Intact:'intact', Red:'blanching', Broken:'broken',
+    Back:'back', Left:'left', Right:'right', Chair:'chair', Walking:'walking', Refused:'refused',
+    Small:'small', Medium:'medium', Large:'large', Smear:'smear',
+    'Pre-Meal':'preMeal', 'Post-Meal':'postMeal', Night:'night',
+    'Type 1':'type1', 'Type 2':'type2', 'Type 3':'type3', 'Type 4':'type4', 'Type 5':'type5', 'Type 6':'type6', 'Type 7':'type7', BNO:'bno'
+  };
+  const key = legacyMap[val] || val;
+  return (enDict[key] || (i18n[prefs.lang] && i18n[prefs.lang][key])) ? t(key) : val;
 }
 
-function trTurn(val) {
-  const map = { Back:'back', Left:'left', Right:'right', Chair:'chair', Walking:'walking', Refused:'refused' };
-  return map[val] ? t(map[val]) : val;
+function trAcvpu(val) {
+  const list = getLangList('acvpu');
+  const codes = ['A','C','V','P','U'];
+  const idx = codes.indexOf(val);
+  if (idx >= 0 && list[idx]) return list[idx];
+  return val || list[0] || 'A';
 }
 
 function getBedSectionHtml(b, secId) {
@@ -851,14 +1005,20 @@ function getBedSectionHtml(b, secId) {
 
   if (secId === 'obs' && d.obs && d.obs.length > 0) {
     return d.obs.map((l,i) => {
-      const o2Txt = l.o2 === 'O2' ? `O2${l.o2f ? ' ' + l.o2f : ''}` : t('air');
-      return rowUI(`<b>${l.time||'--:--'}</b> - RR <b>${l.rr||'-'}</b>, SpO2 <b>${l.spo2||'-'}%</b> (<b>${o2Txt}</b>), BP <b>${l.sys||'-'}/${l.dia||'-'}</b>, HR <b>${l.hr||'-'}</b>, <b>${l.acvpu||'A'}</b>, Temp <b>${l.t||'-'}${prefs.tempUnit}</b>`, b, 'obs', i);
+      if (l.refused) return rowUI(`<b>${l.time||'--:--'}</b> - <b>${t('refused')}</b>`, b, 'obs', i);
+      const o2Dev = l.o2d ? ` ${trCode(l.o2d)}` : '';
+      const o2Txt = l.o2 === 'O2' ? `O2${l.o2f ? ' ' + l.o2f + 'L' : ''}${o2Dev}` : t('air');
+      const painTxt = (l.pain !== undefined && l.pain !== '') ? `, ${t('pain')} <b>${l.pain}/10</b>` : '';
+      return rowUI(`<b>${l.time||'--:--'}</b> - RR <b>${l.rr||'-'}</b>, SpO2 <b>${l.spo2||'-'}%</b> (<b>${o2Txt}</b>), BP <b>${l.sys||'-'}/${l.dia||'-'}</b>, HR <b>${l.hr||'-'}</b>, <b>${trAcvpu(l.acvpu)}</b>, Temp <b>${l.t||'-'}${prefs.tempUnit}</b>${painTxt}`, b, 'obs', i);
     }).filter(Boolean).join('');
   }
   if (secId === 'bm' && d.bm && d.bm.length > 0) {
-    return d.bm.map((l,i) => rowUI(`<b>${l.time||'--:--'}</b> - <b>${l.val||'-'} ${prefs.bmUnit}</b> (<b>${l.meal||'-'}</b>)`, b, 'bm', i)).filter(Boolean).join('');
+    return d.bm.map((l,i) => {
+      const acts = (l.act && l.act.length > 0) ? ` [${l.act.map(trCode).join(', ')}]` : '';
+      return rowUI(`<b>${l.time||'--:--'}</b> - <b>${l.val||'-'} ${prefs.bmUnit}</b> (${l.meal ? trCode(l.meal) : '-'})${acts}`, b, 'bm', i);
+    }).filter(Boolean).join('');
   }
-  if (secId === 'bp' && d.bp && (d.bp.lsys || d.bp.ldia || d.bp.ssys || d.bp.sdia)) {
+  if (secId === 'bp' && d.bp && (d.bp.lsys || d.bp.ldia || d.bp.ssys || d.bp.sdia || d.bp.sym)) {
     let txt = `${t('lying')}: <b>${d.bp.lsys||'-'}/${d.bp.ldia||'-'}</b> | ${t('standing')}: <b>${d.bp.ssys||'-'}/${d.bp.sdia||'-'}</b>`;
     const lsys = parseFloat(d.bp.lsys)||0, ssys = parseFloat(d.bp.ssys)||0;
     const ldia = parseFloat(d.bp.ldia)||0, sdia = parseFloat(d.bp.sdia)||0;
@@ -866,54 +1026,89 @@ function getBedSectionHtml(b, secId) {
       const diaDiff = (ldia && sdia) ? ` / Dia: <b>${ldia - sdia}</b>` : '';
       txt += `<br>${t('diff')} - Sys: <b>${lsys - ssys}</b>${diaDiff}`;
     }
+    if (d.bp.sym) txt += ` (<b>${trCode(d.bp.sym)}</b>)`;
     return flatUI(txt, b, 'bp');
   }
   if (secId === 'fluid' && d.fluid) {
-    let pIn=0, pOut=0, tIn=0, tOut=0;
+    let pIn=0, pOut=0, tIn=0, tOut=0, pPads=0, tPads=0, srcs=[];
     d.fluid.forEach((f, i) => {
-      let In = parseFloat(f.i)||0; let Out = parseFloat(f.o)||0;
-      if(d.td[`fl_${i}`]) { tIn+=In; tOut+=Out; } else { pIn+=In; pOut+=Out; }
+      let In = parseFloat(f.i)||0; let Out = parseFloat(f.o)||0; let pd = parseInt(f.pad)||0;
+      if (f.src && (Out || pd)) srcs.push(trCode(f.src));
+      if(d.td[`fl_${i}`]) { tIn+=In; tOut+=Out; tPads+=pd; } else { pIn+=In; pOut+=Out; pPads+=pd; }
     });
-    if (!tIn && !tOut && !pIn && !pOut) return '';
-    if (hideDone && !pIn && !pOut) return '';
+    const totPads = pPads + tPads;
+    if (!tIn && !tOut && !tPads && !pIn && !pOut && !pPads) return '';
+    if (hideDone && !pIn && !pOut && !pPads) return '';
+    const pPadStr = pPads > 0 ? ` | ${t('wetPad')}: <b>x${pPads}</b>` : '';
+    const tPadStr = tPads > 0 ? ` | ${t('wetPad')}: <b>x${tPads}</b>` : '';
+    const totPadStr = totPads > 0 ? ` | ${t('wetPad')}: <b>x${totPads}</b>` : '';
+    const srcStr = srcs.length > 0 ? ` (${[...new Set(srcs)].join(', ')})` : '';
     let fHtml = '';
-    if(!hideDone && (tIn||tOut)) fHtml += `<div style="opacity:0.5; margin-bottom:8px;">${t('done')}: In <b>${tIn}ml</b> | Out <b>${tOut}ml</b> | Net <b>${tIn-tOut}ml</b></div>`;
-    if(pIn||pOut) fHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);"><span>In <b>${pIn}ml</b> | Out <b>${pOut}ml</b> | Net <b>${pIn-pOut}ml</b></span> <button onclick="tFluid('${b}')" style="padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:transparent; border:1.5px solid var(--input-border); color:var(--text-sub);">${t('markDone')}</button></div>`;
-    fHtml += `<div>Total: In <b>${tIn+pIn}ml</b> | Out <b>${tOut+pOut}ml</b> | Net <b>${(tIn+pIn)-(tOut+pOut)}ml</b></div>`;
+    if(!hideDone && (tIn||tOut||tPads)) fHtml += `<div style="opacity:0.5; margin-bottom:8px;">${t('done')}: ${t('flIn')} <b>${tIn}ml</b> | ${t('flOut')} <b>${tOut}ml</b> | ${t('flNet')} <b>${tIn-tOut}ml</b>${tPadStr}</div>`;
+    if(pIn||pOut||pPads) fHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border);"><span>${t('flIn')} <b>${pIn}ml</b> | ${t('flOut')} <b>${pOut}ml</b>${srcStr} | ${t('flNet')} <b>${pIn-pOut}ml</b>${pPadStr}</span> <button onclick="tFluid('${b}')" style="padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; background:transparent; border:1.5px solid var(--input-border); color:var(--text-sub);">${t('markDone')}</button></div>`;
+    fHtml += `<div>${t('flTotal')}: ${t('flIn')} <b>${tIn+pIn}ml</b> | ${t('flOut')} <b>${tOut+pOut}ml</b> | ${t('flNet')} <b>${(tIn+pIn)-(tOut+pOut)}ml</b>${totPadStr}</div>`;
     return fHtml;
   }
   if (secId === 'food' && d.food) {
     let dietParts = [];
-    if (d.food.b) dietParts.push(`${t('b')}: <b>${d.food.b}</b>`);
-    if (d.food.l) dietParts.push(`${t('l')}: <b>${d.food.l}</b>`);
-    if (d.food.d) dietParts.push(`${t('d')}: <b>${d.food.d}</b>`);
+    if (d.food.b) dietParts.push(`${t('b')}: <b>${trCode(d.food.b)}</b>`);
+    if (d.food.l) dietParts.push(`${t('l')}: <b>${trCode(d.food.l)}</b>`);
+    if (d.food.d) dietParts.push(`${t('d')}: <b>${trCode(d.food.d)}</b>`);
+    if (d.food.s) dietParts.push(`${t('supp')}: <b>${trCode(d.food.s)}</b>`);
+    if (d.food.assist && d.food.assist.length > 0) dietParts.push(`[<b>${d.food.assist.map(trCode).join(', ')}</b>]`);
     return dietParts.length > 0 ? flatUI(dietParts.join(' | '), b, 'food') : '';
   }
   if (secId === 'bowel' && d.bowel && d.bowel.length > 0) {
-    return d.bowel.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.amt||'-'}</b> (<b>${r.type||'-'}</b>)`, b, 'bowel', i)).filter(Boolean).join('');
+    return d.bowel.map((r,i) => {
+      const mTxt = r.method ? ` - ${trCode(r.method)}` : '';
+      return rowUI(`<b>${r.time||'--:--'}</b> - <b>${trCode(r.amt)||'-'}</b> (<b>${trCode(r.type)||'-'}</b>)${mTxt}`, b, 'bowel', i);
+    }).filter(Boolean).join('');
   }
   if (secId === 'amy') {
     let out = '';
     let skinP = [];
-    if (d.amy && d.amy.sac) skinP.push(`Sacrum (<b>${trSkin(d.amy.sac)}</b>)`);
-    if (d.amy && d.amy.groin) skinP.push(`Groin (<b>${trSkin(d.amy.groin)}</b>)`);
-    if (d.amy && d.amy.heels) skinP.push(`Heels (<b>${trSkin(d.amy.heels)}</b>)`);
-    if (d.amy && d.amy.elbows) skinP.push(`Elbows (<b>${trSkin(d.amy.elbows)}</b>)`);
+    if (d.amy && d.amy.sac) skinP.push(`${t('sacrum')} (<b>${trCode(d.amy.sac)}</b>)`);
+    if (d.amy && d.amy.groin) skinP.push(`${t('groin')} (<b>${trCode(d.amy.groin)}</b>)`);
+    if (d.amy && d.amy.heels) {
+      const hSide = (d.amy.heels !== 'intact' && d.amy.heels !== 'Fine' && d.amy.heelsSide) ? ` ${trCode(d.amy.heelsSide)}` : '';
+      skinP.push(`${t('heels')}${hSide} (<b>${trCode(d.amy.heels)}</b>)`);
+    }
+    if (d.amy && d.amy.elbows) {
+      const eSide = (d.amy.elbows !== 'intact' && d.amy.elbows !== 'Fine' && d.amy.elbowsSide) ? ` ${trCode(d.amy.elbowsSide)}` : '';
+      skinP.push(`${t('elbows')}${eSide} (<b>${trCode(d.amy.elbows)}</b>)`);
+    }
+    if (d.amyCare && d.amyCare.length > 0) skinP.push(`[<b>${d.amyCare.map(trCode).join(', ')}</b>]`);
     if (skinP.length > 0) out += flatUI(skinP.join(', '), b, 'amy');
+    if (d.amySites && d.amySites.length > 0) {
+      out += d.amySites.map((s,i) => rowUI(`<b>${s.site||'-'}</b>: <b>${trCode(s.status)||'-'}</b>`, b, 'amySites', i)).filter(Boolean).join('');
+    }
     if (d.dressings && d.dressings.length > 0) {
-      out += d.dressings.map((dr,i) => rowUI(`<b>${dr.val || t('dressing')}</b> (${t('due')}: <b>${calcDue(dr.date)}</b>)`, b, 'dressings', i)).filter(Boolean).join('');
+      out += d.dressings.map((dr,i) => {
+        const cond = dr.status ? ` [${trCode(dr.status)}]` : '';
+        return rowUI(`<b>${dr.val || t('dressing')}</b>${cond} (${t('due')}: <b>${calcDue(dr.date, dr.days || 3)}</b>)`, b, 'dressings', i);
+      }).filter(Boolean).join('');
     }
     return out;
   }
-  if (secId === 'turn' && d.turn && d.turn.some(t => t !== '')) {
+  if (secId === 'turn') {
+    let out = '';
     const tTimes = isNightShift ? ['20:00','22:00','00:00','02:00','04:00','06:00'] : ['08:00','10:00','12:00','14:00','16:00','18:00'];
-    return d.turn.map((tr,i) => tr !== '' ? rowUI(`<b>${tTimes[i]}</b> - <b>${trTurn(tr)}</b>`, b, 'turn', i) : '').filter(Boolean).join('');
+    if (d.turn && d.turn.some(t => t !== '')) {
+      out += d.turn.map((tr,i) => tr !== '' ? rowUI(`<b>${tTimes[i]}</b> - <b>${trCode(tr)}</b>`, b, 'turn', i) : '').filter(Boolean).join('');
+    }
+    if (d.turnCustom && d.turnCustom.length > 0) {
+      out += d.turnCustom.map((tc,i) => rowUI(`<b>${tc.time||'--:--'}</b> - <b>${trCode(tc.pos)||'-'}</b>`, b, 'turnCustom', i)).filter(Boolean).join('');
+    }
+    if (d.turnChecks && d.turnChecks.length > 0) {
+      out += flatUI(`[<b>${d.turnChecks.map(trCode).join(', ')}</b>]`, b, 'turnChecks');
+    }
+    return out;
   }
   if (secId === 'mh' && (d.mhLevel || (d.mh && d.mh.length > 0))) {
     let out = '';
-    if (d.mhLevel) out += flatUI(`${t('obsLevel')}: <b>${d.mhLevel}</b>`, b, 'mhLevel');
+    if (d.mhLevel) out += flatUI(`${t('obsLevel')}: <b>${trCode(d.mhLevel)}</b>`, b, 'mhLevel');
     if (d.mh && d.mh.length > 0) {
-      out += d.mh.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.mood||'-'}</b> | <b>${r.sleep||'-'}</b><br>${t('context')}: <b>${r.risks||'-'}</b><br><span style="white-space:pre-wrap;"><b>${r.note||'-'}</b></span>`, b, 'mh', i)).filter(Boolean).join('');
+      out += d.mh.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${trCode(r.mood)||'-'}</b> | <b>${trCode(r.sleep)||'-'}</b>${r.risks ? `<br>${t('context')}: <b>${r.risks}</b>` : ''}${r.note ? `<br><span style="white-space:pre-wrap;"><b>${r.note}</b></span>` : ''}`, b, 'mh', i)).filter(Boolean).join('');
     }
     return out;
   }
@@ -923,8 +1118,22 @@ function getBedSectionHtml(b, secId) {
   if (secId === 'reminders' && d.reminders && d.reminders.length > 0) {
     return d.reminders.map((r,i) => rowUI(`<b>${r.time||'--:--'}</b> - <b>${r.task||'-'}</b>: <b>${r.outcome||'-'}</b>`, b, 'reminders', i)).filter(Boolean).join('');
   }
-  if (secId === 'admit' && d.admit && d.admit.length > 0) {
-    return d.admit.map((r,i) => rowUI(`- <b>${r.val||''}</b>`, b, 'admit', i)).filter(Boolean).join('');
+  if (secId === 'admit') {
+    let out = '';
+    if (d.admitInfo && (d.admitInfo.wt || d.admitInfo.ht || d.admitInfo.band)) {
+      let infoP = [];
+      if (d.admitInfo.wt) infoP.push(`${t('weight')}: <b>${d.admitInfo.wt}kg</b>`);
+      if (d.admitInfo.ht) infoP.push(`${t('height')}: <b>${d.admitInfo.ht}cm</b>`);
+      if (d.admitInfo.band) infoP.push(`<b>${t('wristband')}</b>`);
+      out += flatUI(infoP.join(' | '), b, 'admitInfo');
+    }
+    if (d.admit && d.admit.length > 0) {
+      out += d.admit.map((r,i) => {
+        const loc = r.loc ? ` (${trCode(r.loc)})` : '';
+        return rowUI(`- <b>${r.val||''}</b>${loc}`, b, 'admit', i);
+      }).filter(Boolean).join('');
+    }
+    return out;
   }
   return '';
 }
@@ -935,14 +1144,17 @@ function renderUI() {
     const dot = bedHasOverdue(b) ? '<span class="alert-dot"></span>' : '';
     return `<button class="tab-btn ${b===curBed && !showSummary ?'active-bed':''}" onclick="setBed('${b}')">${b}${dot}</button>`;
   }).join('');
+  tabsHtml += `<button class="tab-btn-add" onclick="quickAddBedMidShift()" title="${t('addBed')}">+</button>`;
   document.getElementById('bedTabs').innerHTML = tabsHtml;
   
   const secOpts = getActiveSections();
   if(secOpts.length > 0 && !secOpts.find(x => x.id === curSec)) curSec = secOpts[0].id;
   const curHasOverdue = bedHasOverdue(curBed);
   document.getElementById('subNav').innerHTML = showSummary ? '' : secOpts.map(s => {
+    const count = getModuleCount(curBed, s.id);
+    const countBadge = count > 0 ? `<span class="mod-count">${count}</span>` : '';
     const dot = (s.id === 'reminders' && curHasOverdue) ? '<span class="alert-dot"></span>' : '';
-    return `<button class="tab-btn ${s.id===curSec?'active-sec':''}" onclick="setSec('${s.id}')">${t(s.id)}${dot}</button>`;
+    return `<button class="tab-btn ${s.id===curSec?'active-sec':''}" onclick="setSec('${s.id}')">${t(s.id)}${countBadge}${dot}</button>`;
   }).join('');
   
   setTimeout(() => {
@@ -968,9 +1180,7 @@ function renderContent() {
         let sectionsHtml = '';
         getActiveSections().forEach(m => {
           const secContent = getBedSectionHtml(b, m.id);
-          if (secContent) {
-            sectionsHtml += `<div class="summary-sec"><b>${t(m.id)}:</b><br>${secContent}</div>`;
-          }
+          if (secContent) sectionsHtml += `<div class="summary-sec"><b>${t(m.id)}:</b><br>${secContent}</div>`;
         });
         h += `<div class="card">
           <h2 style="color:var(--text); margin-bottom:12px; font-size:1.2rem;">
@@ -985,41 +1195,56 @@ function renderContent() {
         let bedsHtml = '';
         alloc.forEach(b => {
           const secContent = getBedSectionHtml(b, m.id);
-          if (secContent) {
-            bedsHtml += `<div class="summary-sec"><div style="font-weight:700; color:var(--teal); margin-bottom:4px;">${b}</div>${secContent}</div>`;
-          }
+          if (secContent) bedsHtml += `<div class="summary-sec"><div style="font-weight:700; color:var(--teal); margin-bottom:4px;">${b}</div>${secContent}</div>`;
         });
-        if (bedsHtml) {
-          h += `<div class="card">
-            <h2 style="color:var(--text); margin-bottom:12px; font-size:1.15rem;">${t(m.id)}</h2>
-            ${bedsHtml}
-          </div>`;
-        }
+        if (bedsHtml) h += `<div class="card"><h2 style="color:var(--text); margin-bottom:12px; font-size:1.15rem;">${t(m.id)}</h2>${bedsHtml}</div>`;
       });
-      if (!h.includes('class="card"')) {
-        h += `<div class="card"><p style="color:var(--text-sub); font-size:0.9rem; text-align:center;">-</p></div>`;
-      }
+      if (!h.includes('class="card"')) h += `<div class="card"><p style="color:var(--text-sub); font-size:0.9rem; text-align:center;">-</p></div>`;
     }
-
     area.innerHTML = h;
     return;
   }
-  if (!db[curBed]) return;
+
+  initBedObj(curBed);
   const d = db[curBed];
   const isNightShift = prefs.shift === 'night';
+  const acvpuList = getLangList('acvpu');
+  const acvpuPairs = ['A','C','V','P','U'].map((code, idx) => [code, acvpuList[idx] || code]);
+  const layLbl = activeLayoutName ? `${t('updLayout')} (${activeLayoutName})` : t('updLayout');
+
   let h = `
   <div class="bed-bar">
-    <span style="font-weight:800; font-size:1.05rem; color:var(--teal);">${curBed}</span>
-    <button type="button" class="btn-subtle btn-sm" style="padding:4px 10px; font-size:0.78rem; font-weight:600;" onclick="renameCurrentBed()">${t('renameBed')}</button>
+    <span style="font-weight:800; font-size:1.1rem; color:var(--teal);">${curBed}</span>
+    <div style="display:flex; gap:6px;">
+      <button type="button" class="btn-subtle btn-sm" style="padding:4px 10px; font-size:0.78rem; font-weight:600;" onclick="toggleBedManage()">${t('manageBed')} &#9662;</button>
+    </div>
   </div>`;
+
+  if (showBedManage) {
+    h += `<div class="manage-panel">
+      <div style="font-size:0.8rem; font-weight:700; color:var(--teal);">${curBed} — ${t('manageBed')}</div>
+      <div class="manage-grid">
+        <button type="button" class="btn btn-subtle btn-sm" onclick="transferCurrentBed()">${t('transferBed')}</button>
+        <button type="button" class="btn btn-subtle btn-sm" onclick="renameCurrentBed()">${t('renameBed')}</button>
+        <button type="button" class="btn btn-subtle btn-sm" onclick="clearCurrentBedData()">${t('clearBed')}</button>
+        <button type="button" class="btn btn-subtle btn-sm" style="color:var(--red); border-color:var(--red);" onclick="removeCurrentBedMidShift()">${t('removeBed')}</button>
+      </div>
+      <button type="button" class="btn btn-primary btn-sm" style="width:100%; margin-top:8px; background:var(--teal);" onclick="saveCurrentToActiveLayout()">${layLbl}</button>
+    </div>`;
+  }
 
   if (curSec === 'obs') {
     h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('obs')">+ ${t('obs')}</button>`;
     d.obs.forEach((r, i) => {
       const showO2Flow = r.o2 === 'O2';
+      const painOpts = ['', '0','1','2','3','4','5','6','7','8','9','10'];
+      const curAcvpuCode = ['A','C','V','P','U'].find(c => r.acvpu === c || (r.acvpu && r.acvpu.startsWith(c + ' '))) || 'A';
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <b style="color:var(--text);">${t('obs')}</b>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <b style="color:var(--text);">${t('obs')}</b>
+            <button type="button" class="chip ${r.refused?'active-red':''}" style="padding:3px 8px;" onclick="updateField('${curBed}','obs',${i},'refused',!${!!r.refused}); renderContent()">${t('refused')}</button>
+          </div>
           <button class="btn btn-danger btn-sm" onclick="rmArr('obs', ${i})">X</button>
         </div>
         <div class="row">
@@ -1035,15 +1260,19 @@ function renderContent() {
                 <option value="Air">${t('air')}</option>
                 <option value="O2" ${showO2Flow?'selected':''}>O2</option>
               </select>
-              ${showO2Flow ? `<input type="text" placeholder="L/min" value="${r.o2f||''}" oninput="updateField('${curBed}','obs',${i},'o2f',this.value)" style="width:85px;">` : ''}
+              ${showO2Flow ? `<input type="text" placeholder="L/min" value="${r.o2f||''}" oninput="updateField('${curBed}','obs',${i},'o2f',this.value)" style="width:80px;">` : ''}
             </div>
+            ${showO2Flow ? `<div class="mini-Toggle-row">
+              ${['o2Nasal','o2Mask','o2Venturi'].map(dev => `<button type="button" class="mini-btn ${r.o2d===dev?'selected':''}" onclick="updateField('${curBed}','obs',${i},'o2d', '${r.o2d===dev?'':dev}'); renderContent()">${t(dev)}</button>`).join('')}
+            </div>` : ''}
           </div>
           <div><label>BP (Sys/Dia)</label><div class="bp-pair"><input type="number" inputmode="numeric" value="${r.sys||''}" oninput="bpSysInput(this,'${curBed}','obs',${i},'sys','obs-dia-${i}')"><span>/</span><input type="number" inputmode="numeric" id="obs-dia-${i}" value="${r.dia||''}" oninput="updateField('${curBed}','obs',${i},'dia',this.value)"></div></div>
         </div>
         <div class="row" style="margin-bottom:0;">
           <div><label>HR</label><input type="number" inputmode="numeric" value="${r.hr||''}" oninput="updateField('${curBed}','obs',${i},'hr',this.value)"></div>
-          <div><label>ACVPU</label><select onchange="updateField('${curBed}','obs',${i},'acvpu',this.value)">${opts(['A (Alert)','C (Confusion)','V (Voice)','P (Pain)','U (Unresponsive)'], r.acvpu || 'A (Alert)')}</select></div>
+          <div><label>ACVPU</label><select onchange="updateField('${curBed}','obs',${i},'acvpu',this.value)">${optsMap(acvpuPairs, curAcvpuCode)}</select></div>
           <div><label>Temp (${prefs.tempUnit})</label><input type="number" inputmode="decimal" step="0.1" value="${r.t||''}" oninput="updateField('${curBed}','obs',${i},'t',this.value)"></div>
+          <div style="flex:0 0 68px;"><label>${t('pain')}</label><select onchange="updateField('${curBed}','obs',${i},'pain',this.value)">${opts(painOpts, String(r.pain ?? ''))}</select></div>
         </div>
       </div>`;
     });
@@ -1051,16 +1280,23 @@ function renderContent() {
 
   if (curSec === 'bm') {
     h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('bm')">+ ${t('bm')}</button>`;
+    const bmCtxPairs = [['',''],['b',t('b')],['l',t('l')],['d',t('d')],['preMeal',t('preMeal')],['postMeal',t('postMeal')],['night',t('night')]];
     d.bm.forEach((r, i) => {
+      const vNum = parseFloat(r.val);
+      const isAbn = !isNaN(vNum) && (prefs.bmUnit === 'mmol/L' ? (vNum < 4.0 || vNum > 15.0) : (vNum < 72 || vNum > 270));
+      const curActs = r.act || [];
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
           <b style="color:var(--text);">${t('bm')}</b>
           <button class="btn btn-danger btn-sm" onclick="rmArr('bm', ${i})">X</button>
         </div>
-        <div class="row" style="margin-bottom:0;">
+        <div class="row" style="margin-bottom:${isAbn?'10px':'0'};">
           <div><label>${t('time')}</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','bm',${i},'time',this.value)"></div>
-          <div><label>${t('context')}</label><select onchange="updateField('${curBed}','bm',${i},'meal',this.value)">${opts(['',t('b'),t('l'),t('d'),'Pre-Meal','Post-Meal','Night'], r.meal)}</select></div>
-          <div><label>${prefs.bmUnit}</label><input type="number" inputmode="decimal" step="0.1" value="${r.val||''}" oninput="updateField('${curBed}','bm',${i},'val',this.value)"></div>
+          <div><label>${t('context')}</label><select onchange="updateField('${curBed}','bm',${i},'meal',this.value)">${optsMap(bmCtxPairs, r.meal)}</select></div>
+          <div><label>${prefs.bmUnit}</label><input type="number" inputmode="decimal" step="0.1" value="${r.val||''}" oninput="updateField('${curBed}','bm',${i},'val',this.value); checkBmAbn(${i}, this.value)"></div>
+        </div>
+        <div id="bm-act-${i}" class="chip-row ${isAbn?'':'hidden'}" style="margin-bottom:0;">
+          ${['hypoTreated','ketones','escRn'].map(ak => `<button type="button" class="chip ${curActs.includes(ak)?'active-amber':''}" onclick="toggleBmAct(${i},'${ak}')">${t(ak)}</button>`).join('')}
         </div>
       </div>`;
     });
@@ -1071,8 +1307,11 @@ function renderContent() {
       <div class="row">
         <div><label>${t('lying')} BP (Sys/Dia)</label><div class="bp-pair"><input type="number" inputmode="numeric" value="${d.bp.lsys}" oninput="bpSysInput(this,'${curBed}','bp',null,'lsys','bp-ldia')"><span>/</span><input type="number" inputmode="numeric" id="bp-ldia" value="${d.bp.ldia}" oninput="updateField('${curBed}','bp',null,'ldia',this.value)"></div></div>
       </div>
-      <div class="row" style="margin-bottom:0;">
+      <div class="row">
         <div><label>${t('standing')} BP (Sys/Dia)</label><div class="bp-pair"><input type="number" inputmode="numeric" value="${d.bp.ssys}" oninput="bpSysInput(this,'${curBed}','bp',null,'ssys','bp-sdia')"><span>/</span><input type="number" inputmode="numeric" id="bp-sdia" value="${d.bp.sdia}" oninput="updateField('${curBed}','bp',null,'sdia',this.value)"></div></div>
+      </div>
+      <div class="chip-row" style="margin-bottom:0; margin-top:8px;">
+        ${['noSym','dizzy','unableStand'].map(sk => `<button type="button" class="chip ${d.bp.sym===sk?'active':''}" onclick="updateField('${curBed}','bp',null,'sym','${d.bp.sym===sk?'':sk}'); renderUI()">${t(sk)}</button>`).join('')}
       </div>
     </div>`;
   }
@@ -1085,8 +1324,9 @@ function renderContent() {
       activeFluidIdx = foundIdx >= 0 ? foundIdx : 0;
     }
     const isOut = activeFluidType === 'o';
-    let inT=0, outT=0; d.fluid.forEach(f=>{ inT+=parseFloat(f.i)||0; outT+=parseFloat(f.o)||0; });
-    h += `<div id="fluid-totals" class="card" style="display:flex; justify-content:space-between; font-weight:600; padding:12px;"><span>In: ${inT}ml</span><span>Out: ${outT}ml</span><span>Net: ${inT-outT}ml</span></div>`;
+    const curRow = d.fluid[activeFluidIdx] || {i:'', o:'', pad:0, src:''};
+    let inT=0, outT=0, padT=0; d.fluid.forEach(f=>{ inT+=parseFloat(f.i)||0; outT+=parseFloat(f.o)||0; padT+=parseInt(f.pad)||0; });
+    h += `<div id="fluid-totals" class="card" style="display:flex; justify-content:space-between; font-weight:600; padding:12px; flex-wrap:wrap; gap:6px;"><span>${t('flIn')}: ${inT}ml</span><span>${t('flOut')}: ${outT}ml</span><span>${t('flNet')}: ${inT-outT}ml</span>${padT?`<span>${t('wetPad')}: x${padT}</span>`:''}</div>`;
     h += `<div class="card" style="padding:12px; position:sticky; top:112px; z-index:90; box-shadow:0 4px 10px rgba(0,0,0,0.12);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px;">
         <div style="display:flex; align-items:center; gap:6px; flex:1;">
@@ -1096,7 +1336,7 @@ function renderContent() {
           </select>
         </div>
         <button id="quickFluidTypeBtn" type="button" onclick="toggleFluidType()" style="padding:7px 12px; border-radius:6px; border:none; font-weight:700; font-size:0.82rem; cursor:pointer; color:#fff; background:${isOut?'var(--amber)':'var(--teal)'};">
-          ${isOut ? 'Out (ml)' : 'In (ml)'}
+          ${isOut ? `${t('flOut')} (ml)` : `${t('flIn')} (ml)`}
         </button>
       </div>
       <div style="display:flex; gap:5px; align-items:center;">
@@ -1105,23 +1345,37 @@ function renderContent() {
         <button type="button" class="quick-fluid-btn ${isOut?'out-mode':''}" onclick="quickAddFluid(200)">+200</button>
         <button type="button" class="quick-fluid-btn ${isOut?'out-mode':''}" onclick="quickAddFluid(250)">+250</button>
         <button type="button" class="quick-fluid-btn ${isOut?'out-mode':''}" onclick="quickAddFluid(500)">+500</button>
-        <button type="button" class="quick-fluid-btn" style="border-color:var(--red); color:var(--red);" onclick="quickAddFluid(0)">Clr</button>
+        <button type="button" class="quick-fluid-btn" style="border-color:var(--red); color:var(--red);" onclick="quickAddFluid(0)">${t('flClr')}</button>
+      </div>
+      <div id="fluidOutTools" class="chip-row ${isOut?'':'hidden'}" style="margin-top:8px; margin-bottom:0; align-items:center;">
+        <button id="wetPadBtn" type="button" class="chip active-amber" onclick="addWetPad()">+ ${t('wetPad')} (${curRow.pad||0})</button>
+        ${['srcPu','srcCath','srcBowel','srcVomit'].map(sk => `<button type="button" id="fl-src-${sk}" class="chip ${curRow.src===sk?'active':''}" onclick="setFluidSource('${sk}')">${t(sk)}</button>`).join('')}
       </div>
     </div><div class="card">`;
     times.forEach((tStr, i) => {
       const inCls = (i === activeFluidIdx && activeFluidType === 'i') ? 'fl-target-in' : '';
       const outCls = (i === activeFluidIdx && activeFluidType === 'o') ? 'fl-target-out' : '';
-      h += `<div class="row" style="align-items:center; margin-bottom:6px;">
-        <span style="width:45px; font-weight:600; font-size:0.9rem;">${tStr}</span>
-        <input type="number" inputmode="numeric" id="fl-i-${i}" class="${inCls}" placeholder="In (ml)" value="${d.fluid[i].i}" onfocus="setFluidTarget(${i}, 'i')" oninput="updateField('${curBed}','fluid',${i},'i',this.value); refreshFluid()">
-        <input type="number" inputmode="numeric" id="fl-o-${i}" class="${outCls}" placeholder="Out (ml)" value="${d.fluid[i].o}" onfocus="setFluidTarget(${i}, 'o')" oninput="updateField('${curBed}','fluid',${i},'o',this.value); refreshFluid()">
+      const rowPad = d.fluid[i].pad ? `${t('wetPad')} x${d.fluid[i].pad}` : '';
+      const rowSrc = d.fluid[i].src ? trCode(d.fluid[i].src) : '';
+      const subTag = [rowPad, rowSrc].filter(Boolean).join(' • ');
+      h += `<div style="margin-bottom:6px;">
+        <div class="row" style="align-items:center; margin-bottom:2px;">
+          <span style="width:45px; font-weight:600; font-size:0.9rem;">${tStr}</span>
+          <input type="number" inputmode="numeric" id="fl-i-${i}" class="${inCls}" placeholder="${t('flIn')} (ml)" value="${d.fluid[i].i}" onfocus="setFluidTarget(${i}, 'i')" oninput="updateField('${curBed}','fluid',${i},'i',this.value); refreshFluid()">
+          <input type="number" inputmode="numeric" id="fl-o-${i}" class="${outCls}" placeholder="${t('flOut')} (ml)" value="${d.fluid[i].o}" onfocus="setFluidTarget(${i}, 'o')" oninput="updateField('${curBed}','fluid',${i},'o',this.value); refreshFluid()">
+        </div>
+        <div id="fl-sub-${i}" style="padding-inline-start:53px; font-size:0.75rem; font-weight:600; color:var(--amber); ${subTag?'':'display:none;'}">${subTag}</div>
       </div>`;
     });
     h += `</div>`;
   }
-
-  if (curSec === 'bowel') {
-    h += `<button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('bowel')">+ ${t('bowel')}</button>`;
+ if (curSec === 'bowel') {
+    h += `<div style="display:flex; gap:8px; margin-bottom:16px;">
+      <button class="btn btn-primary" style="margin-top:0; flex:1;" onclick="addArr('bowel')">+ ${t('bowel')}</button>
+      <button class="btn btn-primary" style="margin-top:0; flex:1; background:var(--teal);" onclick="quickAddBno()">+ ${t('bno')}</button>
+    </div>`;
+    const amtPairs = [['',''],['small',t('small')],['medium',t('medium')],['large',t('large')],['smear',t('smear')]];
+    const typePairs = [['',''],['type1',t('type1')],['type2',t('type2')],['type3',t('type3')],['type4',t('type4')],['type5',t('type5')],['type6',t('type6')],['type7',t('type7')],['bno',t('bno')]];
     d.bowel.forEach((r, i) => {
       h += `<div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -1129,75 +1383,156 @@ function renderContent() {
         </div>
         <div class="row">
           <div><label>${t('time')}</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','bowel',${i},'time',this.value)"></div>
-          <div><label>${t('amt')}</label><select onchange="updateField('${curBed}','bowel',${i},'amt',this.value)">${opts(['','Small','Medium','Large','Smear'], r.amt)}</select></div>
+          <div><label>${t('amt')}</label><select onchange="updateField('${curBed}','bowel',${i},'amt',this.value)">${optsMap(amtPairs, r.amt)}</select></div>
+          <div><label>${t('type')}</label><select onchange="updateField('${curBed}','bowel',${i},'type',this.value)">${optsMap(typePairs, r.type)}</select></div>
         </div>
-        <div class="row" style="margin-bottom:0;">
-          <div><label>${t('type')}</label><select onchange="updateField('${curBed}','bowel',${i},'type',this.value)">${opts(['','Type 1','Type 2','Type 3','Type 4','Type 5','Type 6','Type 7','BNO'], r.type)}</select></div>
+        <div class="mini-Toggle-row">
+          ${['mToilet','mCommode','mBedpan','mPad'].map(mk => `<button type="button" class="mini-btn ${r.method===mk?'selected':''}" onclick="updateField('${curBed}','bowel',${i},'method','${r.method===mk?'':mk}'); renderContent()">${t(mk)}</button>`).join('')}
         </div>
       </div>`;
     });
   }
 
   if (curSec === 'amy') {
-    const sPairs = [['',''], ['Intact', t('intact')], ['Red', t('red')], ['Broken', t('broken')]];
-    h += `<div class="card"><button class="btn btn-primary" style="margin-bottom:16px; background:var(--teal);" onclick="markSkinIntact()">${t('markIntact')}</button>
-    <div class="row">
-      <div><label>Sacrum</label><select onchange="updateField('${curBed}','amy',null,'sac',this.value)">${optsMap(sPairs, d.amy.sac === 'Fine' ? 'Intact' : d.amy.sac)}</select></div>
-      <div><label>Groin</label><select onchange="updateField('${curBed}','amy',null,'groin',this.value)">${optsMap(sPairs, d.amy.groin === 'Fine' ? 'Intact' : d.amy.groin)}</select></div>
-    </div>
-    <div class="row" style="margin-bottom:0;">
-      <div><label>Heels</label><select onchange="updateField('${curBed}','amy',null,'heels',this.value)">${optsMap(sPairs, d.amy.heels === 'Fine' ? 'Intact' : d.amy.heels)}</select></div>
-      <div><label>Elbows</label><select onchange="updateField('${curBed}','amy',null,'elbows',this.value)">${optsMap(sPairs, d.amy.elbows === 'Fine' ? 'Intact' : d.amy.elbows)}</select></div>
-    </div>
+    const sPairs = [
+      ['',''],
+      ['intact', t('intact')],
+      ['blanching', t('blanching')],
+      ['nonBlanch', t('nonBlanch')],
+      ['moisture', t('moisture')],
+      ['broken', t('broken')],
+      ['tear', t('tear')],
+      ['drySkin', t('drySkin')]
+    ];
+    const normVal = v => (v === 'Fine' || v === 'Intact') ? 'intact' : (v === 'Red' ? 'blanching' : (v === 'Broken' ? 'broken' : (v || '')));
+    const hVal = normVal(d.amy.heels);
+    const eVal = normVal(d.amy.elbows);
+    const showHeelSide = hVal && hVal !== 'intact';
+    const showElbowSide = eVal && eVal !== 'intact';
+    const careList = d.amyCare || [];
+
+    h += `<div class="card">
+      <div style="display:flex; gap:8px; margin-bottom:14px;">
+        <button class="btn btn-primary" style="margin-top:0; flex:1; background:var(--teal);" onclick="markSkinIntact()">${t('markIntact')}</button>
+        <button class="btn btn-subtle" style="width:auto; padding:0 14px;" onclick="addCustomSkinSite()">${t('addSite')}</button>
+      </div>
+      <div class="row">
+        <div><label>${t('sacrum')}</label><select onchange="updateField('${curBed}','amy',null,'sac',this.value); refreshSubNavCounts()">${optsMap(sPairs, normVal(d.amy.sac))}</select></div>
+        <div><label>${t('groin')}</label><select onchange="updateField('${curBed}','amy',null,'groin',this.value); refreshSubNavCounts()">${optsMap(sPairs, normVal(d.amy.groin))}</select></div>
+      </div>
+      <div class="row">
+        <div>
+          <label>${t('heels')}</label>
+          <select onchange="updateField('${curBed}','amy',null,'heels',this.value); renderUI()">${optsMap(sPairs, hVal)}</select>
+          ${showHeelSide ? `<div class="mini-Toggle-row">
+            ${['sideL','sideR','sideBoth'].map(sk => `<button type="button" class="mini-btn ${d.amy.heelsSide===sk?'selected':''}" onclick="updateField('${curBed}','amy',null,'heelsSide','${d.amy.heelsSide===sk?'':sk}'); renderContent()">${t(sk)}</button>`).join('')}
+          </div>` : ''}
+        </div>
+        <div>
+          <label>${t('elbows')}</label>
+          <select onchange="updateField('${curBed}','amy',null,'elbows',this.value); renderUI()">${optsMap(sPairs, eVal)}</select>
+          ${showElbowSide ? `<div class="mini-Toggle-row">
+            ${['sideL','sideR','sideBoth'].map(sk => `<button type="button" class="mini-btn ${d.amy.elbowsSide===sk?'selected':''}" onclick="updateField('${curBed}','amy',null,'elbowsSide','${d.amy.elbowsSide===sk?'':sk}'); renderContent()">${t(sk)}</button>`).join('')}
+          </div>` : ''}
+        </div>
+      </div>
+      ${(d.amySites && d.amySites.length > 0) ? d.amySites.map((s, idx) => `
+        <div class="row" style="align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);">
+          <div style="flex:1;"><input type="text" value="${s.site||''}" oninput="updateField('${curBed}','amySites',${idx},'site',this.value)"></div>
+          <div style="flex:1;"><select onchange="updateField('${curBed}','amySites',${idx},'status',this.value)">${optsMap(sPairs, s.status)}</select></div>
+          <button class="btn btn-danger btn-sm" style="flex:0 0 auto;" onclick="rmCustomSkinSite(${idx})">X</button>
+        </div>
+      `).join('') : ''}
+      <div class="chip-row" style="margin-top:12px; margin-bottom:0;">
+        ${['cBarrier','cOffload','cBoots','escRn'].map(ck => `<button type="button" class="chip ${careList.includes(ck)?'active':''}" onclick="toggleSkinCare('${ck}')">${t(ck)}</button>`).join('')}
+      </div>
     </div>
     <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('dressings')">+ ${t('dressing')}</button>`;
+
+    const drSiteList = getLangList('drSites');
     d.dressings.forEach((r, i) => {
+      const dDays = r.days || 3;
+      const siteChips = drSiteList.map((st, sIdx) => `<button type="button" class="chip" onclick="setDressingSite(${i}, ${sIdx})">+ ${st}</button>`).join('');
       h += `<div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <b>${t('dressing')}</b><button class="btn btn-danger btn-sm" onclick="rmArr('dressings', ${i})">X</button>
         </div>
+        <div class="chip-row">${siteChips}</div>
         <div class="row">
-          <div><label>${t('locNotes')}</label><input type="text" value="${r.val||''}" oninput="updateField('${curBed}','dressings',${i},'val',this.value)"></div>
+          <div><label>${t('locNotes')}</label><input type="text" id="dress-val-${i}" value="${r.val||''}" oninput="updateField('${curBed}','dressings',${i},'val',this.value)"></div>
+          <div style="flex:0 0 95px;"><label>${t('dueIn')}</label><select onchange="updateField('${curBed}','dressings',${i},'days',parseInt(this.value)); refreshDressDue(${i})"><option value="1" ${dDays===1?'selected':''}>1d</option><option value="2" ${dDays===2?'selected':''}>2d</option><option value="3" ${dDays===3?'selected':''}>3d</option><option value="5" ${dDays===5?'selected':''}>5d</option><option value="7" ${dDays===7?'selected':''}>7d</option></select></div>
+        </div>
+        <div class="chip-row">
+          ${['drIntact','drChanged','drLeak','drLift'].map(dk => `<button type="button" class="chip ${r.status===dk?(dk==='drLeak'||dk==='drLift'?'active-amber':'active'):''}" onclick="setDressingStatus(${i},'${dk}')">${t(dk)}</button>`).join('')}
         </div>
         <div class="row" style="align-items:center;">
           <div><label>${t('date')}</label><input type="date" id="dress-date-${i}" value="${r.date||''}" onchange="updateField('${curBed}','dressings',${i},'date',this.value); refreshDressDue(${i})"></div>
           <div style="flex:0 0 auto;"><button class="btn btn-sm" style="border:1.5px solid var(--input-border);" onclick="setNoDateArr(${i})">${t('today')}</button></div>
         </div>
-        <div style="font-size:0.85rem; color:var(--text-sub);">${t('due')} (+3d): <b id="dress-due-${i}">${calcDue(r.date)}</b></div>
+        <div style="font-size:0.85rem; color:var(--text-sub);">${t('due')}: <b id="dress-due-${i}">${calcDue(r.date, dDays)}</b></div>
       </div>`;
     });
   }
 
   if (curSec === 'food') {
-    const fOps = [['100%','100%'],['75%','75%'],['50%','50%'],['25%','25%'],['0%','0%'],['Refused',t('refused')],['NBM',t('nbm')]];
-    const renderMealBtns = (mealKey, curVal) => fOps.map(([val, lbl]) => `<button type="button" class="diet-btn ${curVal===val?'selected':''}" onclick="setDiet('${mealKey}','${val}')">${lbl}</button>`).join('');
+    const fOps = [['100%','100%'],['75%','75%'],['50%','50%'],['25%','25%'],['0%','0%'],['refused',t('refused')],['nbm',t('nbm')]];
+    const sOps = [['taken',t('taken')],['50%','50%'],['refused',t('refused')]];
+    const normDiet = v => v === 'Refused' ? 'refused' : (v === 'NBM' ? 'nbm' : v);
+    const renderMealBtns = (mealKey, curVal, list) => list.map(([val, lbl]) => `<button type="button" class="diet-btn ${normDiet(curVal)===val?'selected':''}" onclick="setDiet('${mealKey}','${val}')">${lbl}</button>`).join('');
+    const curAssist = d.food.assist || [];
     h += `<div class="card">
       <label style="font-size:0.9rem; margin-bottom:8px;">${t('b')}</label>
-      <div class="diet-grid">${renderMealBtns('b', d.food.b)}</div>
+      <div class="diet-grid">${renderMealBtns('b', d.food.b, fOps)}</div>
       <label style="font-size:0.9rem; margin-bottom:8px;">${t('l')}</label>
-      <div class="diet-grid">${renderMealBtns('l', d.food.l)}</div>
+      <div class="diet-grid">${renderMealBtns('l', d.food.l, fOps)}</div>
       <label style="font-size:0.9rem; margin-bottom:8px;">${t('d')}</label>
-      <div class="diet-grid" style="margin-bottom:0;">${renderMealBtns('d', d.food.d)}</div>
+      <div class="diet-grid">${renderMealBtns('d', d.food.d, fOps)}</div>
+      <label style="font-size:0.9rem; margin-bottom:8px;">${t('supp')}</label>
+      <div class="diet-grid">${renderMealBtns('s', d.food.s, sOps)}</div>
+      <div class="chip-row" style="margin-bottom:0;">
+        ${['dIndep','dAssist','dPrompt','dThick'].map(ak => `<button type="button" class="chip ${curAssist.includes(ak)?'active':''}" onclick="toggleDietAssist('${ak}')">${t(ak)}</button>`).join('')}
+      </div>
     </div>`;
   }
 
   if (curSec === 'turn') {
     const tTimes = isNightShift ? ['20:00','22:00','00:00','02:00','04:00','06:00'] : ['08:00','10:00','12:00','14:00','16:00','18:00'];
-    const tPairs = [['',''],['Back',t('back')],['Left',t('left')],['Right',t('right')],['Chair',t('chair')],['Walking',t('walking')],['Refused',t('refused')]];
-    h += `<div class="card">`;
+    const tPairs = [['',''],['back',t('back')],['left',t('left')],['right',t('right')],['chair',t('chair')],['walking',t('walking')],['refused',t('refused')]];
+    const normTurn = v => ({Back:'back',Left:'left',Right:'right',Chair:'chair',Walking:'walking',Refused:'refused'}[v] || v || '');
+    const tChecks = d.turnChecks || [];
+    h += `<div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px;">
+        <div class="chip-row" style="margin-bottom:0; flex:1;">
+          ${['tBell','tRails','tMattress'].map(ck => `<button type="button" class="chip ${tChecks.includes(ck)?'active':''}" onclick="toggleTurnCheck('${ck}')">${t(ck)}</button>`).join('')}
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" style="margin-top:0; background:var(--teal); flex-shrink:0;" onclick="addCustomTurn()">${t('turnNow')}</button>
+      </div>`;
     tTimes.forEach((tStr, i) => {
       h += `<div class="row" style="align-items:center; margin-bottom:8px;">
         <span style="width:45px; font-weight:600; font-size:0.9rem;">${tStr}</span>
-        <select onchange="updateField('${curBed}','turn',${i},null,this.value)">${optsMap(tPairs, d.turn[i])}</select>
+        <select onchange="updateField('${curBed}','turn',${i},null,this.value); refreshSubNavCounts()">${optsMap(tPairs, normTurn(d.turn[i]))}</select>
       </div>`;
     });
+    if (d.turnCustom && d.turnCustom.length > 0) {
+      d.turnCustom.forEach((tc, idx) => {
+        h += `<div class="row" style="align-items:center; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);">
+          <div style="flex:0 0 110px;"><input type="time" value="${tc.time||''}" oninput="updateField('${curBed}','turnCustom',${idx},'time',this.value)"></div>
+          <div style="flex:1;"><select onchange="updateField('${curBed}','turnCustom',${idx},'pos',this.value)">${optsMap(tPairs, tc.pos)}</select></div>
+          <button class="btn btn-danger btn-sm" style="flex:0 0 auto;" onclick="rmCustomTurn(${idx})">X</button>
+        </div>`;
+      });
+    }
     h += `</div>`;
   }
+
   if (curSec === 'mh') {
+    const lvlPairs = [['',''],['lvl1',t('lvl1')],['lvl2',t('lvl2')],['lvl3',t('lvl3')],['lvl4',t('lvl4')]];
+    const moodPairs = [['',''],['calm',t('calm')],['anxious',t('anxious')],['agitated',t('agitated')],['low',t('low')],['elevated',t('elevated')],['hostile',t('hostile')]];
+    const restPairs = [['',''],['asleep',t('asleep')],['settled',t('settled')],['restless',t('restless')],['outOfBed',t('outOfBed')]];
     h += `<div class="card" style="border: 2px solid var(--teal);">
             <label style="color:var(--teal); font-size:0.95rem;">${t('obsLevel')}</label>
-            <select style="font-weight:bold; font-size:1.05rem;" onchange="updateField('${curBed}', 'mhLevel', null, null, this.value)">
-              ${opts(['', 'Level 1: General', 'Level 2: Intermittent', 'Level 3: Eyesight', "Level 4: Arm's Length"], d.mhLevel)}
+            <select style="font-weight:bold; font-size:1.05rem;" onchange="updateField('${curBed}', 'mhLevel', null, null, this.value); refreshSubNavCounts()">
+              ${optsMap(lvlPairs, d.mhLevel)}
             </select>
           </div>
           <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('mh')">+ ${t('mh')}</button>`;
@@ -1208,10 +1543,10 @@ function renderContent() {
         </div>
         <div class="row">
           <div><label>${t('time')}</label><input type="time" value="${r.time||''}" oninput="updateField('${curBed}','mh',${i},'time',this.value)"></div>
-          <div><label>${t('mood')}</label><select onchange="updateField('${curBed}','mh',${i},'mood',this.value)">${opts(['','Calm','Anxious','Agitated','Low','Elevated','Hostile'], r.mood)}</select></div>
+          <div><label>${t('mood')}</label><select onchange="updateField('${curBed}','mh',${i},'mood',this.value)">${optsMap(moodPairs, r.mood)}</select></div>
         </div>
         <div class="row">
-          <div><label>${t('rest')}</label><select onchange="updateField('${curBed}','mh',${i},'sleep',this.value)">${opts(['','Asleep','Settled','Restless','Out of Bed'], r.sleep)}</select></div>
+          <div><label>${t('rest')}</label><select onchange="updateField('${curBed}','mh',${i},'sleep',this.value)">${optsMap(restPairs, r.sleep)}</select></div>
           <div><label>${t('context')}</label><input type="text" value="${r.risks||''}" oninput="updateField('${curBed}','mh',${i},'risks',this.value)"></div>
         </div>
         <div class="row" style="margin-bottom:0;">
@@ -1271,14 +1606,26 @@ function renderContent() {
   if (curSec === 'admit') {
     const aList = getLangList('admits');
     const aChips = aList.map((c, cIdx) => `<button type="button" class="chip" onclick="quickAddAdmit(${cIdx})">+ ${c}</button>`).join('');
-    h += `<div class="card" style="padding:12px;">
+    h += `<div class="card">
+      <div class="row" style="align-items:flex-end;">
+        <div><label>${t('weight')}</label><input type="number" inputmode="decimal" step="0.1" value="${d.admitInfo.wt||''}" oninput="updateAdmitInfo('wt',this.value)"></div>
+        <div><label>${t('height')}</label><input type="number" inputmode="numeric" value="${d.admitInfo.ht||''}" oninput="updateAdmitInfo('ht',this.value)"></div>
+        <div style="flex:0 0 auto;"><button type="button" class="chip ${d.admitInfo.band?'active':''}" style="padding:10px 12px;" onclick="updateAdmitInfo('band',!${!!d.admitInfo.band}); renderContent()">${t('wristband')}</button></div>
+      </div>
+    </div>
+    <div class="card" style="padding:12px;">
       <div class="chip-row" style="margin-bottom:0;">${aChips}</div>
     </div>
     <button class="btn btn-primary" style="margin-bottom:16px;" onclick="addArr('admit')">+ ${t('admit')}</button>`;
     d.admit.forEach((r, i) => {
-      h += `<div class="card row" style="align-items:center;">
-        <input type="text" value="${r.val||''}" oninput="updateField('${curBed}','admit',${i},'val',this.value)">
-        <button class="btn btn-danger btn-sm" style="flex:0 0 auto;" onclick="rmArr('admit', ${i})">X</button>
+      h += `<div class="card">
+        <div class="row" style="align-items:center; margin-bottom:8px;">
+          <input type="text" value="${r.val||''}" oninput="updateField('${curBed}','admit',${i},'val',this.value)">
+          <button class="btn btn-danger btn-sm" style="flex:0 0 auto;" onclick="rmArr('admit', ${i})">X</button>
+        </div>
+        <div class="mini-Toggle-row">
+          ${['locPt','locSafe','locHome'].map(lk => `<button type="button" class="mini-btn ${r.loc===lk?'selected':''}" onclick="setAdmitLoc(${i},'${lk}')">${t(lk)}</button>`).join('')}
+        </div>
       </div>`;
     });
   }
@@ -1292,16 +1639,129 @@ function autoGrow(el) {
   el.style.height = el.scrollHeight + 'px';
 }
 
+function refreshSubNavCounts() {
+  if (showSummary) return;
+  const secOpts = getActiveSections();
+  const curHasOverdue = bedHasOverdue(curBed);
+  document.getElementById('subNav').innerHTML = secOpts.map(s => {
+    const count = getModuleCount(curBed, s.id);
+    const countBadge = count > 0 ? `<span class="mod-count">${count}</span>` : '';
+    const dot = (s.id === 'reminders' && curHasOverdue) ? '<span class="alert-dot"></span>' : '';
+    return `<button class="tab-btn ${s.id===curSec?'active-sec':''}" onclick="setSec('${s.id}')">${t(s.id)}${countBadge}${dot}</button>`;
+  }).join('');
+}
+
 function bpSysInput(el, bed, sec, idx, prop, nextId) {
   updateField(bed, sec, idx, prop, el.value);
+  refreshSubNavCounts();
   if (el.value.length >= 3) {
     const nxt = document.getElementById(nextId);
     if (nxt) nxt.focus();
   }
 }
 
+function checkBmAbn(idx, val) {
+  const vNum = parseFloat(val);
+  const isAbn = !isNaN(vNum) && (prefs.bmUnit === 'mmol/L' ? (vNum < 4.0 || vNum > 15.0) : (vNum < 72 || vNum > 270));
+  const row = document.getElementById(`bm-act-${idx}`);
+  if (row) row.classList.toggle('hidden', !isAbn);
+}
+
+function toggleBmAct(idx, key) {
+  if (!db[curBed].bm[idx].act) db[curBed].bm[idx].act = [];
+  const arr = db[curBed].bm[idx].act;
+  const pos = arr.indexOf(key);
+  if (pos >= 0) arr.splice(pos, 1);
+  else arr.push(key);
+  db[curBed].bm[idx].done = false;
+  saveDB();
+  renderContent();
+}
+
 function setDiet(meal, val) {
   db[curBed].food[meal] = db[curBed].food[meal] === val ? '' : val;
+  if (db[curBed].td) delete db[curBed].td['food'];
+  saveDB();
+  renderUI();
+}
+
+function toggleDietAssist(key) {
+  if (!db[curBed].food.assist) db[curBed].food.assist = [];
+  const arr = db[curBed].food.assist;
+  const pos = arr.indexOf(key);
+  if (pos >= 0) arr.splice(pos, 1);
+  else arr.push(key);
+  if (db[curBed].td) delete db[curBed].td['food'];
+  saveDB();
+  renderUI();
+}
+
+function toggleTurnCheck(key) {
+  if (!db[curBed].turnChecks) db[curBed].turnChecks = [];
+  const arr = db[curBed].turnChecks;
+  const pos = arr.indexOf(key);
+  if (pos >= 0) arr.splice(pos, 1);
+  else arr.push(key);
+  if (db[curBed].td) delete db[curBed].td['turnChecks'];
+  saveDB();
+  renderContent();
+}
+
+function addCustomTurn() {
+  if (!db[curBed].turnCustom) db[curBed].turnCustom = [];
+  db[curBed].turnCustom.unshift({time: tNow(), pos: 'left', done: false});
+  saveDB();
+  renderUI();
+}
+
+function rmCustomTurn(idx) {
+  if (!confirm(t('delConfirm'))) return;
+  db[curBed].turnCustom.splice(idx, 1);
+  saveDB();
+  renderUI();
+}
+
+function addCustomSkinSite() {
+  const name = prompt(t('sitePrompt'));
+  if (!name || !name.trim()) return;
+  if (!db[curBed].amySites) db[curBed].amySites = [];
+  db[curBed].amySites.push({site: name.trim(), status: 'blanching', done: false});
+  saveDB();
+  renderUI();
+}
+
+function rmCustomSkinSite(idx) {
+  if (!confirm(t('delConfirm'))) return;
+  db[curBed].amySites.splice(idx, 1);
+  saveDB();
+  renderUI();
+}
+
+function toggleSkinCare(key) {
+  if (!db[curBed].amyCare) db[curBed].amyCare = [];
+  const arr = db[curBed].amyCare;
+  const pos = arr.indexOf(key);
+  if (pos >= 0) arr.splice(pos, 1);
+  else arr.push(key);
+  if (db[curBed].td) delete db[curBed].td['amy'];
+  saveDB();
+  renderUI();
+}
+
+function setDressingSite(idx, siteIdx) {
+  const siteStr = getLangList('drSites')[siteIdx] || '';
+  if (!siteStr) return;
+  const cur = (db[curBed].dressings[idx].val || '').trim();
+  db[curBed].dressings[idx].val = cur ? `${cur}, ${siteStr}` : siteStr;
+  db[curBed].dressings[idx].done = false;
+  saveDB();
+  const inp = document.getElementById(`dress-val-${idx}`);
+  if (inp) inp.value = db[curBed].dressings[idx].val;
+}
+
+function setDressingStatus(idx, stKey) {
+  db[curBed].dressings[idx].status = db[curBed].dressings[idx].status === stKey ? '' : stKey;
+  db[curBed].dressings[idx].done = false;
   saveDB();
   renderContent();
 }
@@ -1309,6 +1769,7 @@ function setDiet(meal, val) {
 function setTaskName(idx, chipIdx) {
   const name = getLangList('tasks')[chipIdx] || '';
   db[curBed].reminders[idx].task = name;
+  db[curBed].reminders[idx].done = false;
   saveDB();
   const inp = document.getElementById(`task-name-${idx}`);
   if (inp) inp.value = name;
@@ -1317,6 +1778,7 @@ function setTaskName(idx, chipIdx) {
 function markTaskDone(idx) {
   const doneTxt = t('done');
   db[curBed].reminders[idx].outcome = doneTxt;
+  db[curBed].reminders[idx].done = false;
   saveDB();
   const inp = document.getElementById(`task-out-${idx}`);
   if (inp) inp.value = doneTxt;
@@ -1325,9 +1787,30 @@ function markTaskDone(idx) {
 
 function quickAddAdmit(chipIdx) {
   const item = getLangList('admits')[chipIdx] || '';
-  db[curBed].admit.unshift({time: tNow(), val: item, done: false});
+  db[curBed].admit.unshift({time: tNow(), val: item, loc: 'locPt', done: false});
+  saveDB();
+  renderUI();
+}
+
+function setAdmitLoc(idx, locKey) {
+  db[curBed].admit[idx].loc = db[curBed].admit[idx].loc === locKey ? '' : locKey;
+  db[curBed].admit[idx].done = false;
   saveDB();
   renderContent();
+}
+
+function updateAdmitInfo(prop, val) {
+  if (!db[curBed].admitInfo) db[curBed].admitInfo = {wt:'', ht:'', band:false};
+  db[curBed].admitInfo[prop] = val;
+  if (db[curBed].td) delete db[curBed].td['admitInfo'];
+  saveDB();
+  refreshSubNavCounts();
+}
+
+function quickAddBno() {
+  db[curBed].bowel.unshift({time: tNow(), amt: '', type: 'bno', method: '', done: false});
+  saveDB();
+  renderUI();
 }
 
 function insertPhrase(idx, phraseIdx) {
@@ -1336,6 +1819,7 @@ function insertPhrase(idx, phraseIdx) {
   const sep = cur.length > 0 ? (cur.endsWith('.') || cur.endsWith(',') || cur.endsWith('。') ? ' ' : '. ') : '';
   const updated = cur + sep + phrase + '. ';
   db[curBed].events[idx].val = updated;
+  db[curBed].events[idx].done = false;
   saveDB();
   const ta = document.getElementById(`note-ta-${idx}`);
   if (ta) {
@@ -1362,10 +1846,11 @@ function updateFluidTargetUI() {
   const btn = document.getElementById('quickFluidTypeBtn');
   if (btn) {
     btn.style.background = isOut ? 'var(--amber)' : 'var(--teal)';
-    btn.textContent = isOut ? 'Out (ml)' : 'In (ml)';
+    btn.textContent = isOut ? `${t('flOut')} (ml)` : `${t('flIn')} (ml)`;
   }
+  const clrTxt = t('flClr');
   document.querySelectorAll('.quick-fluid-btn').forEach(b => {
-    if (b.textContent !== 'Clr') b.classList.toggle('out-mode', isOut);
+    if (b.textContent !== clrTxt) b.classList.toggle('out-mode', isOut);
   });
   for (let i = 0; i < 13; i++) {
     const inEl = document.getElementById(`fl-i-${i}`);
@@ -1373,6 +1858,45 @@ function updateFluidTargetUI() {
     if (inEl) inEl.classList.toggle('fl-target-in', i === activeFluidIdx && activeFluidType === 'i');
     if (outEl) outEl.classList.toggle('fl-target-out', i === activeFluidIdx && activeFluidType === 'o');
   }
+  const outTools = document.getElementById('fluidOutTools');
+  if (outTools) outTools.classList.toggle('hidden', !isOut);
+  const curRow = (db[curBed] && db[curBed].fluid && db[curBed].fluid[activeFluidIdx]) || {pad:0, src:''};
+  const padBtn = document.getElementById('wetPadBtn');
+  if (padBtn) padBtn.textContent = `+ ${t('wetPad')} (${curRow.pad || 0})`;
+  ['srcPu','srcCath','srcBowel','srcVomit'].forEach(sk => {
+    const sBtn = document.getElementById(`fl-src-${sk}`);
+    if (sBtn) sBtn.classList.toggle('active', curRow.src === sk);
+  });
+}
+
+function updateFluidRowSub(idx) {
+  const f = db[curBed].fluid[idx];
+  const subEl = document.getElementById(`fl-sub-${idx}`);
+  if (!subEl || !f) return;
+  const rowPad = f.pad ? `${t('wetPad')} x${f.pad}` : '';
+  const rowSrc = f.src ? trCode(f.src) : '';
+  const subTag = [rowPad, rowSrc].filter(Boolean).join(' • ');
+  subEl.textContent = subTag;
+  subEl.style.display = subTag ? 'block' : 'none';
+}
+
+function addWetPad() {
+  const idx = activeFluidIdx !== null ? activeFluidIdx : 0;
+  db[curBed].fluid[idx].pad = (parseInt(db[curBed].fluid[idx].pad) || 0) + 1;
+  if (db[curBed].td) delete db[curBed].td[`fl_${idx}`];
+  saveDB();
+  updateFluidTargetUI();
+  updateFluidRowSub(idx);
+  refreshFluid();
+}
+
+function setFluidSource(srcKey) {
+  const idx = activeFluidIdx !== null ? activeFluidIdx : 0;
+  db[curBed].fluid[idx].src = db[curBed].fluid[idx].src === srcKey ? '' : srcKey;
+  if (db[curBed].td) delete db[curBed].td[`fl_${idx}`];
+  saveDB();
+  updateFluidTargetUI();
+  updateFluidRowSub(idx);
 }
 
 function quickAddFluid(ml) {
@@ -1380,21 +1904,35 @@ function quickAddFluid(ml) {
   const type = activeFluidType || 'i';
   if (ml === 0) {
     db[curBed].fluid[idx][type] = '';
+    if (type === 'o') { db[curBed].fluid[idx].pad = 0; db[curBed].fluid[idx].src = ''; }
   } else {
     const curVal = parseFloat(db[curBed].fluid[idx][type]) || 0;
     db[curBed].fluid[idx][type] = String(curVal + ml);
   }
+  if (db[curBed].td) delete db[curBed].td[`fl_${idx}`];
   saveDB();
   const inp = document.getElementById(`fl-${type}-${idx}`);
   if (inp) inp.value = db[curBed].fluid[idx][type];
+  updateFluidTargetUI();
+  updateFluidRowSub(idx);
   refreshFluid();
 }
 
 function updateField(bed, sec, idx, prop, val) {
-  if (idx !== null && prop !== null) db[bed][sec][idx][prop] = val;
-  else if (idx !== null) db[bed][sec][idx] = val;
-  else if (prop !== null) db[bed][sec][prop] = val;
-  else db[bed][sec] = val;
+  if (idx !== null && prop !== null) {
+    db[bed][sec][idx][prop] = val;
+    if (typeof db[bed][sec][idx] === 'object' && 'done' in db[bed][sec][idx]) db[bed][sec][idx].done = false;
+    if (sec === 'fluid' && db[bed].td) delete db[bed].td[`fl_${idx}`];
+  } else if (idx !== null) {
+    db[bed][sec][idx] = val;
+    if (db[bed].td) delete db[bed].td[`${sec}_${idx}`];
+  } else if (prop !== null) {
+    db[bed][sec][prop] = val;
+    if (db[bed].td) delete db[bed].td[sec];
+  } else {
+    db[bed][sec] = val;
+    if (db[bed].td) delete db[bed].td[sec];
+  }
   saveDB();
 }
 
@@ -1405,19 +1943,28 @@ function refreshTask(idx) {
     const isOverdue = (!r.outcome && r.time && r.time <= tNow());
     card.classList.toggle('task-alert', Boolean(isOverdue));
   }
-  renderUI();
+  refreshSubNavCounts();
+  let tabsHtml = `<button class="tab-btn ${showSummary ? 'active-summary' : ''}" onclick="toggleSummary()">${t('summary')}</button>`;
+  tabsHtml += alloc.map(b => {
+    const dot = bedHasOverdue(b) ? '<span class="alert-dot"></span>' : '';
+    return `<button class="tab-btn ${b===curBed && !showSummary ?'active-bed':''}" onclick="setBed('${b}')">${b}${dot}</button>`;
+  }).join('');
+  tabsHtml += `<button class="tab-btn-add" onclick="quickAddBedMidShift()" title="${t('addBed')}">+</button>`;
+  document.getElementById('bedTabs').innerHTML = tabsHtml;
 }
 
 function refreshDressDue(idx) {
   const r = db[curBed].dressings[idx];
   const el = document.getElementById(`dress-due-${idx}`);
-  if (el && r) el.textContent = calcDue(r.date);
+  if (el && r) el.textContent = calcDue(r.date, r.days || 3);
 }
 
 function refreshFluid() {
-  let inT=0, outT=0; db[curBed].fluid.forEach(f=>{ inT+=parseFloat(f.i)||0; outT+=parseFloat(f.o)||0; });
+  let inT=0, outT=0, padT=0;
+  db[curBed].fluid.forEach(f=>{ inT+=parseFloat(f.i)||0; outT+=parseFloat(f.o)||0; padT+=parseInt(f.pad)||0; });
   const el = document.getElementById('fluid-totals');
-  if (el) el.innerHTML = `<span>In: ${inT}ml</span><span>Out: ${outT}ml</span><span>Net: ${inT-outT}ml</span>`;
+  if (el) el.innerHTML = `<span>${t('flIn')}: ${inT}ml</span><span>${t('flOut')}: ${outT}ml</span><span>${t('flNet')}: ${inT-outT}ml</span>${padT?`<span>${t('wetPad')}: x${padT}</span>`:''}`;
+  refreshSubNavCounts();
 }
 
 function startAlertTimer() {
@@ -1434,7 +1981,9 @@ function startAlertTimer() {
         osc.type = 'sine'; osc.frequency.value = 880; gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
         osc.start(); osc.stop(audioCtx.currentTime + 0.3);
       }
-      renderUI();
+      if (!document.activeElement || !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+        renderUI();
+      }
     }
   }, 60000);
 }
@@ -1444,9 +1993,9 @@ function optsMap(pairs, sel) { return pairs.map(([val, lbl]) => `<option value="
 function tNow() { const d = new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function addArr(k) { 
   const defaultTime = k === 'reminders' ? '' : tNow();
-  db[curBed][k].unshift({time: defaultTime, val: '', done: false}); 
+  db[curBed][k].unshift({time: defaultTime, val: '', done: false, days: 3}); 
   saveDB(); 
-  renderContent(); 
+  renderUI(); 
 }
 function rmArr(k, i) {
   if (!confirm(t('delConfirm'))) return;
@@ -1454,17 +2003,26 @@ function rmArr(k, i) {
   saveDB();
   renderUI();
 }
-function markSkinIntact() { db[curBed].amy.sac = 'Intact'; db[curBed].amy.groin = 'Intact'; db[curBed].amy.heels = 'Intact'; db[curBed].amy.elbows = 'Intact'; saveDB(); renderContent(); }
+function markSkinIntact() {
+  db[curBed].amy.sac = 'intact';
+  db[curBed].amy.groin = 'intact';
+  db[curBed].amy.heels = 'intact';
+  db[curBed].amy.elbows = 'intact';
+  if (db[curBed].td) delete db[curBed].td['amy'];
+  saveDB();
+  renderUI();
+}
 function setNoDateArr(i) { 
   const d = new Date(); 
   const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   db[curBed].dressings[i].date = dateStr; 
+  db[curBed].dressings[i].done = false;
   saveDB(); 
   const input = document.getElementById(`dress-date-${i}`);
   if (input) input.value = dateStr;
   refreshDressDue(i);
 }
-function calcDue(val) { if (!val) return '-'; const d = new Date(val); d.setDate(d.getDate() + 3); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; }
+function calcDue(val, addDays = 3) { if (!val) return '-'; const d = new Date(val); d.setDate(d.getDate() + addDays); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; }
 function clearShift() { if (confirm(t('endShift') + "?")) { releaseWakeLock(); localStorage.removeItem('cdu_alloc'); localStorage.removeItem('cdu_db'); localStorage.removeItem('cdu_start'); localStorage.removeItem('cdu_ward'); localStorage.removeItem('cdu_mods'); location.reload(); } }
 function handleSwipe() { 
   if (showSummary || alloc.length <= 1) return; 
@@ -1483,3 +2041,4 @@ initSetup();
 </script>
 </body>
 </html>
+
