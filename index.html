@@ -1,0 +1,2710 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>Care Digipad</title>
+<style>
+:root, [data-color="teal"] {
+  --teal: #0d9488;
+  --teal-dark: #0f766e;
+  --teal-light: #f0fdfa;
+  --header-bg: #0f172a;
+}
+[data-color="blue"] {
+  --teal: #0284c7;
+  --teal-dark: #0369a1;
+  --teal-light: #f0f9ff;
+  --header-bg: #0c4a6e;
+}
+[data-color="green"] {
+  --teal: #059669;
+  --teal-dark: #047857;
+  --teal-light: #ecfdf5;
+  --header-bg: #064e3b;
+}
+[data-color="berry"] {
+  --teal: #9333ea;
+  --teal-dark: #7e22ce;
+  --teal-light: #faf5ff;
+  --header-bg: #3b0764;
+}
+[data-color="slate"] {
+  --teal: #475569;
+  --teal-dark: #334155;
+  --teal-light: #f8fafc;
+  --header-bg: #0f172a;
+}
+[data-color="coral"] {
+  --teal: #ea580c;
+  --teal-dark: #c2410c;
+  --teal-light: #fff7ed;
+  --header-bg: #431407;
+}
+
+:root {
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --text: #0f172a;
+  --text-sub: #475569;
+  --border: #e2e8f0;
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --red: #dc2626;
+  --red-light: #fef2f2;
+  --amber: #d97706;
+  --amber-light: #fffbeb;
+  --green: #16a34a;
+  --nav-h: 112px;
+}
+
+[data-theme="night"] {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #f8fafc;
+  --text-sub: #94a3b8;
+  --border: #334155;
+  --input-bg: #0f172a;
+  --input-border: #475569;
+  --teal-light: rgba(255, 255, 255, 0.07);
+  --red-light: rgba(220, 38, 38, 0.15);
+  --amber-light: rgba(217, 119, 6, 0.15);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding-bottom: 40px;
+  overflow-x: hidden;
+}
+.hidden { display: none !important; }
+
+header {
+  background: var(--header-bg);
+  color: #fff;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  height: 52px;
+}
+.hdr-left { display: flex; align-items: center; gap: 8px; }
+.hdr-title { font-weight: 800; font-size: 1.05rem; letter-spacing: -0.3px; }
+.hdr-btn {
+  background: rgba(255,255,255,0.16);
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hdr-right { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; }
+
+.switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background-color: rgba(255,255,255,0.25);
+  transition: .2s; border-radius: 22px;
+}
+.slider:before {
+  position: absolute; content: ""; height: 16px; width: 16px;
+  left: 3px; bottom: 3px; background-color: white;
+  transition: .2s; border-radius: 50%;
+}
+input:checked + .slider { background-color: var(--teal); }
+input:checked + .slider:before { transform: translateX(18px); }
+
+.container { max-width: 600px; margin: 0 auto; padding: 12px; }
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+h1, h2, h3 { margin: 0 0 8px 0; display: flex; justify-content: space-between; align-items: center; }
+label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-sub); margin-bottom: 4px; }
+
+input[type="text"], input[type="number"], input[type="time"], input[type="date"], select, textarea {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 15px;
+  padding-inline-end: 28px;
+}
+[dir="rtl"] select { background-position: left 8px center; }
+textarea { resize: none; overflow: hidden; line-height: 1.4; }
+
+.row { display: flex; gap: 10px; margin-bottom: 10px; }
+.row > div { flex: 1; min-width: 0; }
+.bp-pair { display: flex; align-items: center; gap: 6px; }
+.bp-pair span { font-weight: 700; color: var(--text-sub); }
+
+.btn {
+  display: inline-flex; justify-content: center; align-items: center;
+  width: 100%; padding: 11px 14px; border-radius: 8px;
+  font-weight: 700; font-size: 0.95rem; cursor: pointer;
+  border: none; transition: 0.15s;
+}
+.btn-primary { background: var(--teal); color: #fff; }
+.btn-primary:active { background: var(--teal-dark); }
+.btn-danger { background: var(--red-light); color: var(--red); border: 1px solid var(--red); }
+.btn-subtle { background: var(--bg); color: var(--text); border: 1.5px solid var(--input-border); }
+.btn-sm { width: auto; padding: 6px 12px; font-size: 0.82rem; }
+.del-btn { background: transparent; border: none; color: var(--text-sub); font-weight: 800; cursor: pointer; padding: 4px 8px; }
+
+.sticky-nav {
+  position: sticky; top: 52px; z-index: 150;
+  background: var(--card); border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.tab-strip {
+  display: flex; gap: 6px; overflow-x: auto;
+  padding: 8px 12px; scrollbar-width: none;
+}
+.tab-strip::-webkit-scrollbar { display: none; }
+.tab-btn {
+  flex: 0 0 auto; padding: 7px 14px; border-radius: 20px;
+  border: 1.5px solid var(--input-border); background: var(--card);
+  color: var(--text); font-weight: 700; font-size: 0.84rem;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+}
+.tab-btn.active-bed { background: var(--teal); color: #fff; border-color: var(--teal); }
+.tab-btn.active-sec { background: var(--header-bg); color: #fff; border-color: var(--header-bg); }
+.tab-btn.active-summary { background: #d97706; color: #fff; border-color: #d97706; }
+.tab-btn-add {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+  border: 1.5px dashed var(--teal); background: var(--teal-light);
+  color: var(--teal); font-weight: 800; font-size: 1.1rem; cursor: pointer;
+}
+.mod-count {
+  background: rgba(255,255,255,0.25); color: inherit;
+  padding: 1px 6px; border-radius: 10px; font-size: 0.72rem;
+}
+.tab-btn:not(.active-sec) .mod-count { background: var(--bg); color: var(--teal); }
+.alert-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red); display: inline-block;
+}
+
+.bed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; margin-top: 8px; }
+.bed-item {
+  position: relative; padding: 10px 6px; border-radius: 8px;
+  border: 2px solid var(--input-border); background: var(--bg);
+  text-align: center; font-weight: 800; font-size: 0.92rem; cursor: pointer;
+  user-select: none;
+}
+.bed-item.selected { border-color: var(--teal); background: var(--teal-light); color: var(--teal); }
+.bed-del {
+  position: absolute; top: -6px; right: -6px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--red); color: #fff; font-size: 0.68rem;
+  border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+.mod-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+  margin-bottom: 6px; background: var(--bg);
+}
+.pro-badge {
+  background: var(--amber-light); color: var(--amber);
+  border: 1px solid var(--amber); padding: 1px 6px;
+  border-radius: 4px; font-size: 0.68rem; font-weight: 800; margin-inline-start: 6px;
+}
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.chip {
+  padding: 6px 10px; border-radius: 16px;
+  border: 1.5px solid var(--input-border); background: var(--bg);
+  color: var(--text); font-size: 0.8rem; font-weight: 600; cursor: pointer;
+}
+.chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+.chip.active-red { background: var(--red); color: #fff; border-color: var(--red); }
+.chip.active-amber { background: var(--amber); color: #fff; border-color: var(--amber); }
+
+.mini-Toggle-row { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.mini-btn {
+  flex: 1; min-width: 65px; padding: 6px 8px; border-radius: 6px;
+  border: 1.5px solid var(--input-border); background: var(--bg);
+  color: var(--text); font-size: 0.78rem; font-weight: 700; cursor: pointer; text-align: center;
+}
+.mini-btn.selected { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+.fluid-btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.quick-fluid-btn {
+  padding: 8px; border-radius: 6px; border: 1.5px solid var(--teal);
+  background: var(--teal-light); color: var(--teal); font-weight: 700; font-size: 0.84rem; cursor: pointer;
+}
+.quick-fluid-btn.out-mode { border-color: var(--amber); background: var(--amber-light); color: var(--amber); }
+.fl-target-in { border: 2px solid var(--teal) !important; background: var(--teal-light) !important; }
+.fl-target-out { border: 2px solid var(--amber) !important; background: var(--amber-light) !important; }
+
+.diet-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+.diet-btn {
+  padding: 8px 4px; border-radius: 6px; border: 1.5px solid var(--input-border);
+  background: var(--bg); color: var(--text); font-size: 0.8rem; font-weight: 700; cursor: pointer;
+}
+.diet-btn.selected { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+.summary-toolbar { display: flex; gap: 6px; margin-bottom: 12px; }
+.tool-btn {
+  flex: 1; padding: 8px 6px; border-radius: 8px;
+  border: 1.5px solid var(--input-border); background: var(--card);
+  color: var(--text); font-size: 0.78rem; font-weight: 700; cursor: pointer;
+}
+.tool-btn.active { background: var(--header-bg); color: #fff; border-color: var(--header-bg); }
+.summary-sec { margin-bottom: 10px; font-size: 0.92rem; line-height: 1.45; }
+
+.bed-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 2px; }
+.manage-panel {
+  background: var(--card); border: 2px solid var(--teal);
+  border-radius: 10px; padding: 12px; margin-bottom: 12px;
+}
+.manage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+
+.date-btn-wrap { position: relative; flex: 1; }
+.date-display-btn {
+  width: 100%; padding: 9px 10px; border-radius: 8px;
+  border: 1.5px solid var(--input-border); background: var(--input-bg);
+  color: var(--text); font-size: 0.92rem; font-weight: 600;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.date-native-overlay {
+  position: absolute; left: 0; bottom: 0; width: 100%; height: 40px;
+  opacity: 0; cursor: pointer; z-index: 10;
+}
+
+.task-alert { border: 2px solid var(--red) !important; background: var(--red-light) !important; }
+.pro-card { border: 2px solid var(--teal); background: var(--teal-light); }
+.settings-toggle-btn {
+  width: 100%; padding: 11px; border-radius: 8px;
+  border: 1.5px solid var(--input-border); background: var(--bg);
+  color: var(--text); font-weight: 700; font-size: 0.88rem; cursor: pointer; text-align: center;
+}
+
+#privacyScreen {
+  position: fixed; inset: 0; background: #0f172a; color: #fff;
+  z-index: 9999; display: flex; flex-direction: column;
+  justify-content: center; align-items: center; text-align: center; padding: 24px; cursor: pointer;
+}
+</style>
+</head>
+<body data-theme="day" data-color="teal">
+
+<div id="privacyScreen" class="hidden" onclick="togglePrivacy(false)">
+  <div style="font-size:2.5rem; margin-bottom:12px;">🔒</div>
+  <h2 id="privTitle" style="margin-bottom:6px;">Screen Hidden</h2>
+  <p id="privSub" style="color:#94a3b8; font-size:0.9rem;">Tap anywhere to return to shift notes</p>
+</div>
+
+<header>
+  <div class="hdr-left">
+    <span class="hdr-title" id="hdrTitle">Care Digipad</span>
+    <button class="hdr-btn" id="editBtn" onclick="editBeds()">Edit</button>
+    <button class="hdr-btn" id="hideBtn" onclick="togglePrivacy(true)">Hide</button>
+  </div>
+  <div class="hdr-right">
+    <span id="darkLbl">Dark</span>
+    <label class="switch">
+      <input type="checkbox" id="darkToggle" onchange="toggleDark(this.checked)">
+      <span class="slider"></span>
+    </label>
+  </div>
+</header>
+
+<div id="setupView" class="container">
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px;">
+      <h2 id="lblSetup" style="font-size:1.2rem; margin:0;">Shift Setup</h2>
+      <select id="langSelect" style="width:auto; min-width:140px; padding:6px 26px 6px 10px; font-weight:700; font-size:0.84rem;" onchange="setLang(this.value)">
+        <option value="en">English (UK)</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="pt">Português</option>
+        <option value="it">Italiano</option>
+        <option value="nl">Nederlands</option>
+        <option value="sv">Svenska</option>
+        <option value="pl">Polski</option>
+        <option value="ro">Română</option>
+        <option value="uk">Українська</option>
+        <option value="ru">Русский</option>
+        <option value="el">Ελληνικά</option>
+        <option value="hi">हिन्दी</option>
+        <option value="bn">বাংলা</option>
+        <option value="pa">ਪੰਜਾਬੀ</option>
+        <option value="ur">اردو</option>
+        <option value="ta">தமிழ்</option>
+        <option value="ml">മലയാളം</option>
+        <option value="zh">中文 (简体)</option>
+        <option value="zh-tw">中文 (繁體)</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+        <option value="tl">Tagalog</option>
+        <option value="id">Indonesia</option>
+        <option value="vi">Tiếng Việt</option>
+        <option value="ar">العربية</option>
+        <option value="tr">Türkçe</option>
+        <option value="fa">فارسی</option>
+        <option value="sw">Kiswahili</option>
+      </select>
+    </div>
+    <p id="lblSub" style="font-size:0.84rem; color:var(--text-sub); margin:0 0 6px 0;">100% offline digital shift notepad. Data never leaves your device.</p>
+    <p id="lblDisclaimer" style="font-size:0.74rem; color:var(--text-sub); margin:0; opacity:0.85;">Personal shift scratchpad only. Does not provide clinical advice, diagnosis or decision support.</p>
+  </div>
+
+  <div id="proBanner" class="card pro-card">
+    <div style="font-weight:800; font-size:0.95rem; color:var(--teal); margin-bottom:4px;" id="lblProTitle">Unlock Care Digipad Pro (Lifetime)</div>
+    <p id="lblProSub" style="font-size:0.8rem; color:var(--text-sub); margin:0 0 10px 0;">Unlocks unlimited beds, saved ward layouts, themes, task alarms and all specialist modules.</p>
+    <div style="display:flex; gap:8px; margin-bottom:8px;">
+      <input type="text" id="proKeyInput" placeholder="Enter licence key" style="flex:1; text-transform:uppercase;">
+      <button type="button" id="btnUnlock" class="btn btn-primary btn-sm" onclick="unlockPro()">Unlock</button>
+    </div>
+    <a id="lnkGetPro" href="https://caredigipad.lemonsqueezy.com" target="_blank" rel="noopener" style="font-size:0.8rem; font-weight:700; color:var(--teal); text-decoration:none;">Get a Lifetime Licence Key →</a>
+  </div>
+
+  <div class="card">
+    <div id="savedLayoutRow" style="margin-bottom:12px;">
+      <label id="lblSavedLay">Saved Ward Layouts</label>
+      <div style="display:flex; gap:8px;">
+        <select id="layoutSelect" onchange="loadLayout(this.value)" style="flex:1;"></select>
+        <button type="button" id="delLayBtn" class="btn btn-danger btn-sm hidden" onclick="deleteLayout()">Del</button>
+      </div>
+    </div>
+
+    <label id="lblAddBed">Your Patient Beds (Max 4 chars)</label>
+    <div style="display:flex; gap:8px; margin-bottom:8px;">
+      <input type="text" id="newBedInput" maxlength="4" placeholder="e.g. B1, SR2" style="flex:1; text-transform:uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomBed();}">
+      <button type="button" id="btnAddBed" class="btn btn-primary btn-sm" onclick="addCustomBed()">+ Add</button>
+    </div>
+    <div id="lblBedHelper" style="font-size:0.78rem; color:var(--text-sub); margin-bottom:4px;">Tap a bed below to select (✓) or deselect it for today:</div>
+    <div id="setupBedGrid" class="bed-grid"></div>
+  </div>
+
+  <div class="card">
+    <button type="button" id="btnToggleSettings" class="settings-toggle-btn" onclick="toggleSettingsPanel()">⚙ Shift Hours, Units & Active Modules ▾</button>
+    <div id="settingsBody" class="hidden" style="margin-top:14px;">
+      <h3 id="lblPrefs" style="font-size:0.95rem; margin-bottom:10px;">Preferences & Units</h3>
+      <div class="row">
+        <div>
+          <label id="lblTheme">Theme</label>
+          <select id="themeSelect" onchange="setTheme(this.value)"></select>
+        </div>
+        <div>
+          <label id="lblShiftHrs">Shift Hours</label>
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="btnDayShift" class="mini-btn" onclick="setShift('day')">Day (07:00)</button>
+            <button type="button" id="btnNightShift" class="mini-btn" onclick="setShift('night')">Night (19:00)</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label id="lblBmUnit">Glucose Unit</label>
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="btnBmMmol" class="mini-btn" onclick="setBmUnit('mmol/L')">mmol/L</button>
+            <button type="button" id="btnBmMg" class="mini-btn" onclick="setBmUnit('mg/dL')">mg/dL</button>
+          </div>
+        </div>
+        <div>
+          <label id="lblTempUnit">Temp Unit</label>
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="btnTempC" class="mini-btn" onclick="setTempUnit('°C')">°C</button>
+            <button type="button" id="btnTempF" class="mini-btn" onclick="setTempUnit('°F')">°F</button>
+          </div>
+        </div>
+      </div>
+
+      <label id="lblActiveMods" style="margin-top:12px; margin-bottom:8px;">Active Modules (Tick to show • Tap ▲ ▼ to reorder)</label>
+      <div id="modList"></div>
+
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <input type="text" id="newLayoutName" placeholder="Or save as new layout (e.g. Night)" style="flex:1;">
+        <button type="button" id="btnSaveLay" class="btn btn-primary btn-sm" onclick="saveLayout()">+ Save New</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" id="startBtn" class="btn btn-primary" style="padding:14px; font-size:1.05rem; margin-bottom:10px;" onclick="startShift()">Start Shift</button>
+  <button type="button" id="btnShareSetup" class="btn btn-subtle" onclick="shareApp()">Share Care Digipad with a Colleague</button>
+</div>
+
+<div id="mainView" class="hidden">
+  <div id="stickyNav" class="sticky-nav">
+    <div id="bedTabs" class="tab-strip"></div>
+    <div id="subNav" class="tab-strip" style="padding-top:0;"></div>
+  </div>
+  <div id="contentArea" class="container"></div>
+  <div class="container" style="padding-top:0;">
+    <button type="button" id="btnShareMain" class="btn btn-subtle" style="margin-bottom:10px;" onclick="shareApp()">Share Care Digipad with a Colleague</button>
+    <button type="button" id="btnEndShift" class="btn btn-danger" onclick="clearShift()">End Shift / Clear Data</button>
+  </div>
+</div>
+
+<script src="lang.js" onerror="window.CDU_LANGS = null"></script>
+<script>
+const EN_DICT = {
+  setup: "Shift Setup",
+  sub: "100% offline digital shift notepad. Data never leaves your device.",
+  disclaimer: "Personal shift scratchpad only. Does not provide clinical advice, diagnosis or decision support.",
+  proTitle: "Unlock Care Digipad Pro (Lifetime)",
+  proSub: "Unlocks unlimited beds, saved ward layouts, themes, task alarms and all specialist modules.",
+  proPlaceholder: "Enter licence key",
+  unlock: "Unlock",
+  getPro: "Get a Lifetime Licence Key →",
+  prefs: "Preferences & Units",
+  theme: "Theme",
+  thTeal: "Clinical Teal",
+  thBlue: "Healthcare Blue",
+  thGreen: "Scrub Green",
+  thBerry: "Plum & Berry",
+  thSlate: "Midnight Slate",
+  thCoral: "Warm Coral",
+  shiftHrs: "Shift Hours",
+  dayShift: "Day (07:00)",
+  nightShift: "Night (19:00)",
+  bmUnit: "Glucose Unit",
+  tempUnit: "Temp Unit",
+  savedLay: "Saved Ward Layouts",
+  noLay: "Select a saved layout...",
+  addBed: "Your Patient Beds (Max 4 chars)",
+  bedHelper: "Tap a bed below to select (✓) or deselect it for today:",
+  noBedsYet: "No beds added yet. Type a bed number or initials above and tap + Add.",
+  selectAtLeastOne: "Please tap at least one bed to select (✓) it for today's shift.",
+  add: "+ Add",
+  del: "Del",
+  save: "+ Save New",
+  activeMods: "Active Modules (Tick to show • Tap ▲ ▼ to reorder)",
+  saveLay: "Or save as new layout (e.g. Night)",
+  toggleSettings: "⚙ Shift Hours, Units & Active Modules ▾",
+  start: "Start Shift",
+  startEmpty: "Select Beds to Start",
+  returnShift: "Save & Return to Shift",
+  bedSingular: "Bed",
+  bedPlural: "Beds",
+  share: "Share Care Digipad with a Colleague",
+  endShift: "End Shift / Clear Data",
+  edit: "Edit",
+  hide: "Hide",
+  dark: "Dark",
+  hiddenTitle: "Screen Hidden",
+  hiddenSub: "Tap anywhere to return to shift notes",
+  delConfirm: "Delete this entry?",
+  manageBed: "Manage Bed",
+  renameBed: "Rename Bed",
+  transferBed: "Transfer / Swap Patient",
+  transferPrompt: "Enter destination bed (max 4 chars):",
+  swapConfirm: "is occupied. Swap patients? (Cancel = Overwrite destination)",
+  clearBed: "Clear Bed (Discharge)",
+  clearBedConfirm: "Clear all shift data for this bed?",
+  removeBed: "Remove Bed from Shift",
+  removeBedConfirm: "Remove this bed and its data from the shift?",
+  updLayout: "Save to",
+  layoutSaved: "Saved to layout",
+  quickAddBedTitle: "Add Bed to Shift",
+  savedWardBeds: "Saved Ward Beds (Tap to add):",
+  summary: "Summary",
+  obs: "Vitals",
+  bm: "Glucose",
+  bp: "Lying/Standing BP",
+  fluid: "Fluids",
+  bowel: "Bowels",
+  amy: "Skin & Dressings",
+  food: "Diet",
+  turn: "Turning",
+  mh: "Mental Health",
+  events: "Notes",
+  reminders: "Tasks",
+  admit: "Admissions",
+  done: "Done",
+  markDone: "Mark Done",
+  markBed: "Mark Bed Done",
+  pending: "Pending Only",
+  showAll: "Show All",
+  keepOn: "Keep Screen On",
+  byBed: "By Bed",
+  byMod: "By Module",
+  time: "Time",
+  dueTime: "Due Time",
+  air: "Air",
+  context: "When Taken / Context",
+  rrLbl: "Respirations (RR)",
+  spo2Lbl: "Oxygen Sats (SpO2%)",
+  o2Lbl: "Air / Oxygen (O2)",
+  bpLbl: "Blood Pressure (Sys / Dia)",
+  hrLbl: "Pulse / Heart Rate (HR)",
+  tempLbl: "Temperature",
+  acvpuLbl: "Alertness (ACVPU)",
+  pain: "Pain",
+  painLbl: "Pain Score (0-10)",
+  o2Nasal: "Nasal Cannula",
+  o2Mask: "Mask",
+  o2Venturi: "Venturi",
+  bmValLbl: "Blood Glucose",
+  bmPreB: "Pre-Breakfast (Fasting)",
+  bmPostB: "Post-Breakfast (2hr)",
+  bmPreL: "Pre-Lunch",
+  bmPostL: "Post-Lunch (2hr)",
+  bmPreD: "Pre-Dinner",
+  bmPostD: "Post-Dinner (2hr)",
+  bmBed: "Bedtime",
+  bmNight: "Night (02:00 - 04:00)",
+  bmRandom: "Random / Symptomatic",
+  bmRepeat: "Repeat (Post-Hypo)",
+  preMeal: "Pre-Meal",
+  postMeal: "Post-Meal",
+  night: "Night",
+  hypoTreated: "Hypo Treated",
+  ketones: "Ketones Checked",
+  escRn: "Escalated to RN",
+  lying: "Lying",
+  standing: "Standing",
+  noSym: "No Symptoms",
+  dizzy: "Dizzy / Lightheaded",
+  unableStand: "Unable to Stand",
+  flIn: "Input",
+  flOut: "Output",
+  flNet: "Balance",
+  flTotal: "Total",
+  flClr: "Clear",
+  wetPad: "Wet Pad",
+  srcPu: "Urine (PU)",
+  srcCath: "Catheter",
+  srcBowel: "Bowels",
+  srcVomit: "Vomit",
+  amt: "Amount",
+  type: "Consistency / Stool Type (1-7)",
+  bno: "BNO",
+  bnoFull: "Bowels Not Opened (BNO)",
+  method: "Method",
+  small: "Small",
+  medium: "Medium",
+  large: "Large",
+  smear: "Smear",
+  type1: "Hard — Type 1 (Separate hard lumps)",
+  type2: "Hard — Type 2 (Lumpy sausage)",
+  type3: "Normal — Type 3 (Cracked sausage)",
+  type4: "Normal — Type 4 (Smooth & soft)",
+  type5: "Soft — Type 5 (Soft blobs)",
+  type6: "Loose — Type 6 (Mushy)",
+  type7: "Liquid — Type 7 (Watery)",
+  mToilet: "Toilet",
+  mCommode: "Commode",
+  mBedpan: "Bedpan",
+  mPad: "Pad (Incontinent)",
+  sacrum: "Sacrum",
+  groin: "Groin",
+  heels: "Heels",
+  elbows: "Elbows",
+  intact: "Intact",
+  blanching: "Red (Blanching)",
+  nonBlanch: "Red (Non-Blanching)",
+  moisture: "Moisture Lesion / Excoriated",
+  broken: "Broken / Cavity",
+  tear: "Skin Tear / Bruising",
+  drySkin: "Dry / Fragile",
+  markIntact: "Mark All Intact",
+  addSite: "+ Add Body Site",
+  siteHip: "Hip",
+  siteAnkle: "Ankle",
+  siteShin: "Shin / Leg",
+  siteFoot: "Foot / Toes",
+  siteArm: "Arm / Forearm",
+  siteSpine: "Back / Spine",
+  siteShoulder: "Shoulder",
+  siteEar: "Ear",
+  siteOther: "Other Site",
+  sideL: "Left",
+  sideR: "Right",
+  sideBoth: "Both",
+  cBarrier: "Barrier Cream",
+  cOffload: "Repositioned / Offloaded",
+  cBoots: "Heel Boots / Pillows",
+  dressing: "Dressing",
+  locNotes: "Location / Notes",
+  dueIn: "Next Due In",
+  date: "Date Applied / Checked",
+  today: "Today",
+  due: "Due",
+  selectDate: "Select Date",
+  day1: "1 Day",
+  day2: "2 Days",
+  day3: "3 Days",
+  day5: "5 Days",
+  day7: "7 Days",
+  drIntact: "Intact & Dry",
+  drChanged: "Changed Today",
+  drLeak: "Leaking / Strikethrough",
+  drLift: "Lifting",
+  b: "Breakfast",
+  l: "Lunch",
+  d: "Dinner",
+  supp: "Supplements / Snacks",
+  taken: "Taken",
+  refused: "Refused",
+  nbm: "Nil By Mouth (NBM)",
+  dIndep: "Independent",
+  dAssist: "Assisted",
+  dPrompt: "Prompted",
+  dThick: "Thickened Fluids",
+  turnFreqLbl: "Turn / Repositioning Plan",
+  tf2h: "2-Hourly Turns",
+  tf3h: "3-Hourly Turns",
+  tf4h: "4-Hourly Turns",
+  tfComfort: "PRN / Comfort Only",
+  tfIndep: "Independent (Self-Turning)",
+  posLbl: "Position",
+  back: "Back (Supine)",
+  left: "Left Side",
+  right: "Right Side",
+  chair: "Sitting in Chair",
+  walking: "Walking / Mobilising",
+  turnNow: "+ Log Turn / Position",
+  tBell: "Call Bell in Reach",
+  tRails: "Bed Rails Up",
+  tMattress: "Air Mattress Checked",
+  obsLevel: "Observation Level",
+  lvl1: "Level 1: General",
+  lvl2: "Level 2: Intermittent",
+  lvl3: "Level 3: Within Eyesight",
+  lvl4: "Level 4: Within Arm's Length",
+  mood: "Mood / Presentation",
+  calm: "Calm & Cooperative",
+  anxious: "Anxious / Distressed",
+  agitated: "Agitated / Restless",
+  low: "Low in Mood / Withdrawn",
+  confused: "Confused / Disorientated",
+  vocal: "Vocal / Calling Out",
+  elevated: "Elevated / Elated",
+  hostile: "Hostile / Aggressive",
+  rest: "Location / Activity",
+  asleep: "Asleep in Bed",
+  settled: "Resting on Bed",
+  mhChair: "Sitting in Chair",
+  restless: "Walking / Pacing",
+  mhBath: "In Bathroom / Personal Care",
+  mhCommunal: "In Communal Area",
+  mhVisit: "With Visitors",
+  outOfBed: "Attempting to Leave Ward",
+  mhRationaleLbl: "Intervention / Clinical Rationale",
+  mhRatRoutine: "Routine Check — Safe & Settled",
+  mhRatEngage: "1:1 Engagement & Reassurance",
+  mhRatDeesc: "Verbal De-escalation / Redirection",
+  mhRatReorient: "Reorientated to Time & Ward",
+  mhRatEnv: "Environment Checked & Safe",
+  mhRatFluids: "Food & Fluids Encouraged",
+  mhRatPrn: "PRN Medication Given",
+  mhRatEsc: "Escalated to Nurse in Charge / Medic",
+  mhNoteLbl: "Additional Notes (Optional)",
+  outcome: "Outcome / Action",
+  weight: "Weight (kg)",
+  height: "Height (cm)",
+  wristband: "ID Wristband Checked",
+  locPt: "With Patient",
+  locSafe: "In Ward Safe",
+  locHome: "Sent Home",
+  acvpu: ["A (Alert)", "C (New Confusion)", "V (Voice)", "P (Pain)", "U (Unresponsive)"],
+  phrases: ["Personal care given", "Washed & dressed", "Pressure areas intact", "Mobilised to chair", "Escalated to RN", "Family updated"],
+  tasks: ["Bloods", "ECG", "Repeat Vitals", "Blood Glucose (BM)", "Bladder Scan", "Cannula Check"],
+  admits: ["Dentures", "Glasses", "Hearing Aid", "Walking Frame / Stick", "Phone & Charger", "Keys", "Cash / Wallet"],
+  drSites: ["Sacrum", "Left Heel", "Right Heel", "Left Leg", "Right Leg", "Abdomen"]
+};
+
+const RTL_LANGS = ['ar', 'ur', 'fa'];
+const ALL_MODS = [
+  {id:'obs', pro:false},
+  {id:'bm', pro:false},
+  {id:'bp', pro:true},
+  {id:'fluid', pro:false},
+  {id:'bowel', pro:false},
+  {id:'amy', pro:true},
+  {id:'food', pro:false},
+  {id:'turn', pro:false},
+  {id:'mh', pro:true},
+  {id:'events', pro:false},
+  {id:'reminders', pro:true},
+  {id:'admit', pro:true}
+];
+
+let isPro = localStorage.getItem('cdu_pro') === '1';
+let curLang = localStorage.getItem('cdu_lang') || 'en';
+let curTheme = localStorage.getItem('cdu_color') || 'teal';
+let isDark = localStorage.getItem('cdu_dark') === '1';
+let curShift = localStorage.getItem('cdu_shift') || 'day';
+let bmUnit = localStorage.getItem('cdu_bm_unit') || 'mmol/L';
+let tempUnit = localStorage.getItem('cdu_temp_unit') || '°C';
+
+let wardBeds = JSON.parse(localStorage.getItem('cdu_ward') || '[]');
+let alloc = JSON.parse(localStorage.getItem('cdu_alloc') || '[]');
+let db = JSON.parse(localStorage.getItem('cdu_db') || '{}');
+let layouts = JSON.parse(localStorage.getItem('cdu_layouts') || '{}');
+let activeLayoutName = localStorage.getItem('cdu_active_lay') || '';
+let modConfig = JSON.parse(localStorage.getItem('cdu_mods') || 'null');
+
+let curBed = alloc[0] || '';
+let curSec = 'obs';
+let showSummary = false;
+let summaryGroup = 'bed';
+let hideCompleted = false;
+let showManageBed = false;
+let showQuickAddBed = false;
+let settingsOpen = false;
+let activeFluidIdx = 0;
+let activeFluidType = 'i';
+let wakeLockObj = null;
+let alertTimerId = null;
+let alarmAudioCtx = null;
+let touchStartX = 0, touchEndX = 0, touchStartY = 0, touchEndY = 0;
+
+function getDict() {
+  if (curLang !== 'en' && window.CDU_LANGS && window.CDU_LANGS[curLang]) {
+    return window.CDU_LANGS[curLang];
+  }
+  return EN_DICT;
+}
+
+function t(k) {
+  const dict = getDict();
+  let val = (dict && dict[k] !== undefined) ? dict[k] : (EN_DICT[k] || k);
+  if (k === 'proTitle' && typeof val === 'string') {
+    val = val.replace(/£9\.99\s*|9,99\s*£\s*/g, '');
+  }
+  return val;
+}
+
+function getLangList(k) {
+  const dict = getDict();
+  if (dict && Array.isArray(dict[k])) return dict[k];
+  return EN_DICT[k] || [];
+}
+
+function trCode(val) {
+  if (!val) return '';
+  const dict = getDict();
+  if (dict && dict[val] !== undefined && typeof dict[val] === 'string') return dict[val];
+  if (EN_DICT[val] !== undefined && typeof EN_DICT[val] === 'string') return EN_DICT[val];
+  return val;
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function getLocaleCode() {
+  return curLang === 'en' ? 'en-GB' : curLang;
+}
+
+function todayIsoStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function formatIsoDate(isoStr) {
+  if (!isoStr) return '';
+  const parts = isoStr.split('-');
+  if (parts.length !== 3) return isoStr;
+  const dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  if (isNaN(dt)) return isoStr;
+  return dt.toLocaleDateString(getLocaleCode(), { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function calcDue(dateStr, days = 3) {
+  if (!dateStr) return 'N/A';
+  const parts = dateStr.split('-');
+  let dt;
+  if (parts.length === 3) {
+    dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  } else {
+    dt = new Date(dateStr);
+  }
+  if (isNaN(dt)) return 'N/A';
+  dt.setDate(dt.getDate() + (parseInt(days) || 3));
+  return dt.toLocaleDateString(getLocaleCode(), { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function initModConfig() {
+  if (!Array.isArray(modConfig) || modConfig.length === 0) {
+    modConfig = ALL_MODS.map(m => ({ id: m.id, on: true }));
+  } else {
+    ALL_MODS.forEach(m => {
+      if (!modConfig.some(x => x.id === m.id)) modConfig.push({ id: m.id, on: true });
+    });
+  }
+  if (!isPro) {
+    modConfig.forEach(m => {
+      const def = ALL_MODS.find(x => x.id === m.id);
+      if (def && def.pro) m.on = false;
+    });
+  }
+}
+
+function getActiveSections() {
+  initModConfig();
+  return modConfig.filter(m => {
+    const def = ALL_MODS.find(x => x.id === m.id);
+    if (!def) return false;
+    if (def.pro && !isPro) return false;
+    return m.on;
+  });
+}
+
+function saveDB() {
+  localStorage.setItem('cdu_db', JSON.stringify(db));
+  localStorage.setItem('cdu_alloc', JSON.stringify(alloc));
+  localStorage.setItem('cdu_ward', JSON.stringify(wardBeds));
+}
+
+async function unlockPro() {
+  const inp = document.getElementById('proKeyInput');
+  const btn = document.getElementById('btnUnlock');
+  const key = (inp ? inp.value : '').trim().toUpperCase();
+  if (!key) return;
+
+  if (key === 'JORDAN-CDP-MASTER') {
+    isPro = true;
+    localStorage.setItem('cdu_pro', '1');
+    modConfig = ALL_MODS.map(m => ({ id: m.id, on: true }));
+    localStorage.setItem('cdu_mods', JSON.stringify(modConfig));
+    initSetup();
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    const res = await fetch('https://api.lemonsqueezy.com/v1/licenses/activate', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        license_key: key,
+        instance_name: 'CareDigipad_Device'
+      })
+    });
+    const data = await res.json();
+    if (data && data.activated === true) {
+      isPro = true;
+      localStorage.setItem('cdu_pro', '1');
+      if (data.instance && data.instance.id) {
+        localStorage.setItem('cdu_pro_instance', data.instance.id);
+      }
+      modConfig = ALL_MODS.map(m => ({ id: m.id, on: true }));
+      localStorage.setItem('cdu_mods', JSON.stringify(modConfig));
+      initSetup();
+    } else {
+      alert((data && data.error) ? data.error : 'Invalid or already activated licence key (1-device limit).');
+    }
+  } catch (err) {
+    alert('Please connect to the internet for 1 second to verify and activate your licence key.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = t('unlock'); }
+  }
+}
+
+function initSetup() {
+  document.documentElement.lang = curLang;
+  document.documentElement.dir = RTL_LANGS.includes(curLang) ? 'rtl' : 'ltr';
+  document.body.setAttribute('data-theme', isDark ? 'night' : 'day');
+  document.body.setAttribute('data-color', isPro ? curTheme : 'teal');
+  document.getElementById('darkToggle').checked = isDark;
+  document.getElementById('langSelect').value = curLang;
+
+  initModConfig();
+  applyStaticTranslations();
+  renderThemeOptions();
+  renderLayoutDropdown();
+  renderSetupBeds();
+  renderModList();
+
+  document.getElementById('proBanner').classList.toggle('hidden', isPro);
+  document.getElementById('savedLayoutRow').classList.toggle('hidden', !isPro);
+
+  if (alloc.length > 0 && localStorage.getItem('cdu_start')) {
+    document.getElementById('setupView').classList.add('hidden');
+    document.getElementById('mainView').classList.remove('hidden');
+    document.getElementById('editBtn').classList.remove('hidden');
+    if (!curBed || !alloc.includes(curBed)) curBed = alloc[0];
+    const activeSecs = getActiveSections();
+    if (activeSecs.length > 0 && !activeSecs.some(s => s.id === curSec)) curSec = activeSecs[0].id;
+    renderUI();
+    if (isPro) startAlertTimer();
+  } else {
+    document.getElementById('setupView').classList.remove('hidden');
+    document.getElementById('mainView').classList.add('hidden');
+    document.getElementById('editBtn').classList.add('hidden');
+  }
+}
+
+function applyStaticTranslations() {
+  document.getElementById('editBtn').textContent = t('edit');
+  document.getElementById('hideBtn').textContent = t('hide');
+  document.getElementById('darkLbl').textContent = t('dark');
+  document.getElementById('privTitle').textContent = t('hiddenTitle');
+  document.getElementById('privSub').textContent = t('hiddenSub');
+  document.getElementById('lblSetup').textContent = t('setup');
+  document.getElementById('lblSub').textContent = t('sub');
+  document.getElementById('lblDisclaimer').textContent = t('disclaimer');
+  document.getElementById('lblProTitle').textContent = t('proTitle');
+  document.getElementById('lblProSub').textContent = t('proSub');
+  document.getElementById('proKeyInput').placeholder = t('proPlaceholder');
+  document.getElementById('btnUnlock').textContent = t('unlock');
+  document.getElementById('lnkGetPro').textContent = t('getPro');
+  document.getElementById('lblSavedLay').textContent = t('savedLay');
+  document.getElementById('delLayBtn').textContent = t('del');
+  document.getElementById('lblAddBed').textContent = t('addBed');
+  document.getElementById('btnAddBed').textContent = t('add');
+  document.getElementById('lblBedHelper').textContent = t('bedHelper');
+  document.getElementById('btnToggleSettings').textContent = t('toggleSettings');
+  document.getElementById('lblPrefs').textContent = t('prefs');
+  document.getElementById('lblTheme').textContent = t('theme');
+  document.getElementById('lblShiftHrs').textContent = t('shiftHrs');
+  document.getElementById('btnDayShift').textContent = t('dayShift');
+  document.getElementById('btnNightShift').textContent = t('nightShift');
+  document.getElementById('lblBmUnit').textContent = t('bmUnit');
+  document.getElementById('lblTempUnit').textContent = t('tempUnit');
+  document.getElementById('lblActiveMods').textContent = t('activeMods');
+  document.getElementById('newLayoutName').placeholder = t('saveLay');
+  document.getElementById('btnSaveLay').textContent = t('save');
+  document.getElementById('btnShareSetup').textContent = t('share');
+  document.getElementById('btnShareMain').textContent = t('share');
+  document.getElementById('btnEndShift').textContent = t('endShift');
+
+  document.getElementById('btnDayShift').classList.toggle('selected', curShift === 'day');
+  document.getElementById('btnNightShift').classList.toggle('selected', curShift === 'night');
+  document.getElementById('btnBmMmol').classList.toggle('selected', bmUnit === 'mmol/L');
+  document.getElementById('btnBmMg').classList.toggle('selected', bmUnit === 'mg/dL');
+  document.getElementById('btnTempC').classList.toggle('selected', tempUnit === '°C');
+  document.getElementById('btnTempF').classList.toggle('selected', tempUnit === '°F');
+}
+
+function setLang(l) {
+  curLang = l;
+  localStorage.setItem('cdu_lang', l);
+  initSetup();
+}
+
+function renderThemeOptions() {
+  const themes = [
+    ['teal', t('thTeal')],
+    ['blue', t('thBlue')],
+    ['green', t('thGreen')],
+    ['berry', t('thBerry')],
+    ['slate', t('thSlate')],
+    ['coral', t('thCoral')]
+  ];
+  const sel = document.getElementById('themeSelect');
+  sel.innerHTML = themes.map(([val, lbl]) => `<option value="${val}" ${curTheme===val?'selected':''}>${esc(lbl)}${!isPro && val!=='teal' ? ' (Pro)' : ''}</option>`).join('');
+  sel.disabled = !isPro;
+}
+
+function setTheme(th) {
+  if (!isPro) return;
+  curTheme = th;
+  localStorage.setItem('cdu_color', th);
+  document.body.setAttribute('data-color', th);
+}
+
+function setShift(s) {
+  curShift = s;
+  localStorage.setItem('cdu_shift', s);
+  applyStaticTranslations();
+}
+function renderLayoutDropdown() {
+  const sel = document.getElementById('layoutSelect');
+  const delBtn = document.getElementById('delLayBtn');
+  if (!sel) return;
+  const names = Object.keys(layouts);
+  sel.innerHTML = `<option value="">${esc(t('noLay'))}</option>` +
+    names.map(n => `<option value="${esc(n)}" ${activeLayoutName === n ? 'selected' : ''}>${esc(n)} (${layouts[n].length})</option>`).join('');
+  if (delBtn) delBtn.classList.toggle('hidden', !activeLayoutName || !layouts[activeLayoutName]);
+}
+
+function loadLayout(name) {
+  if (!name || !layouts[name]) {
+    activeLayoutName = '';
+    localStorage.setItem('cdu_active_lay', '');
+    renderLayoutDropdown();
+    return;
+  }
+  activeLayoutName = name;
+  localStorage.setItem('cdu_active_lay', name);
+  const layBeds = layouts[name];
+  layBeds.forEach(b => { if (!wardBeds.includes(b)) wardBeds.push(b); });
+  alloc = [...layBeds];
+  saveDB();
+  renderLayoutDropdown();
+  renderSetupBeds();
+}
+
+function saveLayout() {
+  if (!isPro) return;
+  const inp = document.getElementById('newLayoutName');
+  const name = (inp ? inp.value : '').trim();
+  if (!name) return;
+  if (alloc.length === 0) {
+    alert(t('selectAtLeastOne'));
+    return;
+  }
+  layouts[name] = [...alloc];
+  activeLayoutName = name;
+  localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
+  localStorage.setItem('cdu_active_lay', name);
+  inp.value = '';
+  renderLayoutDropdown();
+}
+
+function deleteLayout() {
+  if (!activeLayoutName || !layouts[activeLayoutName]) return;
+  if (!confirm(t('delConfirm'))) return;
+  delete layouts[activeLayoutName];
+  activeLayoutName = '';
+  localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
+  localStorage.setItem('cdu_active_lay', '');
+  renderLayoutDropdown();
+}
+
+function renderSetupBeds() {
+  const grid = document.getElementById('setupBedGrid');
+  if (!grid) return;
+  if (wardBeds.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1; font-size:0.84rem; color:var(--text-sub); padding:8px 0;">${esc(t('noBedsYet'))}</div>`;
+  } else {
+    grid.innerHTML = wardBeds.map((b, idx) => {
+      const sel = alloc.includes(b);
+      return `<div class="bed-item ${sel ? 'selected' : ''}" onclick="toggleBedAlloc(${idx})">
+        ${sel ? '✓ ' : ''}${esc(b)}
+        <button type="button" class="bed-del" onclick="event.stopPropagation(); deleteWardBed(${idx})">✕</button>
+      </div>`;
+    }).join('');
+  }
+  updateStartBtn();
+}
+
+function addCustomBed() {
+  const inp = document.getElementById('newBedInput');
+  const val = (inp ? inp.value : '').trim().toUpperCase().slice(0, 4);
+  if (!val) return;
+  if (!isPro && alloc.length >= 4 && !alloc.includes(val)) {
+    alert(t('proSub'));
+    return;
+  }
+  if (!wardBeds.includes(val)) wardBeds.push(val);
+  if (!alloc.includes(val)) alloc.push(val);
+  inp.value = '';
+  saveDB();
+  renderSetupBeds();
+}
+
+function toggleBedAlloc(idx) {
+  const b = wardBeds[idx];
+  if (!b) return;
+  const pos = alloc.indexOf(b);
+  if (pos > -1) {
+    alloc.splice(pos, 1);
+  } else {
+    if (!isPro && alloc.length >= 4) {
+      alert(t('proSub'));
+      return;
+    }
+    alloc.push(b);
+  }
+  saveDB();
+  renderSetupBeds();
+}
+
+function deleteWardBed(idx) {
+  const b = wardBeds[idx];
+  if (!b) return;
+  wardBeds.splice(idx, 1);
+  alloc = alloc.filter(x => x !== b);
+  saveDB();
+  renderSetupBeds();
+}
+
+function updateStartBtn() {
+  const btn = document.getElementById('startBtn');
+  if (!btn) return;
+  const inShift = !!localStorage.getItem('cdu_start');
+  if (alloc.length === 0) {
+    btn.textContent = t('startEmpty');
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    const bedWord = alloc.length === 1 ? t('bedSingular') : t('bedPlural');
+    btn.textContent = inShift ? `${t('returnShift')} (${alloc.length} ${bedWord})` : `${t('start')} (${alloc.length} ${bedWord})`;
+  }
+}
+
+function renderModList() {
+  const wrap = document.getElementById('modList');
+  if (!wrap) return;
+  initModConfig();
+  wrap.innerHTML = modConfig.map((m, idx) => {
+    const def = ALL_MODS.find(x => x.id === m.id);
+    const locked = def && def.pro && !isPro;
+    return `<div class="mod-item" style="${locked ? 'opacity:0.6;' : ''}">
+      <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.88rem; color:var(--text); cursor:pointer;">
+        <input type="checkbox" ${m.on && !locked ? 'checked' : ''} ${locked ? 'disabled' : ''} onchange="toggleMod(${idx}, this.checked)">
+        <span>${esc(t(m.id))}</span>
+        ${def && def.pro ? '<span class="pro-badge">PRO</span>' : ''}
+      </label>
+      <div style="display:flex; gap:4px;">
+        <button type="button" class="btn-subtle btn-sm" style="padding:2px 8px;" onclick="moveMod(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+        <button type="button" class="btn-subtle btn-sm" style="padding:2px 8px;" onclick="moveMod(${idx}, 1)" ${idx === modConfig.length - 1 ? 'disabled' : ''}>▼</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleMod(idx, checked) {
+  if (!modConfig[idx]) return;
+  modConfig[idx].on = checked;
+  localStorage.setItem('cdu_mods', JSON.stringify(modConfig));
+}
+
+function moveMod(idx, dir) {
+  const target = idx + dir;
+  if (target < 0 || target >= modConfig.length) return;
+  const temp = modConfig[idx];
+  modConfig[idx] = modConfig[target];
+  modConfig[target] = temp;
+  localStorage.setItem('cdu_mods', JSON.stringify(modConfig));
+  renderModList();
+}
+
+function startShift() {
+  if (alloc.length === 0) {
+    alert(t('selectAtLeastOne'));
+    return;
+  }
+  localStorage.setItem('cdu_start', '1');
+  if (!curBed || !alloc.includes(curBed)) curBed = alloc[0];
+  const activeSecs = getActiveSections();
+  if (activeSecs.length > 0 && !activeSecs.some(s => s.id === curSec)) curSec = activeSecs[0].id;
+  saveDB();
+  document.getElementById('setupView').classList.add('hidden');
+  document.getElementById('mainView').classList.remove('hidden');
+  document.getElementById('editBtn').classList.remove('hidden');
+  renderUI();
+  if (isPro) startAlertTimer();
+}
+
+function editBeds() {
+  document.getElementById('mainView').classList.add('hidden');
+  document.getElementById('setupView').classList.remove('hidden');
+  document.getElementById('editBtn').classList.add('hidden');
+  renderSetupBeds();
+}
+
+function clearShift() {
+  if (!confirm(t('endShift') + '?')) return;
+  db = {};
+  localStorage.removeItem('cdu_db');
+  localStorage.removeItem('cdu_start');
+  showSummary = false;
+  showManageBed = false;
+  showQuickAddBed = false;
+  initSetup();
+}
+
+function toggleDark(checked) {
+  isDark = checked;
+  localStorage.setItem('cdu_dark', checked ? '1' : '0');
+  document.body.setAttribute('data-theme', isDark ? 'night' : 'day');
+}
+
+function togglePrivacy(show) {
+  document.getElementById('privacyScreen').classList.toggle('hidden', !show);
+}
+
+function shareApp() {
+  const shareData = {
+    title: 'Care Digipad',
+    text: t('sub'),
+    url: window.location.href
+  };
+  if (navigator.share) {
+    navigator.share(shareData).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(window.location.href);
+    alert('Link copied to clipboard');
+  }
+}
+
+function getPt(b) {
+  if (!db[b]) db[b] = {};
+  const p = db[b];
+  if (!Array.isArray(p.obs)) p.obs = [];
+  if (!Array.isArray(p.bm)) p.bm = [];
+  if (!Array.isArray(p.bp)) p.bp = [];
+  if (!Array.isArray(p.fluids) || p.fluids.length === 0) p.fluids = [{ i: 0, o: 0, src: '', wet: 0, done: false }];
+  if (!Array.isArray(p.bowel)) p.bowel = [];
+  if (!p.skin || typeof p.skin !== 'object') p.skin = { sacrum: '', groin: '', heels: '', elbows: '' };
+  if (!Array.isArray(p.skinCustom)) p.skinCustom = [];
+  if (!Array.isArray(p.skinCare)) p.skinCare = [];
+  if (typeof p.skinDone !== 'boolean') p.skinDone = false;
+  if (!Array.isArray(p.dressings)) p.dressings = [];
+  if (!p.diet || typeof p.diet !== 'object') p.diet = { b: '', l: '', d: '', supp: '', supps: [], flags: [], done: false };
+  if (!Array.isArray(p.diet.supps)) p.diet.supps = [];
+  if (!Array.isArray(p.diet.flags)) p.diet.flags = [];
+  if (typeof p.turnFreq !== 'string') p.turnFreq = '';
+  if (typeof p.turnPlanDone !== 'boolean') p.turnPlanDone = false;
+  if (!Array.isArray(p.turns)) p.turns = [];
+  if (!Array.isArray(p.turnChecks)) p.turnChecks = [];
+  if (typeof p.mhLevel !== 'string') p.mhLevel = 'lvl1';
+  if (!Array.isArray(p.mh)) p.mh = [];
+  if (!Array.isArray(p.events)) p.events = [];
+  if (!Array.isArray(p.reminders)) p.reminders = [];
+  if (!p.admit || typeof p.admit !== 'object') p.admit = { w: '', h: '', wb: false, items: {}, done: false };
+  if (!p.admit.items || typeof p.admit.items !== 'object') p.admit.items = {};
+  return p;
+}
+
+function modEntryCount(b, modId) {
+  const p = getPt(b);
+  switch (modId) {
+    case 'obs': return p.obs.length;
+    case 'bm': return p.bm.length;
+    case 'bp': return p.bp.length;
+    case 'fluid': return p.fluids.reduce((acc, f) => acc + ((f.i > 0 || f.o > 0 || f.wet > 0) ? 1 : 0), 0);
+    case 'bowel': return p.bowel.length;
+    case 'amy': {
+      const sk = Object.values(p.skin).filter(Boolean).length + p.skinCustom.length + p.dressings.length;
+      return sk;
+    }
+    case 'food': return [p.diet.b, p.diet.l, p.diet.d].filter(Boolean).length + p.diet.supps.length + (p.diet.supp ? 1 : 0);
+    case 'turn': return p.turns.length + (p.turnFreq ? 1 : 0);
+    case 'mh': return p.mh.length;
+    case 'events': return p.events.length;
+    case 'reminders': return p.reminders.filter(r => !r.done).length;
+    case 'admit': return (p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length > 0) ? 1 : 0;
+    default: return 0;
+  }
+}
+
+function hasOverdueTask(b) {
+  if (!isPro) return false;
+  const p = getPt(b);
+  const now = new Date();
+  const curMins = now.getHours() * 60 + now.getMinutes();
+  return p.reminders.some(r => {
+    if (r.done || !r.due) return false;
+    const [hh, mm] = r.due.split(':').map(Number);
+    if (isNaN(hh) || isNaN(mm)) return false;
+    return curMins >= (hh * 60 + mm);
+  });
+}
+
+function renderUI() {
+  const bedTabs = document.getElementById('bedTabs');
+  const subNav = document.getElementById('subNav');
+  const activeSecs = getActiveSections();
+
+  let bedHtml = `<button type="button" class="tab-btn ${showSummary ? 'active-summary' : ''}" onclick="toggleSummary(true)">${esc(t('summary'))}</button>`;
+  alloc.forEach(b => {
+    const isAct = !showSummary && curBed === b;
+    const alertDot = hasOverdueTask(b) ? `<span class="alert-dot"></span>` : '';
+    bedHtml += `<button type="button" class="tab-btn ${isAct ? 'active-bed' : ''}" onclick="selectBed('${esc(b)}')">${esc(b)}${alertDot}</button>`;
+  });
+  bedHtml += `<button type="button" class="tab-btn-add" onclick="toggleQuickAddBed()">+</button>`;
+  bedTabs.innerHTML = bedHtml;
+
+  if (showSummary) {
+    subNav.classList.add('hidden');
+    renderSummary();
+    return;
+  }
+
+  subNav.classList.remove('hidden');
+  if (activeSecs.length > 0 && !activeSecs.some(s => s.id === curSec)) {
+    curSec = activeSecs[0].id;
+  }
+
+  subNav.innerHTML = activeSecs.map(s => {
+    const cnt = modEntryCount(curBed, s.id);
+    const badge = cnt > 0 ? `<span class="mod-count">${cnt}</span>` : '';
+    const alertDot = (s.id === 'reminders' && hasOverdueTask(curBed)) ? `<span class="alert-dot"></span>` : '';
+    return `<button type="button" class="tab-btn ${curSec === s.id ? 'active-sec' : ''}" onclick="selectSec('${s.id}')">${esc(t(s.id))}${badge}${alertDot}</button>`;
+  }).join('');
+
+  renderSection();
+}
+
+function selectBed(b) {
+  showSummary = false;
+  showManageBed = false;
+  showQuickAddBed = false;
+  curBed = b;
+  activeFluidIdx = getPt(b).fluids.length - 1;
+  renderUI();
+}
+
+function selectSec(s) {
+  showSummary = false;
+  curSec = s;
+  renderUI();
+}
+
+function toggleSummary(val) {
+  showSummary = val;
+  showManageBed = false;
+  showQuickAddBed = false;
+  renderUI();
+}
+
+function toggleManageBed() {
+  showManageBed = !showManageBed;
+  showQuickAddBed = false;
+  renderSection();
+}
+
+function toggleQuickAddBed() {
+  showQuickAddBed = !showQuickAddBed;
+  showManageBed = false;
+  if (showSummary) showSummary = false;
+  renderUI();
+}
+
+function quickAddBedToShift(bedName) {
+  const inp = document.getElementById('quickBedInput');
+  const val = (bedName || (inp ? inp.value : '')).trim().toUpperCase().slice(0, 4);
+  if (!val) return;
+  if (!isPro && alloc.length >= 4 && !alloc.includes(val)) {
+    alert(t('proSub'));
+    return;
+  }
+  if (!wardBeds.includes(val)) wardBeds.push(val);
+  if (!alloc.includes(val)) alloc.push(val);
+  curBed = val;
+  showQuickAddBed = false;
+  saveDB();
+  renderUI();
+}
+
+function renameCurrentBed() {
+  const inp = document.getElementById('renameBedInput');
+  const newName = (inp ? inp.value : '').trim().toUpperCase().slice(0, 4);
+  if (!newName || newName === curBed) return;
+  if (alloc.includes(newName)) {
+    alert(newName + ' ' + t('swapConfirm'));
+    return;
+  }
+  db[newName] = db[curBed];
+  delete db[curBed];
+  const idx = alloc.indexOf(curBed);
+  if (idx > -1) alloc[idx] = newName;
+  const wIdx = wardBeds.indexOf(curBed);
+  if (wIdx > -1) wardBeds[wIdx] = newName;
+  else wardBeds.push(newName);
+  curBed = newName;
+  showManageBed = false;
+  saveDB();
+  renderUI();
+}
+
+function transferCurrentBed() {
+  const dest = (prompt(t('transferPrompt')) || '').trim().toUpperCase().slice(0, 4);
+  if (!dest || dest === curBed) return;
+  if (db[dest] && Object.keys(db[dest]).length > 0) {
+    if (confirm(`${dest} ${t('swapConfirm')}`)) {
+      const temp = db[dest];
+      db[dest] = db[curBed];
+      db[curBed] = temp;
+    } else {
+      db[dest] = db[curBed];
+      delete db[curBed];
+    }
+  } else {
+    db[dest] = db[curBed];
+    delete db[curBed];
+  }
+  if (!wardBeds.includes(dest)) wardBeds.push(dest);
+  if (!alloc.includes(dest)) {
+    const idx = alloc.indexOf(curBed);
+    if (idx > -1) alloc[idx] = dest;
+    else alloc.push(dest);
+  }
+  curBed = dest;
+  showManageBed = false;
+  saveDB();
+  renderUI();
+}
+
+function clearCurrentBed() {
+  if (!confirm(t('clearBedConfirm'))) return;
+  delete db[curBed];
+  showManageBed = false;
+  saveDB();
+  renderUI();
+}
+
+function removeCurrentBedFromShift() {
+  if (!confirm(t('removeBedConfirm'))) return;
+  delete db[curBed];
+  alloc = alloc.filter(b => b !== curBed);
+  showManageBed = false;
+  saveDB();
+  if (alloc.length === 0) {
+    localStorage.removeItem('cdu_start');
+    initSetup();
+  } else {
+    curBed = alloc[0];
+    renderUI();
+  }
+}
+
+function updateActiveLayoutFromShift() {
+  if (!activeLayoutName) return;
+  layouts[activeLayoutName] = [...alloc];
+  localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
+  alert(`${t('layoutSaved')}: ${activeLayoutName}`);
+}
+
+function nowTimeStr() {
+  const d = new Date();
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+
+function renderSection() {
+  const area = document.getElementById('contentArea');
+  if (!curBed) return;
+  const p = getPt(curBed);
+  const nowStr = nowTimeStr();
+
+  let topHtml = `<div class="bed-bar">
+    <div style="font-weight:800; font-size:1.1rem; color:var(--teal);">${esc(curBed)} — ${esc(t(curSec))}</div>
+    <button type="button" class="btn-subtle btn-sm" onclick="toggleManageBed()">⚙ ${esc(t('manageBed'))}</button>
+  </div>`;
+
+  if (showQuickAddBed) {
+    const unalloc = wardBeds.filter(b => !alloc.includes(b));
+    topHtml += `<div class="manage-panel">
+      <div style="font-weight:800; margin-bottom:8px;">${esc(t('quickAddBedTitle'))}</div>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <input type="text" id="quickBedInput" maxlength="4" placeholder="e.g. B5" style="text-transform:uppercase;">
+        <button type="button" class="btn btn-primary btn-sm" onclick="quickAddBedToShift()">${esc(t('add'))}</button>
+      </div>
+      ${unalloc.length > 0 ? `<div style="font-size:0.78rem; color:var(--text-sub); margin-bottom:6px;">${esc(t('savedWardBeds'))}</div>
+      <div class="chip-row">${unalloc.map(b => `<span class="chip" onclick="quickAddBedToShift('${esc(b)}')">+ ${esc(b)}</span>`).join('')}</div>` : ''}
+    </div>`;
+  }
+
+  if (showManageBed) {
+    topHtml += `<div class="manage-panel">
+      <div style="font-weight:800; margin-bottom:8px;">${esc(t('manageBed'))}: ${esc(curBed)}</div>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <input type="text" id="renameBedInput" maxlength="4" value="${esc(curBed)}" style="text-transform:uppercase;">
+        <button type="button" class="btn btn-primary btn-sm" onclick="renameCurrentBed()">${esc(t('renameBed'))}</button>
+      </div>
+      <div class="manage-grid">
+        <button type="button" class="btn btn-subtle btn-sm" onclick="transferCurrentBed()">⇄ ${esc(t('transferBed'))}</button>
+        <button type="button" class="btn btn-subtle btn-sm" onclick="clearCurrentBed()">🧹 ${esc(t('clearBed'))}</button>
+        <button type="button" class="btn btn-danger btn-sm" style="grid-column:1/-1;" onclick="removeCurrentBedFromShift()">✕ ${esc(t('removeBed'))}</button>
+        ${isPro && activeLayoutName ? `<button type="button" class="btn btn-primary btn-sm" style="grid-column:1/-1;" onclick="updateActiveLayoutFromShift()">💾 ${esc(t('updLayout'))} "${esc(activeLayoutName)}"</button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  let bodyHtml = '';
+
+  if (curSec === 'obs') {
+    const acvpuList = getLangList('acvpu');
+    bodyHtml = `<div class="card">
+      <div class="row">
+        <div><label>${esc(t('time'))}</label><input type="time" id="obsTime" value="${nowStr}"></div>
+        <div><label>${esc(t('rrLbl'))}</label><input type="number" id="obsRr" inputmode="numeric" placeholder="12-20"></div>
+      </div>
+      <div class="row">
+        <div><label>${esc(t('spo2Lbl'))}</label><input type="number" id="obsSpo2" inputmode="numeric" placeholder="96"></div>
+        <div>
+          <label>${esc(t('o2Lbl'))}</label>
+          <input type="text" id="obsO2" value="${esc(t('air'))}">
+          <div class="mini-Toggle-row">
+            <button type="button" class="mini-btn" onclick="setO2Preset('${esc(t('air'))}')">${esc(t('air'))}</button>
+            <button type="button" class="mini-btn" onclick="setO2Preset('2L ' + '${esc(t('o2Nasal'))}')">2L NC</button>
+            <button type="button" class="mini-btn" onclick="setO2Preset('${esc(t('o2Mask'))}')">${esc(t('o2Mask'))}</button>
+            <button type="button" class="mini-btn" onclick="setO2Preset('${esc(t('o2Venturi'))}')">${esc(t('o2Venturi'))}</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>${esc(t('bpLbl'))}</label>
+          <div class="bp-pair">
+            <input type="number" id="obsSys" inputmode="numeric" placeholder="120">
+            <span>/</span>
+            <input type="number" id="obsDia" inputmode="numeric" placeholder="80">
+          </div>
+        </div>
+        <div><label>${esc(t('hrLbl'))}</label><input type="number" id="obsHr" inputmode="numeric" placeholder="75"></div>
+      </div>
+      <div class="row">
+        <div><label>${esc(t('tempLbl'))} (${esc(tempUnit)})</label><input type="number" step="0.1" id="obsTemp" inputmode="decimal" placeholder="${tempUnit === '°F' ? '98.2' : '36.8'}"></div>
+        <div>
+          <label>${esc(t('acvpuLbl'))}</label>
+          <select id="obsAcvpu">${acvpuList.map((v, i) => `<option value="${i}">${esc(v)}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="row">
+        <div><label>${esc(t('painLbl'))}</label><input type="number" min="0" max="10" id="obsPain" inputmode="numeric" placeholder="0"></div>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="addObs()">${esc(t('add'))} ${esc(t('obs'))}</button>
+    </div>` + p.obs.map((o, i) => {
+      const acvTxt = (typeof o.aIdx === 'number' && acvpuList[o.aIdx]) ? acvpuList[o.aIdx] : (o.a || '');
+      return `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+        <div><strong>${esc(o.t)}</strong> — RR <b>${esc(o.rr)}</b>, SpO2 <b>${esc(o.sp)}%</b> (${esc(o.o2)}), BP <b>${esc(o.bp)}</b>, HR <b>${esc(o.hr)}</b>, ${esc(acvTxt)}, Temp <b>${esc(o.tm)}${esc(o.u || tempUnit)}</b>${o.pn ? `, ${esc(t('pain'))} <b>${esc(o.pn)}/10</b>` : ''}</div>
+        <button type="button" class="del-btn" onclick="delItem('obs', ${i})">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  else if (curSec === 'bm') {
+    const ctxOpts = ['bmPreB','bmPostB','bmPreL','bmPostL','bmPreD','bmPostD','bmBed','bmNight','bmRandom','bmRepeat'];
+    bodyHtml = `<div class="card">
+      <div class="row">
+        <div><label>${esc(t('time'))}</label><input type="time" id="bmTime" value="${nowStr}"></div>
+        <div><label>${esc(t('bmValLbl'))} (${esc(bmUnit)})</label><input type="number" step="0.1" id="bmVal" inputmode="decimal" placeholder="${bmUnit === 'mg/dL' ? '100' : '5.5'}"></div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label>${esc(t('context'))}</label>
+        <select id="bmCtx">${ctxOpts.map(k => `<option value="${k}">${esc(t(k))}</option>`).join('')}</select>
+      </div>
+      <div class="chip-row" id="bmFlags">
+        <span class="chip" data-code="hypoTreated" onclick="this.classList.toggle('active-red')">${esc(t('hypoTreated'))}</span>
+        <span class="chip" data-code="ketones" onclick="this.classList.toggle('active-amber')">${esc(t('ketones'))}</span>
+        <span class="chip" data-code="escRn" onclick="this.classList.toggle('active')">${esc(t('escRn'))}</span>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="addBm()">${esc(t('add'))} ${esc(t('bm'))}</button>
+    </div>` + p.bm.map((b, i) => `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <div><strong>${esc(b.t)}</strong> — <b>${esc(b.v)} ${esc(b.u || bmUnit)}</b> (${esc(trCode(b.c))})${(b.f && b.f.length) ? ' • ' + b.f.map(x => esc(trCode(x))).join(', ') : ''}</div>
+      <button type="button" class="del-btn" onclick="delItem('bm', ${i})">✕</button>
+    </div>`).join('');
+  }
+
+  else if (curSec === 'bp') {
+    bodyHtml = `<div class="card">
+      <div class="row">
+        <div><label>${esc(t('time'))}</label><input type="time" id="bpTime" value="${nowStr}"></div>
+      </div>
+      <div class="row">
+        <div>
+          <label>${esc(t('lying'))} BP</label>
+          <div class="bp-pair"><input type="number" id="bpLSys" inputmode="numeric" placeholder="120"><span>/</span><input type="number" id="bpLDia" inputmode="numeric" placeholder="80"></div>
+        </div>
+        <div>
+          <label>${esc(t('standing'))} BP</label>
+          <div class="bp-pair"><input type="number" id="bpSSys" inputmode="numeric" placeholder="115"><span>/</span><input type="number" id="bpSDia" inputmode="numeric" placeholder="75"></div>
+        </div>
+      </div>
+      <div class="chip-row" id="bpSyms">
+        <span class="chip" data-code="noSym" onclick="this.classList.toggle('active')">${esc(t('noSym'))}</span>
+        <span class="chip" data-code="dizzy" onclick="this.classList.toggle('active-amber')">${esc(t('dizzy'))}</span>
+        <span class="chip" data-code="unableStand" onclick="this.classList.toggle('active-red')">${esc(t('unableStand'))}</span>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="addBp()">${esc(t('add'))} ${esc(t('bp'))}</button>
+    </div>` + p.bp.map((x, i) => `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <div><strong>${esc(x.t)}</strong> — ${esc(t('lying'))}: <b>${esc(x.l)}</b> | ${esc(t('standing'))}: <b>${esc(x.s)}</b>${(x.sym && x.sym.length) ? ' (' + x.sym.map(s => esc(trCode(s))).join(', ') + ')' : ''}</div>
+      <button type="button" class="del-btn" onclick="delItem('bp', ${i})">✕</button>
+    </div>`).join('');
+  }
+
+  else if (curSec === 'fluid') {
+    if (activeFluidIdx >= p.fluids.length) activeFluidIdx = p.fluids.length - 1;
+    let totI = 0, totO = 0;
+    p.fluids.forEach(f => { totI += (Number(f.i) || 0); totO += (Number(f.o) || 0); });
+    const net = totI - totO;
+
+    bodyHtml = `<div class="card">
+      <div class="fluid-btn-grid" style="margin-bottom:8px;">
+        ${[50, 100, 150, 200, 250, 500].map(v => `<button type="button" class="quick-fluid-btn ${activeFluidType === 'o' ? 'out-mode' : ''}" onclick="addQuickFluid(${v})">+${v}ml ${esc(activeFluidType === 'i' ? t('flIn') : t('flOut'))}</button>`).join('')}
+      </div>
+      <div class="chip-row" style="margin-bottom:10px;">
+        ${['srcPu','srcCath','srcBowel','srcVomit'].map(sc => {
+          const curSrc = p.fluids[activeFluidIdx] ? p.fluids[activeFluidIdx].src : '';
+          return `<span class="chip ${curSrc === sc ? 'active-amber' : ''}" onclick="setFluidSource('${sc}')">${esc(t(sc))}</span>`;
+        }).join('')}
+        <span class="chip" onclick="addWetPad()">+1 ${esc(t('wetPad'))}</span>
+      </div>
+      <div id="fluidRows">
+        ${p.fluids.map((f, idx) => `<div class="row" style="align-items:center; margin-bottom:8px;">
+          <div>
+            <label>${esc(t('flIn'))} (ml)</label>
+            <input type="number" inputmode="numeric" class="${activeFluidIdx === idx && activeFluidType === 'i' ? 'fl-target-in' : ''}" value="${f.i || ''}" placeholder="0" onfocus="setFluidTarget(${idx}, 'i')" oninput="updFluid(${idx}, 'i', this.value)">
+          </div>
+          <div>
+            <label>${esc(t('flOut'))} (ml) ${f.src ? '• ' + esc(trCode(f.src)) : ''} ${f.wet ? `• ${esc(t('wetPad'))} x${f.wet}` : ''}</label>
+            <input type="number" inputmode="numeric" class="${activeFluidIdx === idx && activeFluidType === 'o' ? 'fl-target-out' : ''}" value="${f.o || ''}" placeholder="0" onfocus="setFluidTarget(${idx}, 'o')" oninput="updFluid(${idx}, 'o', this.value)">
+          </div>
+          <div style="flex:0 0 auto; padding-top:16px; display:flex; gap:4px;">
+            <button type="button" class="btn-subtle btn-sm" onclick="clrFluidRow(${idx})">${esc(t('flClr'))}</button>
+            ${p.fluids.length > 1 ? `<button type="button" class="del-btn" onclick="delFluidRow(${idx})">✕</button>` : ''}
+          </div>
+        </div>`).join('')}
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid var(--border); font-size:0.9rem;">
+        <div><strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b>${totI}ml</b> | ${esc(t('flOut'))} <b>${totO}ml</b> | ${esc(t('flNet'))} <b>${net > 0 ? '+' + net : net}ml</b></div>
+        <button type="button" class="btn btn-primary btn-sm" onclick="addFluidRow()">${esc(t('add'))}</button>
+      </div>
+    </div>`;
+  }
+
+  else if (curSec === 'bowel') {
+    const amtOpts = ['bno','small','medium','large','smear'];
+    const typeOpts = ['type1','type2','type3','type4','type5','type6','type7'];
+    const methOpts = ['mToilet','mCommode','mBedpan','mPad'];
+    bodyHtml = `<div class="card">
+      <div class="row">
+        <div><label>${esc(t('time'))}</label><input type="time" id="bwTime" value="${nowStr}"></div>
+        <div>
+          <label>${esc(t('amt'))}</label>
+          <select id="bwAmt" onchange="document.getElementById('bwExtra').classList.toggle('hidden', this.value==='bno')">
+            ${amtOpts.map(k => `<option value="${k}" ${k==='medium'?'selected':''}>${esc(t(k))}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div id="bwExtra">
+        <div class="row">
+          <div><label>${esc(t('type'))}</label><select id="bwType">${typeOpts.map(k => `<option value="${k}" ${k==='type4'?'selected':''}>${esc(t(k))}</option>`).join('')}</select></div>
+          <div><label>${esc(t('method'))}</label><select id="bwMeth">${methOpts.map(k => `<option value="${k}">${esc(t(k))}</option>`).join('')}</select></div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="addBowel()">${esc(t('add'))} ${esc(t('bowel'))}</button>
+    </div>` + p.bowel.map((b, i) => `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <div><strong>${esc(b.t)}</strong> — ${b.a === 'bno' ? `<b>${esc(t('bnoFull'))}</b>` : `<b>${esc(trCode(b.a))}</b> — ${esc(trCode(b.ty))}${b.m ? ' • ' + esc(trCode(b.m)) : ''}`}</div>
+      <button type="button" class="del-btn" onclick="delItem('bowel', ${i})">✕</button>
+    </div>`).join('');
+  }
+
+  else if (curSec === 'amy') {
+    const skinStates = ['', 'intact', 'blanching', 'nonBlanch', 'moisture', 'broken', 'tear', 'drySkin'];
+    const coreSites = ['sacrum', 'groin', 'heels', 'elbows'];
+    const extraSites = ['siteHip','siteAnkle','siteShin','siteFoot','siteArm','siteSpine','siteShoulder','siteEar','siteOther'];
+    const sides = ['', 'sideL', 'sideR', 'sideBoth'];
+    const drSites = getLangList('drSites');
+    const todayIso = todayIsoStr();
+
+    bodyHtml = `<div class="card">
+      <h3><span>${esc(t('amy'))}</span><button type="button" class="btn btn-primary btn-sm" onclick="markAllSkinIntact()">✓ ${esc(t('markIntact'))}</button></h3>
+      <div class="row" style="flex-wrap:wrap;">
+        ${coreSites.map(site => `<div style="flex:1 1 45%; margin-bottom:8px;">
+          <label>${esc(t(site))}</label>
+          <select onchange="updSkin('${site}', this.value)">
+            ${skinStates.map(st => `<option value="${st}" ${p.skin[site] === st ? 'selected' : ''}>${st ? esc(t(st)) : '—'}</option>`).join('')}
+          </select>
+        </div>`).join('')}
+      </div>
+      ${p.skinCustom.map((c, idx) => `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:var(--bg); border-radius:6px; margin-bottom:6px; font-size:0.88rem;">
+        <span><strong>${esc(trCode(c.site))}${c.side ? ' (' + esc(trCode(c.side)) + ')' : ''}:</strong> ${esc(trCode(c.cond))}</span>
+        <button type="button" class="del-btn" onclick="delCustomSkin(${idx})">✕</button>
+      </div>`).join('')}
+      <details style="margin:8px 0 10px 0;">
+        <summary style="font-size:0.84rem; font-weight:700; color:var(--teal); cursor:pointer;">${esc(t('addSite'))}</summary>
+        <div class="row" style="margin-top:8px;">
+          <div><label>${esc(t('locNotes'))}</label><select id="csSite">${extraSites.map(s => `<option value="${s}">${esc(t(s))}</option>`).join('')}</select></div>
+          <div><label>Side</label><select id="csSide">${sides.map(s => `<option value="${s}">${s ? esc(t(s)) : '—'}</option>`).join('')}</select></div>
+        </div>
+        <div class="row">
+          <div><label>Status</label><select id="csCond">${skinStates.filter(Boolean).map(s => `<option value="${s}">${esc(t(s))}</option>`).join('')}</select></div>
+          <div style="display:flex; align-items:flex-end;"><button type="button" class="btn btn-primary" onclick="addCustomSkin()">${esc(t('add'))}</button></div>
+        </div>
+      </details>
+      <div class="chip-row">
+        ${['cBarrier','cOffload','cBoots'].map(ck => `<span class="chip ${p.skinCare.includes(ck) ? 'active' : ''}" onclick="toggleSkinCare('${ck}')">${esc(t(ck))}</span>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>${esc(t('dressing'))}</h3>
+      <div class="chip-row">
+        ${drSites.map((ds, idx) => `<span class="chip" onclick="document.getElementById('drLoc').value='${esc(ds)}'">+ ${esc(ds)}</span>`).join('')}
+      </div>
+      <div class="row">
+        <div><label>${esc(t('locNotes'))}</label><input type="text" id="drLoc" placeholder="e.g. Sacrum"></div>
+        <div>
+          <label>${esc(t('dueIn'))}</label>
+          <select id="drFreq">
+            <option value="1">${esc(t('day1'))}</option>
+            <option value="2">${esc(t('day2'))}</option>
+            <option value="3" selected>${esc(t('day3'))}</option>
+            <option value="5">${esc(t('day5'))}</option>
+            <option value="7">${esc(t('day7'))}</option>
+          </select>
+        </div>
+      </div>
+      <div class="chip-row" id="drStatusChips">
+        ${['drIntact','drChanged','drLeak','drLift'].map((st, i) => `<span class="chip ${i===0?'active':''}" data-code="${st}" onclick="selectDrStatus(this)">${esc(t(st))}</span>`).join('')}
+      </div>
+      <div class="row" style="align-items:flex-end;">
+        <div>
+          <label>${esc(t('date'))}</label>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="addDressing('${todayIso}')">${esc(t('today'))}</button>
+            <div class="date-btn-wrap">
+              <div class="date-display-btn"><span>📅 ${esc(t('selectDate'))}</span></div>
+              <input type="date" class="date-native-overlay" onchange="if(this.value) addDressing(this.value)">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>` + p.dressings.map((d, i) => `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <div><strong>${esc(d.l)}</strong>${d.st ? ' (' + esc(trCode(d.st)) + ')' : ''} — ${esc(t('date'))}: <b>${esc(formatIsoDate(d.dt))}</b> • ${esc(t('due'))}: <b>${esc(calcDue(d.dt, d.f))}</b></div>
+      <button type="button" class="del-btn" onclick="delDressing(${i})">✕</button>
+    </div>`).join('');
+  }
+
+  else if (curSec === 'food') {
+    const mealOpts = ['100%', '75%', '50%', '25%', 'refused', 'nbm'];
+    const meals = [['b', t('b')], ['l', t('l')], ['d', t('d')]];
+    bodyHtml = `<div class="card">
+      ${meals.map(([k, lbl]) => `<label>${esc(lbl)}</label>
+      <div class="diet-grid">
+        ${mealOpts.map(opt => {
+          const disp = (opt === 'refused' || opt === 'nbm') ? t(opt) : opt;
+          return `<button type="button" class="diet-btn ${p.diet[k] === opt ? 'selected' : ''}" onclick="setMeal('${k}', '${opt}')">${esc(disp)}</button>`;
+        }).join('')}
+      </div>`).join('')}
+      <label>${esc(t('supp'))}</label>
+      <div class="chip-row">
+        <span class="chip" onclick="quickLogSupp('taken')">+ ${esc(t('taken'))}</span>
+        <span class="chip" onclick="quickLogSupp('refused')">+ ${esc(t('refused'))}</span>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <input type="text" id="suppInput" placeholder="${esc(t('supp'))}" value="${esc(p.diet.supp || '')}" oninput="updSuppText(this.value)">
+        <button type="button" class="btn btn-primary btn-sm" onclick="addCustomSupp()">${esc(t('add'))}</button>
+      </div>
+      ${p.diet.supps.map((s, idx) => `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:var(--bg); border-radius:6px; margin-bottom:6px; font-size:0.86rem;">
+        <span><strong>${esc(s.t)}</strong> — ${esc(trCode(s.v))}</span>
+        <button type="button" class="del-btn" onclick="delSupp(${idx})">✕</button>
+      </div>`).join('')}
+      <div class="chip-row" style="margin-top:8px;">
+        ${['dIndep','dAssist','dPrompt','dThick'].map(fl => `<span class="chip ${p.diet.flags.includes(fl) ? 'active' : ''}" onclick="toggleDietFlag('${fl}')">${esc(t(fl))}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+  else if (curSec === 'turn') {
+    const tfOpts = ['', 'tf2h', 'tf3h', 'tf4h', 'tfComfort', 'tfIndep'];
+    const posOpts = ['back', 'left', 'right', 'chair', 'walking'];
+    bodyHtml = `<div class="card">
+      <div style="margin-bottom:10px;">
+        <label>${esc(t('turnFreqLbl'))}</label>
+        <select onchange="setTurnFreq(this.value)">
+          ${tfOpts.map(k => `<option value="${k}" ${p.turnFreq === k ? 'selected' : ''}>${k ? esc(t(k)) : '—'}</option>`).join('')}
+        </select>
+      </div>
+      <div class="row">
+        <div><label>${esc(t('time'))}</label><input type="time" id="trnTime" value="${nowStr}"></div>
+        <div><label>${esc(t('posLbl'))}</label><select id="trnPos">${posOpts.map(k => `<option value="${k}">${esc(t(k))}</option>`).join('')}</select></div>
+      </div>
+      <div class="chip-row">
+        ${['tBell','tRails','tMattress'].map(ck => `<span class="chip ${p.turnChecks.includes(ck) ? 'active' : ''}" onclick="toggleTurnCheck('${ck}')">${esc(t(ck))}</span>`).join('')}
+      </div>
+      <button type="button" class="btn btn-primary" onclick="addTurn()">${esc(t('turnNow'))}</button>
+    </div>` + p.turns.map((tr, i) => `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <div><strong>${esc(tr.t)}</strong> — <b>${esc(trCode(tr.p))}</b></div>
+      <button type="button" class="del-btn" onclick="delItem('turns', ${i})">✕</button>
+    </div>`).join('');
+  }
+
+  else if (curSec === 'mh') {
+    const lvlOpts = ['lvl1', 'lvl2', 'lvl3', 'lvl4'];
+    const moodOpts = ['calm', 'anxious', 'agitated', 'low', 'confused', 'vocal', 'elevated', 'hostile'];
+    const locOpts = ['asleep', 'settled', 'mhChair', 'restless', 'mhBath', 'mhCommunal', 'mhVisit', 'outOfBed'];
+    const ratOpts = ['mhRatRoutine', 'mhRatEngage', 'mhRatDeesc', 'mhRatReorient', 'mhRatEnv', 'mhRatFluids', 'mhRatPrn', 'mhRatEsc'];
+
+    bodyHtml = `<div class="card">
+      <div style="margin-bottom:10px;">
+        <label>${esc(t('obsLevel'))}</label>
+        <select onchange="setMhLevel(this.value)">
+          ${lvlOpts.map(k => `<option value="${k}" ${p.mhLevel === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
+        </select>
+      </div>
+      <div class="row">
+        <div><label>${esc(t('time'))}</label><input type="time" id="mhTime" value="${nowStr}"></div>
+        <div><label>${esc(t('mood'))}</label><select id="mhMood">${moodOpts.map(k => `<option value="${k}">${esc(t(k))}</option>`).join('')}</select></div>
+      </div>
+      <div class="row">
+        <div><label>${esc(t('rest'))}</label><select id="mhLoc">${locOpts.map(k => `<option value="${k}">${esc(t(k))}</option>`).join('')}</select></div>
+        <div><label>${esc(t('mhRationaleLbl'))}</label><select id="mhRat">${ratOpts.map(k => `<option value="${k}">${esc(t(k))}</option>`).join('')}</select></div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label>${esc(t('mhNoteLbl'))}</label>
+        <input type="text" id="mhNote" placeholder="...">
+      </div>
+      <button type="button" class="btn btn-primary" onclick="addMh()">${esc(t('add'))} ${esc(t('mh'))}</button>
+    </div>` + p.mh.map((m, i) => `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <div><strong>${esc(m.t)}</strong> — <b>${esc(trCode(m.m))}</b> • ${esc(trCode(m.r))}${m.rat ? ' • ' + esc(trCode(m.rat)) : ''}${m.n ? ' (' + esc(m.n) + ')' : ''}</div>
+      <button type="button" class="del-btn" onclick="delItem('mh', ${i})">✕</button>
+    </div>`).join('');
+  }
+
+  else if (curSec === 'events') {
+    const phrases = getLangList('phrases');
+    bodyHtml = `<div class="card">
+      <div class="chip-row">
+        ${phrases.map((ph, idx) => `<span class="chip" onclick="addQuickPhrase(${idx})">+ ${esc(ph)}</span>`).join('')}
+      </div>
+      <div class="row">
+        <div style="flex:0 0 110px;"><label>${esc(t('time'))}</label><input type="time" id="evTime" value="${nowStr}"></div>
+        <div><label>${esc(t('events'))}</label><textarea id="evNote" rows="2" placeholder="..." oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea></div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label>${esc(t('outcome'))}</label>
+        <input type="text" id="evOut" placeholder="...">
+      </div>
+      <button type="button" class="btn btn-primary" onclick="addEvent()">${esc(t('add'))} ${esc(t('events'))}</button>
+    </div>` + p.events.map((e, i) => {
+      const noteTxt = (typeof e.pIdx === 'number' && phrases[e.pIdx]) ? phrases[e.pIdx] : e.e;
+      return `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+        <div><strong>${esc(e.t)}</strong> — ${esc(noteTxt)}${e.o ? ' → <b>' + esc(e.o) + '</b>' : ''}</div>
+        <button type="button" class="del-btn" onclick="delItem('events', ${i})">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  else if (curSec === 'reminders') {
+    const taskList = getLangList('tasks');
+    const now = new Date();
+    const curMins = now.getHours() * 60 + now.getMinutes();
+
+    bodyHtml = `<div class="card">
+      <div class="chip-row">
+        ${taskList.map((tk, idx) => `<span class="chip" onclick="setTaskPreset(${idx})">+ ${esc(tk)}</span>`).join('')}
+      </div>
+      <div class="row">
+        <div style="flex:0 0 120px;"><label>${esc(t('dueTime'))}</label><input type="time" id="remDue" value="${nowStr}"></div>
+        <div><label>${esc(t('reminders'))}</label><input type="text" id="remText" placeholder="..."></div>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="addReminder()">${esc(t('add'))} ${esc(t('reminders'))}</button>
+    </div>` + p.reminders.map((r, i) => {
+      const tkTxt = (typeof r.tIdx === 'number' && taskList[r.tIdx]) ? taskList[r.tIdx] : r.txt;
+      let isOverdue = false;
+      if (!r.done && r.due) {
+        const [hh, mm] = r.due.split(':').map(Number);
+        if (!isNaN(hh) && !isNaN(mm) && curMins >= (hh * 60 + mm)) isOverdue = true;
+      }
+      return `<div class="card ${isOverdue ? 'task-alert' : ''}" style="display:flex; justify-content:space-between; align-items:center;">
+        <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.92rem; color:var(--text); cursor:pointer;">
+          <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleTaskDone(${i})">
+          <span style="${r.done ? 'text-decoration:line-through; opacity:0.55;' : ''}"><strong>${esc(r.due || '--:--')}</strong> — ${esc(tkTxt)}</span>
+        </label>
+        <button type="button" class="del-btn" onclick="delItem('reminders', ${i})">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  else if (curSec === 'admit') {
+    const admitList = getLangList('admits');
+    const locs = ['', 'locPt', 'locSafe', 'locHome'];
+
+    bodyHtml = `<div class="card">
+      <div class="row">
+        <div><label>${esc(t('weight'))}</label><input type="number" step="0.1" inputmode="decimal" value="${esc(p.admit.w)}" oninput="updAdmitField('w', this.value)"></div>
+        <div><label>${esc(t('height'))}</label><input type="number" step="0.1" inputmode="decimal" value="${esc(p.admit.h)}" oninput="updAdmitField('h', this.value)"></div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <span class="chip ${p.admit.wb ? 'active' : ''}" onclick="updAdmitField('wb', !getPt(curBed).admit.wb); renderSection();">✓ ${esc(t('wristband'))}</span>
+      </div>
+      ${admitList.map((itemLbl, idx) => {
+        const key = 'std_' + idx;
+        const curVal = p.admit.items[key] || '';
+        return `<div class="row" style="align-items:center; margin-bottom:6px;">
+          <div style="font-size:0.88rem; font-weight:700;">${esc(itemLbl)}</div>
+          <div>
+            <select onchange="setAdmitItem('${key}', this.value)">
+              ${locs.map(lc => `<option value="${lc}" ${curVal === lc ? 'selected' : ''}>${lc ? esc(t(lc)) : '—'}</option>`).join('')}
+            </select>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  area.innerHTML = topHtml + bodyHtml;
+}
+
+function setO2Preset(val) {
+  const inp = document.getElementById('obsO2');
+  if (inp) inp.value = val;
+}
+
+function addObs() {
+  const p = getPt(curBed);
+  const tVal = document.getElementById('obsTime').value || nowTimeStr();
+  const rr = document.getElementById('obsRr').value.trim();
+  const sp = document.getElementById('obsSpo2').value.trim();
+  const o2 = document.getElementById('obsO2').value.trim() || t('air');
+  const sys = document.getElementById('obsSys').value.trim();
+  const dia = document.getElementById('obsDia').value.trim();
+  const hr = document.getElementById('obsHr').value.trim();
+  const tm = document.getElementById('obsTemp').value.trim();
+  const aIdx = parseInt(document.getElementById('obsAcvpu').value) || 0;
+  const pn = document.getElementById('obsPain').value.trim();
+
+  if (!rr && !sp && !sys && !hr && !tm) return;
+  p.obs.push({
+    t: tVal,
+    rr: rr || '-',
+    sp: sp || '-',
+    o2,
+    bp: (sys || dia) ? `${sys || '-'}/${dia || '-'}` : '-',
+    hr: hr || '-',
+    tm: tm || '-',
+    u: tempUnit,
+    aIdx,
+    pn,
+    done: false
+  });
+  saveDB();
+  renderUI();
+}
+
+function addBm() {
+  const p = getPt(curBed);
+  const tVal = document.getElementById('bmTime').value || nowTimeStr();
+  const v = document.getElementById('bmVal').value.trim();
+  if (!v) return;
+  const c = document.getElementById('bmCtx').value;
+  const f = [];
+  document.querySelectorAll('#bmFlags .chip').forEach(ch => {
+    if (ch.classList.contains('active') || ch.classList.contains('active-red') || ch.classList.contains('active-amber')) {
+      f.push(ch.getAttribute('data-code'));
+    }
+  });
+  p.bm.push({ t: tVal, v, u: bmUnit, c, f, done: false });
+  saveDB();
+  renderUI();
+}
+
+function addBp() {
+  const p = getPt(curBed);
+  const tVal = document.getElementById('bpTime').value || nowTimeStr();
+  const lSys = document.getElementById('bpLSys').value.trim();
+  const lDia = document.getElementById('bpLDia').value.trim();
+  const sSys = document.getElementById('bpSSys').value.trim();
+  const sDia = document.getElementById('bpSDia').value.trim();
+  if (!lSys && !sSys) return;
+  const sym = [];
+  document.querySelectorAll('#bpSyms .chip').forEach(ch => {
+    if (ch.classList.contains('active') || ch.classList.contains('active-red') || ch.classList.contains('active-amber')) {
+      sym.push(ch.getAttribute('data-code'));
+    }
+  });
+  p.bp.push({
+    t: tVal,
+    l: (lSys || lDia) ? `${lSys || '-'}/${lDia || '-'}` : '-',
+    s: (sSys || sDia) ? `${sSys || '-'}/${sDia || '-'}` : '-',
+    sym,
+    done: false
+  });
+  saveDB();
+  renderUI();
+}
+
+function setFluidTarget(idx, type) {
+  activeFluidIdx = idx;
+  activeFluidType = type;
+  document.querySelectorAll('.quick-fluid-btn').forEach(btn => {
+    btn.classList.toggle('out-mode', type === 'o');
+    const amt = btn.textContent.match(/\+\d+ml/);
+    if (amt) btn.textContent = `${amt[0]} ${type === 'i' ? t('flIn') : t('flOut')}`;
+  });
+}
+
+function updFluid(idx, type, val) {
+  const p = getPt(curBed);
+  if (!p.fluids[idx]) return;
+  p.fluids[idx][type] = Math.max(0, parseInt(val) || 0);
+  p.fluids[idx].done = false;
+  saveDB();
+}
+
+function addQuickFluid(vol) {
+  const p = getPt(curBed);
+  if (!p.fluids[activeFluidIdx]) activeFluidIdx = p.fluids.length - 1;
+  const row = p.fluids[activeFluidIdx];
+  row[activeFluidType] = (Number(row[activeFluidType]) || 0) + vol;
+  row.done = false;
+  saveDB();
+  renderUI();
+}
+
+function setFluidSource(sc) {
+  const p = getPt(curBed);
+  if (!p.fluids[activeFluidIdx]) activeFluidIdx = p.fluids.length - 1;
+  const row = p.fluids[activeFluidIdx];
+  row.src = (row.src === sc) ? '' : sc;
+  activeFluidType = 'o';
+  saveDB();
+  renderUI();
+}
+
+function addWetPad() {
+  const p = getPt(curBed);
+  if (!p.fluids[activeFluidIdx]) activeFluidIdx = p.fluids.length - 1;
+  const row = p.fluids[activeFluidIdx];
+  row.wet = (Number(row.wet) || 0) + 1;
+  row.done = false;
+  saveDB();
+  renderUI();
+}
+
+function addFluidRow() {
+  const p = getPt(curBed);
+  p.fluids.push({ i: 0, o: 0, src: '', wet: 0, done: false });
+  activeFluidIdx = p.fluids.length - 1;
+  saveDB();
+  renderUI();
+}
+
+function clrFluidRow(idx) {
+  const p = getPt(curBed);
+  if (!p.fluids[idx]) return;
+  p.fluids[idx] = { i: 0, o: 0, src: '', wet: 0, done: false };
+  saveDB();
+  renderUI();
+}
+
+function delFluidRow(idx) {
+  const p = getPt(curBed);
+  if (p.fluids.length <= 1) return;
+  p.fluids.splice(idx, 1);
+  activeFluidIdx = Math.max(0, p.fluids.length - 1);
+  saveDB();
+  renderUI();
+}
+
+function addBowel() {
+  const p = getPt(curBed);
+  const tVal = document.getElementById('bwTime').value || nowTimeStr();
+  const a = document.getElementById('bwAmt').value;
+  const ty = a === 'bno' ? '' : document.getElementById('bwType').value;
+  const m = a === 'bno' ? '' : document.getElementById('bwMeth').value;
+  p.bowel.push({ t: tVal, a, ty, m, done: false });
+  saveDB();
+  renderUI();
+}
+
+function updSkin(site, val) {
+  const p = getPt(curBed);
+  p.skin[site] = val;
+  p.skinDone = false;
+  saveDB();
+  renderUI();
+}
+
+function markAllSkinIntact() {
+  const p = getPt(curBed);
+  ['sacrum', 'groin', 'heels', 'elbows'].forEach(s => { p.skin[s] = 'intact'; });
+  p.skinDone = false;
+  saveDB();
+  renderUI();
+}
+
+function addCustomSkin() {
+  const p = getPt(curBed);
+  const site = document.getElementById('csSite').value;
+  const side = document.getElementById('csSide').value;
+  const cond = document.getElementById('csCond').value;
+  p.skinCustom.push({ site, side, cond });
+  p.skinDone = false;
+  saveDB();
+  renderUI();
+}
+
+function delCustomSkin(idx) {
+  const p = getPt(curBed);
+  p.skinCustom.splice(idx, 1);
+  saveDB();
+  renderUI();
+}
+
+function toggleSkinCare(ck) {
+  const p = getPt(curBed);
+  const pos = p.skinCare.indexOf(ck);
+  if (pos > -1) p.skinCare.splice(pos, 1);
+  else p.skinCare.push(ck);
+  p.skinDone = false;
+  saveDB();
+  renderUI();
+}
+
+function selectDrStatus(el) {
+  document.querySelectorAll('#drStatusChips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function addDressing(dateStr) {
+  const p = getPt(curBed);
+  const loc = (document.getElementById('drLoc').value || '').trim();
+  if (!loc) {
+    alert(t('locNotes'));
+    return;
+  }
+  const f = parseInt(document.getElementById('drFreq').value) || 3;
+  const actChip = document.querySelector('#drStatusChips .chip.active');
+  const st = actChip ? actChip.getAttribute('data-code') : 'drIntact';
+  p.dressings.push({ l: loc, dt: dateStr || todayIsoStr(), f, st, done: false });
+  document.getElementById('drLoc').value = '';
+  saveDB();
+  renderUI();
+}
+
+function delDressing(idx) {
+  const p = getPt(curBed);
+  p.dressings.splice(idx, 1);
+  saveDB();
+  renderUI();
+}
+
+function setMeal(mealKey, val) {
+  const p = getPt(curBed);
+  p.diet[mealKey] = (p.diet[mealKey] === val) ? '' : val;
+  p.diet.done = false;
+  saveDB();
+  renderUI();
+}
+
+function quickLogSupp(statusCode) {
+  const p = getPt(curBed);
+  p.diet.supps.push({ t: nowTimeStr(), v: statusCode });
+  p.diet.done = false;
+  saveDB();
+  renderUI();
+}
+
+function updSuppText(val) {
+  const p = getPt(curBed);
+  p.diet.supp = val;
+  p.diet.done = false;
+  saveDB();
+}
+
+function addCustomSupp() {
+  const inp = document.getElementById('suppInput');
+  const val = (inp ? inp.value : '').trim();
+  if (!val) return;
+  const p = getPt(curBed);
+  p.diet.supps.push({ t: nowTimeStr(), v: val });
+  p.diet.supp = '';
+  p.diet.done = false;
+  saveDB();
+  renderUI();
+}
+
+function delSupp(idx) {
+  const p = getPt(curBed);
+  p.diet.supps.splice(idx, 1);
+  saveDB();
+  renderUI();
+}
+
+function toggleDietFlag(fl) {
+  const p = getPt(curBed);
+  const idx = p.diet.flags.indexOf(fl);
+  if (idx > -1) p.diet.flags.splice(idx, 1);
+  else p.diet.flags.push(fl);
+  p.diet.done = false;
+  saveDB();
+  renderUI();
+}
+
+function setTurnFreq(val) {
+  const p = getPt(curBed);
+  p.turnFreq = val;
+  p.turnPlanDone = false;
+  saveDB();
+  renderUI();
+}
+
+function addTurn() {
+  const p = getPt(curBed);
+  const tVal = document.getElementById('trnTime').value || nowTimeStr();
+  const pos = document.getElementById('trnPos').value;
+  p.turns.push({ t: tVal, p: pos, done: false });
+  saveDB();
+  renderUI();
+}
+
+function toggleTurnCheck(ck) {
+  const p = getPt(curBed);
+  const idx = p.turnChecks.indexOf(ck);
+  if (idx > -1) p.turnChecks.splice(idx, 1);
+  else p.turnChecks.push(ck);
+  saveDB();
+  renderUI();
+}
+
+function setMhLevel(val) {
+  const p = getPt(curBed);
+  p.mhLevel = val;
+  saveDB();
+}
+
+function addMh() {
+  const p = getPt(curBed);
+  const tVal = document.getElementById('mhTime').value || nowTimeStr();
+  const m = document.getElementById('mhMood').value;
+  const r = document.getElementById('mhLoc').value;
+  const rat = document.getElementById('mhRat').value;
+  const n = (document.getElementById('mhNote').value || '').trim();
+  p.mh.push({ t: tVal, m, r, rat, n, done: false });
+  saveDB();
+  renderUI();
+}
+
+function addQuickPhrase(pIdx) {
+  const p = getPt(curBed);
+  const phrases = getLangList('phrases');
+  p.events.push({ t: nowTimeStr(), pIdx, e: phrases[pIdx] || '', o: '', done: false });
+  saveDB();
+  renderUI();
+}
+
+function addEvent() {
+  const p = getPt(curBed);
+  const tVal = document.getElementById('evTime').value || nowTimeStr();
+  const e = (document.getElementById('evNote').value || '').trim();
+  const o = (document.getElementById('evOut').value || '').trim();
+  if (!e) return;
+  p.events.push({ t: tVal, e, o, done: false });
+  saveDB();
+  renderUI();
+}
+
+function setTaskPreset(tIdx) {
+  const taskList = getLangList('tasks');
+  const inp = document.getElementById('remText');
+  if (inp && taskList[tIdx]) {
+    inp.value = taskList[tIdx];
+    inp.setAttribute('data-tidx', tIdx);
+  }
+}
+
+function addReminder() {
+  const p = getPt(curBed);
+  const due = document.getElementById('remDue').value || nowTimeStr();
+  const inp = document.getElementById('remText');
+  const txt = (inp ? inp.value : '').trim();
+  if (!txt) return;
+  const taskList = getLangList('tasks');
+  const presetIdx = taskList.indexOf(txt);
+  p.reminders.push({
+    due,
+    txt,
+    tIdx: presetIdx > -1 ? presetIdx : undefined,
+    done: false,
+    alerted: false
+  });
+  saveDB();
+  renderUI();
+}
+
+function toggleTaskDone(idx) {
+  const p = getPt(curBed);
+  if (!p.reminders[idx]) return;
+  p.reminders[idx].done = !p.reminders[idx].done;
+  saveDB();
+  renderUI();
+}
+
+function updAdmitField(k, val) {
+  const p = getPt(curBed);
+  p.admit[k] = val;
+  p.admit.done = false;
+  saveDB();
+}
+
+function setAdmitItem(key, locCode) {
+  const p = getPt(curBed);
+  if (!locCode) delete p.admit.items[key];
+  else p.admit.items[key] = locCode;
+  p.admit.done = false;
+  saveDB();
+  renderUI();
+}
+
+function delItem(sec, idx) {
+  if (!confirm(t('delConfirm'))) return;
+  const p = getPt(curBed);
+  if (Array.isArray(p[sec])) {
+    p[sec].splice(idx, 1);
+    saveDB();
+    renderUI();
+  }
+}
+
+function doneBtnHtml(bed, sec, idx, isDone) {
+  const bEsc = esc(bed);
+  const lbl = isDone ? esc(t('done')) : esc(t('markDone'));
+  const style = isDone
+    ? 'background:var(--green); color:#fff; border:1px solid var(--green); padding:3px 9px; border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer; flex-shrink:0;'
+    : 'background:transparent; color:var(--text-sub); border:1px solid var(--input-border); padding:3px 9px; border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer; flex-shrink:0;';
+  return `<button type="button" style="${style}" onclick="toggleSumDone('${bEsc}', '${sec}', ${idx})">${lbl}</button>`;
+}
+
+function sumRowWrap(leftHtml, bed, sec, idx, isDone) {
+  if (hideCompleted && isDone) return '';
+  const textStyle = isDone ? 'opacity:0.48; color:var(--text-sub); flex:1;' : 'flex:1;';
+  return `<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:4px 0; border-bottom:1px solid var(--border);">
+    <span style="${textStyle}">${leftHtml}</span>
+    ${doneBtnHtml(bed, sec, idx, isDone)}
+  </div>`;
+}
+
+function toggleSumDone(bed, sec, idx) {
+  const p = getPt(bed);
+  if (sec === 'skin') p.skinDone = !p.skinDone;
+  else if (sec === 'diet') p.diet.done = !p.diet.done;
+  else if (sec === 'turnPlan') p.turnPlanDone = !p.turnPlanDone;
+  else if (sec === 'admit') p.admit.done = !p.admit.done;
+  else if (Array.isArray(p[sec]) && p[sec][idx]) {
+    p[sec][idx].done = !p[sec][idx].done;
+  }
+  saveDB();
+  renderSummary();
+}
+
+function markBedDone(bed) {
+  const p = getPt(bed);
+  p.obs.forEach(x => x.done = true);
+  p.bm.forEach(x => x.done = true);
+  p.bp.forEach(x => x.done = true);
+  p.fluids.forEach(x => x.done = true);
+  p.bowel.forEach(x => x.done = true);
+  p.skinDone = true;
+  p.dressings.forEach(x => x.done = true);
+  p.diet.done = true;
+  p.turnPlanDone = true;
+  p.turns.forEach(x => x.done = true);
+  p.mh.forEach(x => x.done = true);
+  p.events.forEach(x => x.done = true);
+  p.reminders.forEach(x => x.done = true);
+  p.admit.done = true;
+  saveDB();
+  renderSummary();
+}
+
+function buildModuleSummaryForBed(b, modId) {
+  const p = getPt(b);
+  const acvpuList = getLangList('acvpu');
+  const phrases = getLangList('phrases');
+  const taskList = getLangList('tasks');
+  const admitList = getLangList('admits');
+  let rows = '';
+
+  if (modId === 'obs') {
+    p.obs.forEach((o, i) => {
+      const acvTxt = (typeof o.aIdx === 'number' && acvpuList[o.aIdx]) ? acvpuList[o.aIdx] : (o.a || '');
+      const txt = `<strong>${esc(o.t)}</strong> - RR <b>${esc(o.rr)}</b>, SpO2 <b>${esc(o.sp)}%</b> (${esc(o.o2)}), BP <b>${esc(o.bp)}</b>, HR <b>${esc(o.hr)}</b>, <b>${esc(acvTxt)}</b>, Temp <b>${esc(o.tm)}${esc(o.u || tempUnit)}</b>${o.pn ? `, ${esc(t('pain'))} <b>${esc(o.pn)}/10</b>` : ''}`;
+      rows += sumRowWrap(txt, b, 'obs', i, !!o.done);
+    });
+  }
+
+  else if (modId === 'bm') {
+    p.bm.forEach((x, i) => {
+      const txt = `<strong>${esc(x.t)}</strong> - <b>${esc(x.v)} ${esc(x.u || bmUnit)}</b> (${esc(trCode(x.c))})${(x.f && x.f.length) ? ' • ' + x.f.map(f => esc(trCode(f))).join(', ') : ''}`;
+      rows += sumRowWrap(txt, b, 'bm', i, !!x.done);
+    });
+  }
+
+  else if (modId === 'bp') {
+    p.bp.forEach((x, i) => {
+      const txt = `<strong>${esc(x.t)}</strong> - ${esc(t('lying'))}: <b>${esc(x.l)}</b> | ${esc(t('standing'))}: <b>${esc(x.s)}</b>${(x.sym && x.sym.length) ? ' (' + x.sym.map(s => esc(trCode(s))).join(', ') + ')' : ''}`;
+      rows += sumRowWrap(txt, b, 'bp', i, !!x.done);
+    });
+  }
+
+  else if (modId === 'fluid') {
+    let totI = 0, totO = 0;
+    p.fluids.forEach((f, i) => {
+      const fi = Number(f.i) || 0;
+      const fo = Number(f.o) || 0;
+      const fw = Number(f.wet) || 0;
+      totI += fi;
+      totO += fo;
+      if (fi > 0 || fo > 0 || fw > 0) {
+        const bal = fi - fo;
+        const txt = `${f.done ? esc(t('done')) + ': ' : ''}${esc(t('flIn'))} <b>${fi}ml</b> | ${esc(t('flOut'))} <b>${fo}ml</b>${f.src ? ' (' + esc(trCode(f.src)) + ')' : ''} | ${esc(t('flNet'))} <b>${bal}ml</b>${fw ? ` • ${esc(t('wetPad'))} x<b>${fw}</b>` : ''}`;
+        rows += sumRowWrap(txt, b, 'fluids', i, !!f.done);
+      }
+    });
+    if (rows) {
+      const net = totI - totO;
+      rows += `<div style="padding-top:6px; font-size:0.9rem;">${esc(t('flTotal'))}: ${esc(t('flIn'))} <b>${totI}ml</b> | ${esc(t('flOut'))} <b>${totO}ml</b> | ${esc(t('flNet'))} <b>${net}ml</b></div>`;
+    }
+  }
+
+  else if (modId === 'bowel') {
+    p.bowel.forEach((x, i) => {
+      const txt = x.a === 'bno'
+        ? `<strong>${esc(x.t)}</strong> - <b>${esc(t('bnoFull'))}</b>`
+        : `<strong>${esc(x.t)}</strong> - <b>${esc(trCode(x.a))}</b> — ${esc(trCode(x.ty))}${x.m ? ' • ' + esc(trCode(x.m)) : ''}`;
+      rows += sumRowWrap(txt, b, 'bowel', i, !!x.done);
+    });
+  }
+
+  else if (modId === 'amy') {
+    const skParts = [];
+    ['sacrum', 'groin', 'heels', 'elbows'].forEach(st => {
+      if (p.skin[st]) skParts.push(`${esc(t(st))}: <b>${esc(trCode(p.skin[st]))}</b>`);
+    });
+    p.skinCustom.forEach(c => {
+      skParts.push(`${esc(trCode(c.site))}${c.side ? ' (' + esc(trCode(c.side)) + ')' : ''}: <b>${esc(trCode(c.cond))}</b>`);
+    });
+    if (p.skinCare.length > 0) {
+      skParts.push(p.skinCare.map(ck => `<b>${esc(trCode(ck))}</b>`).join(', '));
+    }
+    if (skParts.length > 0) {
+      rows += sumRowWrap(skParts.join(', '), b, 'skin', 0, !!p.skinDone);
+    }
+    p.dressings.forEach((d, i) => {
+      const txt = `<strong>${esc(t('dressing'))}:</strong> <b>${esc(d.l)}</b>${d.st ? ' (' + esc(trCode(d.st)) + ')' : ''} — ${esc(t('due'))}: <b>${esc(calcDue(d.dt, d.f))}</b>`;
+      rows += sumRowWrap(txt, b, 'dressings', i, !!d.done);
+    });
+  }
+
+  else if (modId === 'food') {
+    const dParts = [];
+    if (p.diet.b) dParts.push(`${esc(t('b'))}: <b>${esc(trCode(p.diet.b))}</b>`);
+    if (p.diet.l) dParts.push(`${esc(t('l'))}: <b>${esc(trCode(p.diet.l))}</b>`);
+    if (p.diet.d) dParts.push(`${esc(t('d'))}: <b>${esc(trCode(p.diet.d))}</b>`);
+    if (p.diet.supp) dParts.push(`${esc(t('supp'))}: <b>${esc(p.diet.supp)}</b>`);
+    p.diet.supps.forEach(s => {
+      dParts.push(`${esc(s.t)} <b>${esc(trCode(s.v))}</b>`);
+    });
+    if (p.diet.flags.length > 0) {
+      dParts.push(p.diet.flags.map(fl => `<b>${esc(trCode(fl))}</b>`).join(', '));
+    }
+    if (dParts.length > 0) {
+      rows += sumRowWrap(dParts.join(' | '), b, 'diet', 0, !!p.diet.done);
+    }
+  }
+
+  else if (modId === 'turn') {
+    if (p.turnFreq) {
+      const planTxt = `${esc(t('turnFreqLbl'))}: <b>${esc(trCode(p.turnFreq))}</b>${p.turnChecks.length ? ' (' + p.turnChecks.map(ck => esc(trCode(ck))).join(', ') + ')' : ''}`;
+      rows += sumRowWrap(planTxt, b, 'turnPlan', 0, !!p.turnPlanDone);
+    }
+    p.turns.forEach((tr, i) => {
+      const txt = `<strong>${esc(tr.t)}</strong> - <b>${esc(trCode(tr.p))}</b>`;
+      rows += sumRowWrap(txt, b, 'turns', i, !!tr.done);
+    });
+  }
+
+  else if (modId === 'mh') {
+    p.mh.forEach((m, i) => {
+      const txt = `<strong>${esc(m.t)}</strong> (${esc(trCode(p.mhLevel))}) - <b>${esc(trCode(m.m))}</b> • ${esc(trCode(m.r))}${m.rat ? ' • ' + esc(trCode(m.rat)) : ''}${m.n ? ' (' + esc(m.n) + ')' : ''}`;
+      rows += sumRowWrap(txt, b, 'mh', i, !!m.done);
+    });
+  }
+
+  else if (modId === 'events') {
+    p.events.forEach((e, i) => {
+      const noteTxt = (typeof e.pIdx === 'number' && phrases[e.pIdx]) ? phrases[e.pIdx] : e.e;
+      const txt = `<strong>${esc(e.t)}</strong> - ${esc(noteTxt)}${e.o ? ' → <b>' + esc(e.o) + '</b>' : ''}`;
+      rows += sumRowWrap(txt, b, 'events', i, !!e.done);
+    });
+  }
+
+  else if (modId === 'reminders') {
+    p.reminders.forEach((r, i) => {
+      const tkTxt = (typeof r.tIdx === 'number' && taskList[r.tIdx]) ? taskList[r.tIdx] : r.txt;
+      const txt = `<strong>${esc(r.due || '--:--')}</strong> - <b>${esc(tkTxt)}</b>`;
+      rows += sumRowWrap(txt, b, 'reminders', i, !!r.done);
+    });
+  }
+
+  else if (modId === 'admit') {
+    const aParts = [];
+    if (p.admit.w) aParts.push(`${esc(t('weight'))}: <b>${esc(p.admit.w)}kg</b>`);
+    if (p.admit.h) aParts.push(`${esc(t('height'))}: <b>${esc(p.admit.h)}cm</b>`);
+    if (p.admit.wb) aParts.push(`<b>${esc(t('wristband'))}</b>`);
+    Object.entries(p.admit.items).forEach(([k, lc]) => {
+      const idx = parseInt(k.replace('std_', ''));
+      const lbl = !isNaN(idx) && admitList[idx] ? admitList[idx] : k;
+      aParts.push(`${esc(lbl)}: <b>${esc(trCode(lc))}</b>`);
+    });
+    if (aParts.length > 0) {
+      rows += sumRowWrap(aParts.join(' | '), b, 'admit', 0, !!p.admit.done);
+    }
+  }
+
+  return rows;
+}
+
+function renderSummary() {
+  const area = document.getElementById('contentArea');
+  const activeSecs = getActiveSections();
+
+  let html = `<div class="summary-toolbar">
+    <button type="button" class="tool-btn ${summaryGroup === 'bed' ? 'active' : ''}" onclick="setSumGroup('bed')">${esc(t('byBed'))}</button>
+    <button type="button" class="tool-btn ${summaryGroup === 'mod' ? 'active' : ''}" onclick="setSumGroup('mod')">${esc(t('byMod'))}</button>
+    <button type="button" class="tool-btn ${hideCompleted ? 'active' : ''}" onclick="toggleHideCompleted()">${esc(hideCompleted ? t('showAll') : t('pending'))}</button>
+    <button type="button" class="tool-btn ${wakeLockObj ? 'active' : ''}" onclick="toggleWakeLock()">💡 ${esc(t('keepOn'))}</button>
+  </div>`;
+
+  if (summaryGroup === 'bed') {
+    alloc.forEach(b => {
+      let bedContent = '';
+      activeSecs.forEach(s => {
+        const modRows = buildModuleSummaryForBed(b, s.id);
+        if (modRows) {
+          bedContent += `<div class="summary-sec">
+            <div style="font-weight:800; margin-bottom:2px;">${esc(t(s.id))}:</div>
+            ${modRows}
+          </div>`;
+        }
+      });
+      if (bedContent) {
+        html += `<div class="card">
+          <h3>
+            <span>${esc(b)}</span>
+            <button type="button" class="btn-subtle btn-sm" style="background:var(--header-bg); color:#fff; border:none;" onclick="markBedDone('${esc(b)}')">${esc(t('markBed'))}</button>
+          </h3>
+          ${bedContent}
+        </div>`;
+      }
+    });
+  } else {
+    activeSecs.forEach(s => {
+      let modContent = '';
+      alloc.forEach(b => {
+        const modRows = buildModuleSummaryForBed(b, s.id);
+        if (modRows) {
+          modContent += `<div class="summary-sec">
+            <div style="font-weight:800; color:var(--teal); margin-bottom:2px;">${esc(b)}:</div>
+            ${modRows}
+          </div>`;
+        }
+      });
+      if (modContent) {
+        html += `<div class="card">
+          <h3><span>${esc(t(s.id))}</span></h3>
+          ${modContent}
+        </div>`;
+      }
+    });
+  }
+
+  area.innerHTML = html;
+}
+
+function setSumGroup(g) {
+  summaryGroup = g;
+  renderSummary();
+}
+
+function toggleHideCompleted() {
+  hideCompleted = !hideCompleted;
+  renderSummary();
+}
+
+async function toggleWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    if (wakeLockObj) {
+      await wakeLockObj.release();
+      wakeLockObj = null;
+    } else {
+      wakeLockObj = await navigator.wakeLock.request('screen');
+      wakeLockObj.addEventListener('release', () => { wakeLockObj = null; if (showSummary) renderSummary(); });
+    }
+    renderSummary();
+  } catch (e) {}
+}
+
+function playAlarmBeep() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!alarmAudioCtx) alarmAudioCtx = new Ctx();
+    const osc = alarmAudioCtx.createOscillator();
+    const gain = alarmAudioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, alarmAudioCtx.currentTime);
+    gain.gain.setValueAtTime(0.15, alarmAudioCtx.currentTime);
+    osc.connect(gain);
+    gain.connect(alarmAudioCtx.destination);
+    osc.start();
+    osc.stop(alarmAudioCtx.currentTime + 0.25);
+  } catch (e) {}
+}
+
+function startAlertTimer() {
+  if (alertTimerId) clearInterval(alertTimerId);
+  alertTimerId = setInterval(() => {
+    if (!isPro) return;
+    const now = new Date();
+    const curMins = now.getHours() * 60 + now.getMinutes();
+    let triggered = false;
+    alloc.forEach(b => {
+      const p = getPt(b);
+      p.reminders.forEach(r => {
+        if (!r.done && !r.alerted && r.due) {
+          const [hh, mm] = r.due.split(':').map(Number);
+          if (!isNaN(hh) && !isNaN(mm) && curMins >= (hh * 60 + mm)) {
+            r.alerted = true;
+            triggered = true;
+          }
+        }
+      });
+    });
+    if (triggered) {
+      saveDB();
+      playAlarmBeep();
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      renderUI();
+    }
+  }, 20000);
+}
+
+window.addEventListener('DOMContentLoaded', initSetup);
+</script>
+</body>
+</html>
+
+function setBmUnit(u) {
+  bmUnit = u;
+  localStorage.setItem('cdu_bm_unit', u);
+  applyStaticTranslations();
+}
+
+function setTempUnit(u) {
+  tempUnit = u;
+  localStorage.setItem('cdu_temp_unit', u);
+  applyStaticTranslations();
+}
+
+function toggleSettingsPanel() {
+  settingsOpen = !settingsOpen;
+  document.getElementById('settingsBody').classList.toggle('hidden', !settingsOpen);
+}
