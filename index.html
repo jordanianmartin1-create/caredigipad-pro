@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>Care Digipad</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="day" data-color="teal">
+
+<div id="privacyScreen" class="hidden" onclick="togglePrivacy(false)">
+  <div style="font-size:2.5rem; margin-bottom:12px;">🔒</div>
+  <h2 id="privTitle" style="margin-bottom:6px;">Screen Hidden</h2>
+  <p id="privSub" style="color:#94a3b8; font-size:0.9rem;">Tap anywhere to return to shift notes</p>
+</div>
+
+<header>
+  <div class="hdr-left">
+    <span class="hdr-title" id="hdrTitle">Care Digipad</span>
+    <button type="button" class="hdr-btn hidden" id="editBtn" onclick="editBeds()">Edit</button>
+    <button type="button" class="hdr-btn" id="hideBtn" onclick="togglePrivacy(true)">Hide</button>
+  </div>
+  <div class="hdr-right">
+    <span id="darkLbl">Dark</span>
+    <label class="switch">
+      <input type="checkbox" id="darkToggle" onchange="toggleDark(this.checked)">
+      <span class="slider"></span>
+    </label>
+  </div>
+</header>
+
+<div id="setupView" class="container">
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px;">
+      <h2 id="lblSetup" style="font-size:1.2rem; margin:0;">Shift Setup</h2>
+      <select id="langSelect" style="width:auto; min-width:135px; padding:6px 26px 6px 10px; font-weight:700; font-size:0.84rem;" onchange="setLang(this.value)">
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="pt">Português</option>
+        <option value="it">Italiano</option>
+        <option value="nl">Nederlands</option>
+        <option value="sv">Svenska</option>
+        <option value="pl">Polski</option>
+        <option value="ro">Română</option>
+        <option value="uk">Українська</option>
+        <option value="ru">Русский</option>
+        <option value="el">Ελληνικά</option>
+        <option value="hi">हिन्दी</option>
+        <option value="bn">বাংলা</option>
+        <option value="pa">ਪੰਜਾਬੀ</option>
+        <option value="ur">اردو</option>
+        <option value="ta">தமிழ்</option>
+        <option value="ml">മലയാളം</option>
+        <option value="zh">中文 (简体)</option>
+        <option value="zh-tw">中文 (繁體)</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+        <option value="tl">Tagalog</option>
+        <option value="id">Indonesia</option>
+        <option value="vi">Tiếng Việt</option>
+        <option value="ar">العربية</option>
+        <option value="tr">Türkçe</option>
+        <option value="fa">فارسی</option>
+        <option value="sw">Kiswahili</option>
+      </select>
+    </div>
+    <p id="lblSub" style="font-size:0.84rem; color:var(--text-sub); margin:0 0 6px 0;">100% offline digital shift notepad. Data never leaves your device.</p>
+    <p id="lblDisclaimer" style="font-size:0.74rem; color:var(--text-sub); margin:0; opacity:0.85;">Personal shift scratchpad only. Does not provide clinical advice, diagnosis or decision support.</p>
+  </div>
+
+  <div id="proBanner" class="card pro-card">
+    <div style="font-weight:800; font-size:0.95rem; color:var(--teal); margin-bottom:4px;" id="lblProTitle">Unlock Care Digipad Pro (Lifetime)</div>
+    <p id="lblProSub" style="font-size:0.8rem; color:var(--text-sub); margin:0 0 10px 0;">Unlocks unlimited beds, saved ward layouts, themes, task alarms and all specialist modules.</p>
+    <div style="display:flex; gap:8px; margin-bottom:8px;">
+      <input type="text" id="proKeyInput" placeholder="Enter licence key" style="flex:1; text-transform:uppercase;">
+      <button type="button" id="btnUnlock" class="btn btn-primary btn-sm" onclick="unlockPro()">Unlock</button>
+    </div>
+    <a id="lnkGetPro" href="https://caredigipad.lemonsqueezy.com" target="_blank" rel="noopener" style="font-size:0.8rem; font-weight:700; color:var(--teal); text-decoration:none;">Get a Lifetime Licence Key →</a>
+  </div>
+
+  <div class="card">
+    <div id="savedLayoutRow" style="margin-bottom:12px;">
+      <label id="lblSavedLay">Saved Ward Layouts</label>
+      <div style="display:flex; gap:8px;">
+        <select id="layoutSelect" onchange="loadLayout(this.value)" style="flex:1;"></select>
+        <button type="button" id="delLayBtn" class="btn btn-danger btn-sm hidden" onclick="deleteLayout()">Del</button>
+      </div>
+    </div>
+
+    <label id="lblAddBed">Your Patient Beds (Max 4 chars)</label>
+    <div style="display:flex; gap:8px; margin-bottom:8px;">
+      <input type="text" id="newBedInput" maxlength="4" style="flex:1; text-transform:uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomBed();}">
+      <button type="button" id="btnAddBed" class="btn btn-primary btn-sm" onclick="addCustomBed()">+ Add</button>
+    </div>
+    <div id="lblBedHelper" style="font-size:0.78rem; color:var(--text-sub); margin-bottom:4px;">Tap a bed below to select (✓) or deselect it for today:</div>
+    <div id="setupBedGrid" class="bed-grid"></div>
+  </div>
+
+  <div class="card">
+    <button type="button" id="btnToggleSettings" class="settings-toggle-btn" onclick="toggleSettingsPanel()">⚙ Shift Hours, Units & Active Modules ▾</button>
+    <div id="settingsBody" class="hidden" style="margin-top:14px;">
+      <h3 id="lblPrefs" style="font-size:0.95rem; margin-bottom:10px;">Preferences & Units</h3>
+      <div class="row">
+        <div>
+          <label id="lblTheme">Theme</label>
+          <select id="themeSelect" onchange="setTheme(this.value)"></select>
+        </div>
+        <div>
+          <label id="lblShiftHrs">Shift Hours</label>
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="btnDayShift" class="mini-btn" onclick="setShift('day')">Day (07:00)</button>
+            <button type="button" id="btnNightShift" class="mini-btn" onclick="setShift('night')">Night (19:00)</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label id="lblBmUnit">Glucose Unit</label>
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="btnBmMmol" class="mini-btn" onclick="setBmUnit('mmol/L')">mmol/L</button>
+            <button type="button" id="btnBmMg" class="mini-btn" onclick="setBmUnit('mg/dL')">mg/dL</button>
+          </div>
+        </div>
+        <div>
+          <label id="lblTempUnit">Temp Unit</label>
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="btnTempC" class="mini-btn" onclick="setTempUnit('°C')">°C</button>
+            <button type="button" id="btnTempF" class="mini-btn" onclick="setTempUnit('°F')">°F</button>
+          </div>
+        </div>
+      </div>
+
+      <label id="lblActiveMods" style="margin-top:12px; margin-bottom:8px;">Active Modules (Tick to show • Tap ▲ ▼ to reorder)</label>
+      <div id="modList"></div>
+
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <input type="text" id="newLayoutName" placeholder="Or save as new layout (e.g. Night)" style="flex:1;">
+        <button type="button" id="btnSaveLay" class="btn btn-primary btn-sm" onclick="saveLayout()">+ Save New</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" id="startBtn" class="btn btn-primary" style="padding:14px; font-size:1.05rem; margin-bottom:10px;" onclick="startShift()">Start Shift</button>
+  <button type="button" id="btnShareSetup" class="btn btn-subtle" onclick="shareApp()">Share Care Digipad with a Colleague</button>
+</div>
+
+<div id="mainView" class="hidden">
+  <div id="stickyNav" class="sticky-nav">
+    <div id="bedTabs" class="tab-strip"></div>
+    <div id="subNav" class="tab-strip" style="padding-top:0;"></div>
+  </div>
+  <div id="contentArea" class="container"></div>
+  <div class="container" style="padding-top:0;">
+    <button type="button" id="btnShareMain" class="btn btn-subtle" style="margin-bottom:10px;" onclick="shareApp()">Share Care Digipad with a Colleague</button>
+    <button type="button" id="btnEndShift" class="btn btn-danger" onclick="clearShift()">End Shift / Clear Data</button>
+  </div>
+</div>
+
+<script src="lang.js" onerror="window.CDU_LANGS = null"></script>
+<script src="core.js"></script>
+<script src="modules.js"></script>
+</body>
+</html>
