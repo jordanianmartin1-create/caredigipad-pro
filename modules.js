@@ -4,13 +4,14 @@ function computeTaskDueTs(dueStr, refMs) {
   if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return null;
   const base = refMs ? new Date(refMs) : new Date();
   const dt = new Date(base.getFullYear(), base.getMonth(), base.getDate(), parts[0], parts[1], 0, 0);
-  if (dt.getTime() < base.getTime() - 60 * 60 * 1000) dt.setDate(dt.getDate() + 1);
+  if (dt.getTime() < base.getTime() - 2 * 60 * 1000) dt.setDate(dt.getDate() + 1);
   return dt.getTime();
 }
 
 function isTaskOverdue(r) {
   if (!r || r.done || !r.due) return false;
-  if (!r.dueTs) r.dueTs = computeTaskDueTs(r.due, r.createdTs || Date.now());
+  if (!r.createdTs) r.createdTs = Date.now();
+  if (!r.dueTs) r.dueTs = computeTaskDueTs(r.due, r.createdTs);
   return r.dueTs ? Date.now() >= r.dueTs : false;
 }
 
@@ -135,6 +136,7 @@ function modEntryCount(b, modId) {
 
 function renderUI() {
   if (checkShiftExpiry()) return;
+  if (typeof sortBedArray === 'function') alloc = sortBedArray(alloc);
   const bedTabs = document.getElementById('bedTabs');
   const subNav = document.getElementById('subNav');
   const activeSecs = getActiveSections();
@@ -295,7 +297,7 @@ function removeCurrentBedFromShift() {
 
 function updateActiveLayoutFromShift() {
   if (!activeLayoutName) return;
-  layouts[activeLayoutName] = [...alloc];
+  layouts[activeLayoutName] = sortBedArray(alloc);
   localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
   alert(`${t('layoutSaved')}: ${activeLayoutName}`);
 }
@@ -887,7 +889,7 @@ function renderSection() {
       </div>
       <div style="margin-bottom:12px;">
         <label>${esc(t('locNotes'))}</label>
-        <input type="text" value="${esc(p.admit.other || '')}" oninput="updAdmitField('other', this.value)">
+        <input type="text" placeholder="Other belongings / notes..." value="${esc(p.admit.other || '')}" oninput="updAdmitField('other', this.value)">
       </div>
       <div class="chip-row" style="margin-bottom:0;">
         ${locs.map(lc => `<span class="chip ${p.admit.loc === lc ? 'active' : ''}" onclick="toggleAdmitLoc('${lc}')">${esc(t(lc))}</span>`).join('')}
@@ -1213,6 +1215,7 @@ function buildModuleSummaryForBed(b, modId) {
 }
 
 function renderSummary() {
+  if (typeof sortBedArray === 'function') alloc = sortBedArray(alloc);
   const area = document.getElementById('contentArea');
   const activeSecs = getActiveSections();
   let html = `<div class="summary-toolbar">
@@ -1248,3 +1251,11 @@ function renderSummary() {
 
 function setSumGroup(g) { summaryGroup = g; renderSummary(); }
 function toggleHideCompleted() { hideCompleted = !hideCompleted; renderSummary(); }
+
+window.CDP_MOD_VER = 5;
+function applyModVerBadge() {
+  const h = document.getElementById('hdrTitle');
+  if (h) h.innerHTML = 'Care Digipad <small style="font-size:0.68rem; opacity:0.9; font-weight:700; color:#5eead4;">v5 ✓</small>';
+}
+applyModVerBadge();
+window.addEventListener('DOMContentLoaded', applyModVerBadge);
