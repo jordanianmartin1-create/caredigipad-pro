@@ -1,6 +1,6 @@
 const EN_DICT = {
   setup: "Shift Setup",
-  sub: "100% offline digital shift notepad. Data never leaves your device and automatically wipes after 14 hours.",
+  sub: "100% offline digital shift notepad. Data never leaves your device.",
   disclaimer: "Personal shift scratchpad only. Does not provide clinical advice, diagnosis or decision support.",
   proTitle: "Unlock Care Digipad Pro (Lifetime)",
   proSub: "Unlocks unlimited beds, saved ward layouts, themes, task alarms and all specialist modules.",
@@ -23,15 +23,15 @@ const EN_DICT = {
   savedLay: "Saved Ward Layouts",
   noLay: "Select a saved layout...",
   addBed: "Your Patient Beds (Max 4 chars)",
-  bedHelper: "Tap a bed below to select (✓) or deselect it for today:",
+  bedHelper: "Tap a bed below to select or deselect it for today:",
   noBedsYet: "No beds added yet. Type a bed number or initials above and tap + Add.",
-  selectAtLeastOne: "Please tap at least one bed to select (✓) it for today's shift.",
+  selectAtLeastOne: "Please tap at least one bed to select it for today's shift.",
   add: "+ Add",
   del: "Del",
   save: "+ Save New",
   activeMods: "Active Modules (Tick to show • Tap ▲ ▼ to reorder)",
   saveLay: "Or save as new layout (e.g. Night)",
-  toggleSettings: "⚙ Shift Hours, Units & Active Modules ▾",
+  toggleSettings: "Shift Hours, Units & Active Modules ▾",
   start: "Start Shift",
   startEmpty: "Select Beds to Start",
   returnShift: "Save & Return to Shift",
@@ -74,11 +74,14 @@ const EN_DICT = {
   done: "Done",
   markDone: "Mark Done",
   markBed: "Mark Bed Done",
+  undoBed: "Undo Bed",
   pending: "Pending Only",
   showAll: "Show All",
   keepOn: "Keep Screen On",
   byBed: "By Bed",
   byMod: "By Module",
+  allDoneMsg: "All logged entries are marked as done.",
+  nothingLoggedMsg: "No entries logged for this shift yet.",
   time: "Time",
   dueTime: "Due Time",
   air: "Air",
@@ -160,6 +163,8 @@ const EN_DICT = {
   drySkin: "Dry / Fragile",
   markIntact: "Mark All Intact",
   addSite: "+ Add Body Site",
+  sideLbl: "Side",
+  statusLbl: "Status",
   siteHip: "Hip",
   siteAnkle: "Ankle",
   siteShin: "Shin / Leg",
@@ -177,6 +182,7 @@ const EN_DICT = {
   cBoots: "Heel Boots / Pillows",
   dressing: "Dressing",
   locNotes: "Location / Notes",
+  otherItemPh: "Other item (e.g. Watch, Bag)...",
   dueIn: "Next Due In",
   date: "Date Applied / Checked",
   today: "Today",
@@ -281,7 +287,7 @@ function sortBedArray(arr) {
 
 let isPro = localStorage.getItem('cdu_pro') === '1';
 let curLang = localStorage.getItem('cdu_lang') || 'en';
-let curTheme = localStorage.getItem('cdu_color') || 'teal';
+let curTheme = localStorage.getItem('cdu_theme_color') || 'teal';
 let isDark = localStorage.getItem('cdu_dark') === '1';
 let curShift = localStorage.getItem('cdu_shift') || 'day';
 let bmUnit = localStorage.getItem('cdu_bm_unit') || 'mmol/L';
@@ -303,6 +309,7 @@ let showManageBed = false;
 let showQuickAddBed = false;
 let settingsOpen = false;
 let openForms = {};
+let expandedCards = {};
 let activeFluidIdx = 0;
 let activeFluidType = 'i';
 let wakeLockObj = null;
@@ -320,6 +327,7 @@ function checkShiftExpiry() {
   if (Date.now() - ts >= SHIFT_MAX_MS) {
     db = {};
     openForms = {};
+    expandedCards = {};
     localStorage.removeItem('cdu_db');
     localStorage.removeItem('cdu_start');
     showSummary = false;
@@ -357,6 +365,13 @@ function getShiftHours() {
   return hrs;
 }
 
+function getCurrentShiftHourIdx() {
+  const curHrStr = String(new Date().getHours()).padStart(2, '0') + ':00';
+  const hrs = getShiftHours();
+  const idx = hrs.indexOf(curHrStr);
+  return idx > -1 ? idx : 0;
+}
+
 function getDict() {
   if (curLang !== 'en' && window.CDU_LANGS && window.CDU_LANGS[curLang]) return window.CDU_LANGS[curLang];
   return EN_DICT;
@@ -366,6 +381,7 @@ function t(k) {
   const dict = getDict();
   let val = (dict && dict[k] !== undefined) ? dict[k] : (EN_DICT[k] || k);
   if (k === 'proTitle' && typeof val === 'string') val = val.replace(/£9\.99\s*|9,99\s*£\s*/g, '');
+  if (k === 'bedHelper' && typeof val === 'string') val = val.replace(/\s*\(✓\)/g, '');
   return val;
 }
 
@@ -498,6 +514,8 @@ function initSetup() {
   document.documentElement.dir = RTL_LANGS.includes(curLang) ? 'rtl' : 'ltr';
   document.body.setAttribute('data-theme', isDark ? 'night' : 'day');
   document.body.setAttribute('data-color', isPro ? curTheme : 'teal');
+  const hdr = document.getElementById('hdrTitle');
+  if (hdr) hdr.textContent = 'Care Digipad';
   document.getElementById('darkToggle').checked = isDark;
   document.getElementById('langSelect').value = curLang;
 
@@ -516,6 +534,7 @@ function initSetup() {
     document.getElementById('mainView').classList.remove('hidden');
     document.getElementById('editBtn').classList.remove('hidden');
     if (!curBed || !alloc.includes(curBed)) curBed = alloc[0];
+    activeFluidIdx = getCurrentShiftHourIdx();
     const activeSecs = getActiveSections();
     if (activeSecs.length > 0 && !activeSecs.some(s => s.id === curSec)) curSec = activeSecs[0].id;
     if (typeof renderUI === 'function') renderUI();
@@ -563,7 +582,7 @@ function renderThemeOptions() {
 function setTheme(th) {
   if (!isPro) return;
   curTheme = th;
-  localStorage.setItem('cdu_color', th);
+  localStorage.setItem('cdu_theme_color', th);
   document.body.setAttribute('data-color', th);
 }
 
@@ -645,7 +664,7 @@ function renderSetupBeds() {
   } else {
     grid.innerHTML = wardBeds.map((b, idx) => {
       const sel = alloc.includes(b);
-      return `<div class="bed-item ${sel ? 'selected' : ''}" onclick="toggleBedAlloc(${idx})">${sel ? '✓ ' : ''}${esc(b)}<button type="button" class="bed-del" onclick="event.stopPropagation(); deleteWardBed(${idx})">✕</button></div>`;
+      return `<div class="bed-item ${sel ? 'selected' : ''}" onclick="toggleBedAlloc(${idx})">${esc(b)}<button type="button" class="bed-del" onclick="event.stopPropagation(); deleteWardBed(${idx})">✕</button></div>`;
     }).join('');
   }
   updateStartBtn();
@@ -739,6 +758,7 @@ function startShift() {
   const curSt = Number(localStorage.getItem('cdu_start'));
   if (!curSt || curSt < 1000000000000) localStorage.setItem('cdu_start', String(Date.now()));
   if (!curBed || !alloc.includes(curBed)) curBed = alloc[0];
+  activeFluidIdx = getCurrentShiftHourIdx();
   const activeSecs = getActiveSections();
   if (activeSecs.length > 0 && !activeSecs.some(s => s.id === curSec)) curSec = activeSecs[0].id;
   saveDB();
@@ -761,6 +781,7 @@ function clearShift() {
   if (!confirm(t('endShift') + '?')) return;
   db = {};
   openForms = {};
+  expandedCards = {};
   localStorage.removeItem('cdu_db');
   localStorage.removeItem('cdu_start');
   showSummary = false;
