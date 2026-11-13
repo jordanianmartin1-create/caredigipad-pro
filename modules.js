@@ -1,55 +1,49 @@
-(function injectEnhancementStyles() {
-  const st = document.createElement('style');
-  st.textContent = `
-    .entry-card { border-left: 3.5px solid var(--teal); position: relative; }
-    .entry-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-    .entry-num { font-size: 0.78rem; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: 0.3px; }
-    .sum-mod-hdr { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--teal); background: var(--teal-light); padding: 3px 8px; border-radius: 6px; margin-bottom: 4px; cursor: pointer; }
-    .task-badge { font-size: 0.72rem; font-weight: 800; padding: 2px 7px; border-radius: 10px; background: var(--bg); color: var(--text-sub); border: 1px solid var(--border); }
-    .task-badge.overdue { background: var(--red); color: #fff; border-color: var(--red); }
-  `;
-  document.head.appendChild(st);
-})();
-
-function getLocaleCode() {
-  if (curLang === 'en') return 'en-GB';
-  return curLang;
-}
-
 function computeTaskDueTs(dueStr, refMs) {
   if (!dueStr) return null;
   const parts = dueStr.split(':').map(Number);
   if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return null;
   const base = refMs ? new Date(refMs) : new Date();
   const dt = new Date(base.getFullYear(), base.getMonth(), base.getDate(), parts[0], parts[1], 0, 0);
-  if (dt.getTime() < base.getTime() - 60 * 60 * 1000) {
-    dt.setDate(dt.getDate() + 1);
-  }
+  if (dt.getTime() < base.getTime() - 60 * 60 * 1000) dt.setDate(dt.getDate() + 1);
   return dt.getTime();
 }
 
 function isTaskOverdue(r) {
   if (!r || r.done || !r.due) return false;
-  if (!r.dueTs) {
-    r.dueTs = computeTaskDueTs(r.due, r.createdTs || Date.now());
-  }
+  if (!r.dueTs) r.dueTs = computeTaskDueTs(r.due, r.createdTs || Date.now());
   return r.dueTs ? Date.now() >= r.dueTs : false;
 }
 
 function hasOverdueTask(b) {
   if (!isPro) return false;
-  const p = getPt(b);
-  return p.reminders.some(r => isTaskOverdue(r));
+  return getPt(b).reminders.some(r => isTaskOverdue(r));
+}
+
+function playAlarmBeep() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!alarmAudioCtx) alarmAudioCtx = new Ctx();
+    const osc = alarmAudioCtx.createOscillator();
+    const gain = alarmAudioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, alarmAudioCtx.currentTime);
+    gain.gain.setValueAtTime(0.15, alarmAudioCtx.currentTime);
+    osc.connect(gain);
+    gain.connect(alarmAudioCtx.destination);
+    osc.start();
+    osc.stop(alarmAudioCtx.currentTime + 0.25);
+  } catch (e) {}
 }
 
 function startAlertTimer() {
   if (alertTimerId) clearInterval(alertTimerId);
   alertTimerId = setInterval(() => {
+    if (checkShiftExpiry()) return;
     if (!isPro) return;
     let triggered = false;
     alloc.forEach(b => {
-      const p = getPt(b);
-      p.reminders.forEach(r => {
+      getPt(b).reminders.forEach(r => {
         if (!r.done && !r.alerted && isTaskOverdue(r)) {
           r.alerted = true;
           triggered = true;
@@ -76,14 +70,7 @@ function getPt(b) {
     const old = Array.isArray(p.fluids) ? p.fluids : [];
     p.fluids = hrs.map((h, idx) => {
       const ex = old[idx] || {};
-      return {
-        t: h,
-        i: Number(ex.i) || 0,
-        o: Number(ex.o) || 0,
-        src: ex.src || '',
-        wet: Number(ex.wet) || 0,
-        done: !!ex.done
-      };
+      return { t: h, i: Number(ex.i) || 0, o: Number(ex.o) || 0, src: ex.src || '', wet: Number(ex.wet) || 0, done: !!ex.done };
     });
   } else {
     p.fluids.forEach((f, idx) => { f.t = hrs[idx]; });
@@ -146,8 +133,38 @@ function modEntryCount(b, modId) {
   }
 }
 
-function commitPendingForm() {
-  saveDB();
+function renderUI() {
+  if (checkShiftExpiry()) return;
+  const bedTabs = document.getElementById('bedTabs');
+  const subNav = document.getElementById('subNav');
+  const activeSecs = getActiveSections();
+
+  let bedHtml = `<button type="button" class="tab-btn ${showSummary ? 'active-summary' : ''}" onclick="toggleSummary(true)">${esc(t('summary'))}</button>`;
+  alloc.forEach((b, bIdx) => {
+    const isAct = !showSummary && curBed === b;
+    const alertDot = hasOverdueTask(b) ? `<span class="alert-dot"></span>` : '';
+    bedHtml += `<button type="button" class="tab-btn ${isAct ? 'active-bed' : ''}" onclick="selectBedIdx(${bIdx})">${esc(b)}${alertDot}</button>`;
+  });
+  bedHtml += `<button type="button" class="tab-btn-add" onclick="toggleQuickAddBed()">+</button>`;
+  bedTabs.innerHTML = bedHtml;
+
+  if (showSummary) {
+    subNav.classList.add('hidden');
+    renderSummary();
+    return;
+  }
+
+  subNav.classList.remove('hidden');
+  if (activeSecs.length > 0 && !activeSecs.some(s => s.id === curSec)) curSec = activeSecs[0].id;
+
+  subNav.innerHTML = activeSecs.map(s => {
+    const cnt = modEntryCount(curBed, s.id);
+    const badge = cnt > 0 ? `<span class="mod-count">${cnt}</span>` : '';
+    const alertDot = (s.id === 'reminders' && hasOverdueTask(curBed)) ? `<span class="alert-dot"></span>` : '';
+    return `<button type="button" class="tab-btn ${curSec === s.id ? 'active-sec' : ''}" onclick="selectSec('${s.id}')">${esc(t(s.id))}${badge}${alertDot}</button>`;
+  }).join('');
+
+  renderSection();
 }
 
 function refreshSubNavCounts() {
@@ -173,15 +190,134 @@ function refreshSubNavCounts() {
   }
 }
 
+function selectBedIdx(bIdx) {
+  if (!alloc[bIdx]) return;
+  saveDB();
+  showSummary = false;
+  showManageBed = false;
+  showQuickAddBed = false;
+  curBed = alloc[bIdx];
+  activeFluidIdx = 0;
+  renderUI();
+}
+
+function selectSec(s) {
+  saveDB();
+  showSummary = false;
+  curSec = s;
+  renderUI();
+}
+
+function toggleSummary(val) {
+  saveDB();
+  showSummary = val;
+  showManageBed = false;
+  showQuickAddBed = false;
+  renderUI();
+}
+
+function toggleManageBed() { showManageBed = !showManageBed; showQuickAddBed = false; renderSection(); }
+function toggleQuickAddBed() { showQuickAddBed = !showQuickAddBed; showManageBed = false; if (showSummary) showSummary = false; renderUI(); }
+function quickAddBedByIdx(wIdx) { if (wardBeds[wIdx]) quickAddBedToShift(wardBeds[wIdx]); }
+
+function quickAddBedToShift(bedName) {
+  const inp = document.getElementById('quickBedInput');
+  const val = (bedName || (inp ? inp.value : '')).trim().toUpperCase().slice(0, 4);
+  if (!val) return;
+  if (!isPro && alloc.length >= 4 && !alloc.includes(val)) { alert(t('proSub')); return; }
+  if (!wardBeds.includes(val)) wardBeds.push(val);
+  if (!alloc.includes(val)) alloc.push(val);
+  curBed = val;
+  showQuickAddBed = false;
+  saveDB();
+  renderUI();
+}
+
+function renameCurrentBed() {
+  const inp = document.getElementById('renameBedInput');
+  const newName = (inp ? inp.value : '').trim().toUpperCase().slice(0, 4);
+  if (!newName || newName === curBed) return;
+  if (alloc.includes(newName)) { alert(newName + ' ' + t('swapConfirm')); return; }
+  db[newName] = db[curBed];
+  delete db[curBed];
+  const idx = alloc.indexOf(curBed);
+  if (idx > -1) alloc[idx] = newName;
+  const wIdx = wardBeds.indexOf(curBed);
+  if (wIdx > -1) wardBeds[wIdx] = newName;
+  else wardBeds.push(newName);
+  curBed = newName;
+  showManageBed = false;
+  saveDB();
+  renderUI();
+}
+
+function transferCurrentBed() {
+  const dest = (prompt(t('transferPrompt')) || '').trim().toUpperCase().slice(0, 4);
+  if (!dest || dest === curBed) return;
+  if (db[dest] && Object.keys(db[dest]).length > 0) {
+    if (confirm(`${dest} ${t('swapConfirm')}`)) {
+      const temp = db[dest]; db[dest] = db[curBed]; db[curBed] = temp;
+    } else {
+      db[dest] = db[curBed]; delete db[curBed];
+    }
+  } else {
+    db[dest] = db[curBed]; delete db[curBed];
+  }
+  if (!wardBeds.includes(dest)) wardBeds.push(dest);
+  if (!alloc.includes(dest)) {
+    const idx = alloc.indexOf(curBed);
+    if (idx > -1) alloc[idx] = dest;
+    else alloc.push(dest);
+  }
+  curBed = dest;
+  showManageBed = false;
+  saveDB();
+  renderUI();
+}
+
+function clearCurrentBed() {
+  if (!confirm(t('clearBedConfirm'))) return;
+  delete db[curBed];
+  showManageBed = false;
+  saveDB();
+  renderUI();
+}
+
+function removeCurrentBedFromShift() {
+  if (!confirm(t('removeBedConfirm'))) return;
+  delete db[curBed];
+  alloc = alloc.filter(b => b !== curBed);
+  showManageBed = false;
+  saveDB();
+  if (alloc.length === 0) { localStorage.removeItem('cdu_start'); initSetup(); }
+  else { curBed = alloc[0]; renderUI(); }
+}
+
+function updateActiveLayoutFromShift() {
+  if (!activeLayoutName) return;
+  layouts[activeLayoutName] = [...alloc];
+  localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
+  alert(`${t('layoutSaved')}: ${activeLayoutName}`);
+}
+
+async function toggleWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    if (wakeLockObj) { await wakeLockObj.release(); wakeLockObj = null; }
+    else {
+      wakeLockObj = await navigator.wakeLock.request('screen');
+      wakeLockObj.addEventListener('release', () => { wakeLockObj = null; if (showSummary) renderSummary(); });
+    }
+    renderSummary();
+  } catch (e) {}
+}
+
 function autoJumpBp(val, nextId) {
   const s = String(val || '').trim();
   const n = Number(s);
   if (s.length >= 3 || (s.length === 2 && n >= 60 && n <= 99)) {
     const nextEl = document.getElementById(nextId);
-    if (nextEl) {
-      nextEl.focus();
-      if (nextEl.select) nextEl.select();
-    }
+    if (nextEl) { nextEl.focus(); if (nextEl.select) nextEl.select(); }
   }
 }
 
@@ -228,9 +364,9 @@ function renderSection() {
       </div>
       <div class="manage-grid">
         <button type="button" class="btn btn-subtle btn-sm" onclick="transferCurrentBed()">⇄ ${esc(t('transferBed'))}</button>
-        <button type="button" class="btn btn-subtle btn-sm" onclick="clearCurrentBed()">🧹 ${esc(t('clearBed'))}</button>
+        <button type="button" class="btn btn-subtle btn-sm" onclick="clearCurrentBed()">${esc(t('clearBed'))}</button>
         <button type="button" class="btn btn-danger btn-sm" style="grid-column:1/-1;" onclick="removeCurrentBedFromShift()">✕ ${esc(t('removeBed'))}</button>
-        ${isPro && activeLayoutName ? `<button type="button" class="btn btn-primary btn-sm" style="grid-column:1/-1;" onclick="updateActiveLayoutFromShift()">💾 ${esc(t('updLayout'))} "${esc(activeLayoutName)}"</button>` : ''}
+        ${isPro && activeLayoutName ? `<button type="button" class="btn btn-primary btn-sm" style="grid-column:1/-1;" onclick="updateActiveLayoutFromShift()">${esc(t('updLayout'))} "${esc(activeLayoutName)}"</button>` : ''}
       </div>
     </div>`;
   }
@@ -762,123 +898,49 @@ function renderSection() {
   area.innerHTML = topHtml + bodyHtml;
 }
 
-function createObsEntry() {
-  const p = getPt(curBed);
-  p.obs.push({ t: nowTimeStr(), rr: '', sp: '', o2: '', sys: '', dia: '', bp: '-', hr: '', tm: '', u: tempUnit, aIdx: null, pn: '', done: false });
-  saveDB();
-  renderUI();
-}
-
-function updObsField(idx, k, val) {
-  const p = getPt(curBed);
-  if (!p.obs[idx]) return;
-  p.obs[idx][k] = val;
-  p.obs[idx].done = false;
-  saveDB();
-  refreshSubNavCounts();
-}
-
+function createObsEntry() { getPt(curBed).obs.push({ t: nowTimeStr(), rr: '', sp: '', o2: '', sys: '', dia: '', bp: '-', hr: '', tm: '', u: tempUnit, aIdx: null, pn: '', done: false }); saveDB(); renderUI(); }
+function updObsField(idx, k, val) { const p = getPt(curBed); if (!p.obs[idx]) return; p.obs[idx][k] = val; p.obs[idx].done = false; saveDB(); refreshSubNavCounts(); }
 function updObsBp(idx, part, val) {
-  const p = getPt(curBed);
-  if (!p.obs[idx]) return;
-  const o = p.obs[idx];
-  const [curSys, curDia] = splitBpParts(o, 'sys', 'dia', 'bp');
-  o.sys = part === 'sys' ? val.trim() : curSys;
-  o.dia = part === 'dia' ? val.trim() : curDia;
-  o.bp = (o.sys || o.dia) ? `${o.sys || '-'}/${o.dia || '-'}` : '-';
-  o.done = false;
-  saveDB();
-  refreshSubNavCounts();
+  const p = getPt(curBed); if (!p.obs[idx]) return;
+  const o = p.obs[idx]; const [curSys, curDia] = splitBpParts(o, 'sys', 'dia', 'bp');
+  o.sys = part === 'sys' ? val.trim() : curSys; o.dia = part === 'dia' ? val.trim() : curDia;
+  o.bp = (o.sys || o.dia) ? `${o.sys || '-'}/${o.dia || '-'}` : '-'; o.done = false; saveDB(); refreshSubNavCounts();
 }
 
-function createBmEntry() {
-  const p = getPt(curBed);
-  p.bm.push({ t: nowTimeStr(), v: '', u: bmUnit, c: '', f: [], done: false });
-  saveDB();
-  renderUI();
-}
-
-function updBmField(idx, k, val) {
-  const p = getPt(curBed);
-  if (!p.bm[idx]) return;
-  p.bm[idx][k] = val;
-  p.bm[idx].done = false;
-  saveDB();
-  refreshSubNavCounts();
-}
-
+function createBmEntry() { getPt(curBed).bm.push({ t: nowTimeStr(), v: '', u: bmUnit, c: '', f: [], done: false }); saveDB(); renderUI(); }
+function updBmField(idx, k, val) { const p = getPt(curBed); if (!p.bm[idx]) return; p.bm[idx][k] = val; p.bm[idx].done = false; saveDB(); refreshSubNavCounts(); }
 function toggleBmFlag(idx, code) {
-  const p = getPt(curBed);
-  if (!p.bm[idx]) return;
+  const p = getPt(curBed); if (!p.bm[idx]) return;
   if (!Array.isArray(p.bm[idx].f)) p.bm[idx].f = [];
   const pos = p.bm[idx].f.indexOf(code);
-  if (pos > -1) p.bm[idx].f.splice(pos, 1);
-  else p.bm[idx].f.push(code);
-  p.bm[idx].done = false;
-  saveDB();
-  renderSection();
+  if (pos > -1) p.bm[idx].f.splice(pos, 1); else p.bm[idx].f.push(code);
+  p.bm[idx].done = false; saveDB(); renderSection();
 }
 
-function createBpEntry() {
-  const p = getPt(curBed);
-  p.bp.push({ t: nowTimeStr(), lSys: '', lDia: '', sSys: '', sDia: '', l: '-', s: '-', sym: [], done: false });
-  saveDB();
-  renderUI();
-}
-
-function updBpField(idx, k, val) {
-  const p = getPt(curBed);
-  if (!p.bp[idx]) return;
-  p.bp[idx][k] = val;
-  p.bp[idx].done = false;
-  saveDB();
-}
-
+function createBpEntry() { getPt(curBed).bp.push({ t: nowTimeStr(), lSys: '', lDia: '', sSys: '', sDia: '', l: '-', s: '-', sym: [], done: false }); saveDB(); renderUI(); }
+function updBpField(idx, k, val) { const p = getPt(curBed); if (!p.bp[idx]) return; p.bp[idx][k] = val; p.bp[idx].done = false; saveDB(); }
 function updBpPair(idx, posKey, part, val) {
-  const p = getPt(curBed);
-  if (!p.bp[idx]) return;
-  const x = p.bp[idx];
-  const [curSys, curDia] = splitBpParts(x, posKey + 'Sys', posKey + 'Dia', posKey);
-  x[posKey + 'Sys'] = part === 'Sys' ? val.trim() : curSys;
-  x[posKey + 'Dia'] = part === 'Dia' ? val.trim() : curDia;
-  const s = x[posKey + 'Sys'];
-  const d = x[posKey + 'Dia'];
-  x[posKey] = (s || d) ? `${s || '-'}/${d || '-'}` : '-';
-  x.done = false;
-  saveDB();
-  refreshSubNavCounts();
+  const p = getPt(curBed); if (!p.bp[idx]) return;
+  const x = p.bp[idx]; const [curSys, curDia] = splitBpParts(x, posKey + 'Sys', posKey + 'Dia', posKey);
+  x[posKey + 'Sys'] = part === 'Sys' ? val.trim() : curSys; x[posKey + 'Dia'] = part === 'Dia' ? val.trim() : curDia;
+  const s = x[posKey + 'Sys'], d = x[posKey + 'Dia'];
+  x[posKey] = (s || d) ? `${s || '-'}/${d || '-'}` : '-'; x.done = false; saveDB(); refreshSubNavCounts();
 }
-
 function toggleBpSym(idx, code) {
-  const p = getPt(curBed);
-  if (!p.bp[idx]) return;
+  const p = getPt(curBed); if (!p.bp[idx]) return;
   if (!Array.isArray(p.bp[idx].sym)) p.bp[idx].sym = [];
-  const arr = p.bp[idx].sym;
-  const pos = arr.indexOf(code);
-  if (pos > -1) {
-    arr.splice(pos, 1);
-  } else {
-    if (code === 'noSym') {
-      p.bp[idx].sym = ['noSym'];
-    } else {
-      const noPos = arr.indexOf('noSym');
-      if (noPos > -1) arr.splice(noPos, 1);
-      arr.push(code);
-    }
-  }
-  p.bp[idx].done = false;
-  saveDB();
-  renderSection();
+  const arr = p.bp[idx].sym, pos = arr.indexOf(code);
+  if (pos > -1) arr.splice(pos, 1);
+  else if (code === 'noSym') p.bp[idx].sym = ['noSym'];
+  else { const noPos = arr.indexOf('noSym'); if (noPos > -1) arr.splice(noPos, 1); arr.push(code); }
+  p.bp[idx].done = false; saveDB(); renderSection();
 }
 
 function setFluidTarget(idx, type) {
-  activeFluidIdx = idx;
-  activeFluidType = type;
+  activeFluidIdx = idx; activeFluidType = type;
   const p = getPt(curBed);
   for (let i = 0; i < 12; i++) {
-    const inEl = document.getElementById('flIn_' + i);
-    const outEl = document.getElementById('flOut_' + i);
-    const hrEl = document.getElementById('flHr_' + i);
+    const inEl = document.getElementById('flIn_' + i), outEl = document.getElementById('flOut_' + i), hrEl = document.getElementById('flHr_' + i);
     if (inEl) inEl.classList.toggle('fl-target-in', i === idx && type === 'i');
     if (outEl) outEl.classList.toggle('fl-target-out', i === idx && type === 'o');
     if (hrEl) hrEl.style.color = (i === idx) ? 'var(--teal)' : '';
@@ -888,448 +950,114 @@ function setFluidTarget(idx, type) {
     const m = btn.textContent.match(/\+\d+ml/);
     if (m) btn.textContent = `${m[0]} ${type === 'i' ? t('flIn') : t('flOut')}`;
   });
-  const stEl = document.getElementById('flHdrStatus');
-  const actHr = p.fluids[idx] ? p.fluids[idx].t : '';
+  const stEl = document.getElementById('flHdrStatus'), actHr = p.fluids[idx] ? p.fluids[idx].t : '';
   if (stEl) stEl.innerHTML = `${esc(t('time'))}: <strong style="color:var(--teal);">${esc(actHr)}</strong> (${esc(type === 'i' ? t('flIn') : t('flOut'))})`;
   const curSrc = p.fluids[idx] ? p.fluids[idx].src : '';
-  document.querySelectorAll('#flSrcChips .chip[data-src]').forEach(ch => {
-    ch.classList.toggle('active-amber', ch.getAttribute('data-src') === curSrc);
-  });
+  document.querySelectorAll('#flSrcChips .chip[data-src]').forEach(ch => ch.classList.toggle('active-amber', ch.getAttribute('data-src') === curSrc));
 }
 
 function updFluid(idx, type, val) {
-  const p = getPt(curBed);
-  if (!p.fluids[idx]) return;
-  p.fluids[idx][type] = Math.max(0, parseInt(val) || 0);
-  p.fluids[idx].done = false;
-  saveDB();
+  const p = getPt(curBed); if (!p.fluids[idx]) return;
+  p.fluids[idx][type] = Math.max(0, parseInt(val) || 0); p.fluids[idx].done = false; saveDB();
   let totI = 0, totO = 0;
   p.fluids.forEach(f => { totI += (Number(f.i) || 0); totO += (Number(f.o) || 0); });
-  const net = totI - totO;
-  const totEl = document.getElementById('flHdrTotal');
-  if (totEl) {
-    totEl.innerHTML = `<strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b>${totI}ml</b> | ${esc(t('flOut'))} <b>${totO}ml</b> | <b>${net > 0 ? '+' + net : net}ml</b>`;
-  }
+  const net = totI - totO, totEl = document.getElementById('flHdrTotal');
+  if (totEl) totEl.innerHTML = `<strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b>${totI}ml</b> | ${esc(t('flOut'))} <b>${totO}ml</b> | <b>${net > 0 ? '+' + net : net}ml</b>`;
   refreshSubNavCounts();
 }
 
-function addQuickFluid(vol) {
-  const p = getPt(curBed);
-  if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0;
-  const row = p.fluids[activeFluidIdx];
-  row[activeFluidType] = (Number(row[activeFluidType]) || 0) + vol;
-  row.done = false;
-  saveDB();
-  renderUI();
-}
+function addQuickFluid(vol) { const p = getPt(curBed); if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0; p.fluids[activeFluidIdx][activeFluidType] = (Number(p.fluids[activeFluidIdx][activeFluidType]) || 0) + vol; p.fluids[activeFluidIdx].done = false; saveDB(); renderUI(); }
+function setFluidSource(sc) { const p = getPt(curBed); if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0; p.fluids[activeFluidIdx].src = (p.fluids[activeFluidIdx].src === sc) ? '' : sc; activeFluidType = 'o'; saveDB(); renderUI(); }
+function addWetPad() { const p = getPt(curBed); if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0; p.fluids[activeFluidIdx].wet = (Number(p.fluids[activeFluidIdx].wet) || 0) + 1; p.fluids[activeFluidIdx].done = false; saveDB(); renderUI(); }
+function decWetPad(idx) { const p = getPt(curBed); if (!p.fluids[idx]) return; p.fluids[idx].wet = Math.max(0, (Number(p.fluids[idx].wet) || 0) - 1); saveDB(); renderUI(); }
+function clrFluidRow(idx) { const p = getPt(curBed); if (!p.fluids[idx]) return; p.fluids[idx] = { t: p.fluids[idx].t, i: 0, o: 0, src: '', wet: 0, done: false }; saveDB(); renderUI(); }
 
-function setFluidSource(sc) {
-  const p = getPt(curBed);
-  if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0;
-  const row = p.fluids[activeFluidIdx];
-  row.src = (row.src === sc) ? '' : sc;
-  activeFluidType = 'o';
-  saveDB();
-  renderUI();
-}
-
-function addWetPad() {
-  const p = getPt(curBed);
-  if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0;
-  const row = p.fluids[activeFluidIdx];
-  row.wet = (Number(row.wet) || 0) + 1;
-  row.done = false;
-  saveDB();
-  renderUI();
-}
-
-function decWetPad(idx) {
-  const p = getPt(curBed);
-  if (!p.fluids[idx]) return;
-  p.fluids[idx].wet = Math.max(0, (Number(p.fluids[idx].wet) || 0) - 1);
-  saveDB();
-  renderUI();
-}
-
-function clrFluidRow(idx) {
-  const p = getPt(curBed);
-  if (!p.fluids[idx]) return;
-  const hr = p.fluids[idx].t;
-  p.fluids[idx] = { t: hr, i: 0, o: 0, src: '', wet: 0, done: false };
-  saveDB();
-  renderUI();
-}
-
-function createBowelEntry() {
-  const p = getPt(curBed);
-  p.bowel.push({ t: nowTimeStr(), a: '', ty: '', m: '', done: false });
-  saveDB();
-  renderUI();
-}
-
+function createBowelEntry() { getPt(curBed).bowel.push({ t: nowTimeStr(), a: '', ty: '', m: '', done: false }); saveDB(); renderUI(); }
 function updBowelField(idx, k, val, rerender) {
-  const p = getPt(curBed);
-  if (!p.bowel[idx]) return;
+  const p = getPt(curBed); if (!p.bowel[idx]) return;
   p.bowel[idx][k] = val;
-  if (k === 'a' && val === 'bno') {
-    p.bowel[idx].ty = '';
-    p.bowel[idx].m = '';
-  }
-  p.bowel[idx].done = false;
-  saveDB();
-  refreshSubNavCounts();
-  if (rerender) renderSection();
+  if (k === 'a' && val === 'bno') { p.bowel[idx].ty = ''; p.bowel[idx].m = ''; }
+  p.bowel[idx].done = false; saveDB(); refreshSubNavCounts(); if (rerender) renderSection();
 }
 
-function updSkin(site, val) {
-  const p = getPt(curBed);
-  p.skin[site] = val;
-  p.skinDone = false;
-  saveDB();
-  renderUI();
-}
-
+function updSkin(site, val) { const p = getPt(curBed); p.skin[site] = val; p.skinDone = false; saveDB(); renderUI(); }
 function markAllSkinIntact() {
-  const p = getPt(curBed);
-  const allIntact = ['sacrum', 'groin', 'heels', 'elbows'].every(s => p.skin[s] === 'intact');
+  const p = getPt(curBed), allIntact = ['sacrum', 'groin', 'heels', 'elbows'].every(s => p.skin[s] === 'intact');
   ['sacrum', 'groin', 'heels', 'elbows'].forEach(s => { p.skin[s] = allIntact ? '' : 'intact'; });
-  p.skinDone = false;
-  saveDB();
-  renderUI();
+  p.skinDone = false; saveDB(); renderUI();
 }
+function createCustomSkin() { const p = getPt(curBed); p.skinCustom.push({ site: '', side: '', cond: '' }); p.skinDone = false; saveDB(); renderUI(); }
+function updCustomSkinField(idx, k, val) { const p = getPt(curBed); if (!p.skinCustom[idx]) return; p.skinCustom[idx][k] = val; p.skinDone = false; saveDB(); refreshSubNavCounts(); }
+function delCustomSkin(idx) { getPt(curBed).skinCustom.splice(idx, 1); saveDB(); renderUI(); }
+function toggleSkinCare(ck) { const p = getPt(curBed), pos = p.skinCare.indexOf(ck); if (pos > -1) p.skinCare.splice(pos, 1); else p.skinCare.push(ck); p.skinDone = false; saveDB(); renderUI(); }
 
-function createCustomSkin() {
-  const p = getPt(curBed);
-  p.skinCustom.push({ site: '', side: '', cond: '' });
-  p.skinDone = false;
-  saveDB();
-  renderUI();
-}
+function createDressingEntry() { getPt(curBed).dressings.push({ l: '', dt: todayIsoStr(), f: 0, st: '', done: false }); saveDB(); renderUI(); }
+function setDrCardSite(idx, siteIdx) { const p = getPt(curBed), drSites = getLangList('drSites'); if (!p.dressings[idx] || !drSites[siteIdx]) return; p.dressings[idx].l = (p.dressings[idx].l === drSites[siteIdx]) ? '' : drSites[siteIdx]; p.dressings[idx].done = false; saveDB(); renderUI(); }
+function updDressingField(idx, k, val, rerender) { const p = getPt(curBed); if (!p.dressings[idx]) return; p.dressings[idx][k] = val; p.dressings[idx].done = false; saveDB(); refreshSubNavCounts(); if (rerender) renderSection(); }
+function toggleDressingStatus(idx, stCode) { const p = getPt(curBed); if (!p.dressings[idx]) return; p.dressings[idx].st = (p.dressings[idx].st === stCode) ? '' : stCode; p.dressings[idx].done = false; saveDB(); renderSection(); }
+function delDressing(idx) { if (!confirm(t('delConfirm'))) return; getPt(curBed).dressings.splice(idx, 1); saveDB(); renderUI(); }
 
-function updCustomSkinField(idx, k, val) {
-  const p = getPt(curBed);
-  if (!p.skinCustom[idx]) return;
-  p.skinCustom[idx][k] = val;
-  p.skinDone = false;
-  saveDB();
-  refreshSubNavCounts();
-}
+function setMeal(mealKey, val) { const p = getPt(curBed); p.diet[mealKey] = (p.diet[mealKey] === val) ? '' : val; p.diet.done = false; saveDB(); renderUI(); }
+function quickLogSupp(statusCode) { const p = getPt(curBed); p.diet.supps.push({ t: nowTimeStr(), v: statusCode }); p.diet.done = false; saveDB(); renderUI(); }
+function updSuppText(val) { const p = getPt(curBed); p.diet.supp = val; p.diet.done = false; saveDB(); refreshSubNavCounts(); }
+function addCustomSupp() { const inp = document.getElementById('suppInput'), val = (inp ? inp.value : '').trim(); if (!val) return; const p = getPt(curBed); p.diet.supps.push({ t: nowTimeStr(), v: val }); p.diet.supp = ''; p.diet.done = false; saveDB(); renderUI(); }
+function delSupp(idx) { getPt(curBed).diet.supps.splice(idx, 1); saveDB(); renderUI(); }
+function toggleDietFlag(fl) { const p = getPt(curBed), idx = p.diet.flags.indexOf(fl); if (idx > -1) p.diet.flags.splice(idx, 1); else p.diet.flags.push(fl); p.diet.done = false; saveDB(); renderUI(); }
 
-function delCustomSkin(idx) {
-  const p = getPt(curBed);
-  p.skinCustom.splice(idx, 1);
-  saveDB();
-  renderUI();
-}
+function setTurnFreq(val) { const p = getPt(curBed); p.turnFreq = val; p.turnPlanDone = false; saveDB(); renderUI(); }
+function createTurnEntry() { getPt(curBed).turns.push({ t: nowTimeStr(), p: '', done: false }); saveDB(); renderUI(); }
+function updTurnField(idx, k, val) { const p = getPt(curBed); if (!p.turns[idx]) return; p.turns[idx][k] = val; p.turns[idx].done = false; saveDB(); refreshSubNavCounts(); }
+function toggleTurnCheck(ck) { const p = getPt(curBed), idx = p.turnChecks.indexOf(ck); if (idx > -1) p.turnChecks.splice(idx, 1); else p.turnChecks.push(ck); saveDB(); renderUI(); }
 
-function toggleSkinCare(ck) {
-  const p = getPt(curBed);
-  const pos = p.skinCare.indexOf(ck);
-  if (pos > -1) p.skinCare.splice(pos, 1);
-  else p.skinCare.push(ck);
-  p.skinDone = false;
-  saveDB();
-  renderUI();
-}
+function setMhLevel(val) { getPt(curBed).mhLevel = val; saveDB(); }
+function createMhEntry() { getPt(curBed).mh.push({ t: nowTimeStr(), m: '', r: '', rat: '', n: '', done: false }); saveDB(); renderUI(); }
+function updMhField(idx, k, val) { const p = getPt(curBed); if (!p.mh[idx]) return; p.mh[idx][k] = val; p.mh[idx].done = false; saveDB(); refreshSubNavCounts(); }
 
-function createDressingEntry() {
-  const p = getPt(curBed);
-  p.dressings.push({ l: '', dt: todayIsoStr(), f: 0, st: '', done: false });
-  saveDB();
-  renderUI();
-}
-
-function setDrCardSite(idx, siteIdx) {
-  const p = getPt(curBed);
-  const drSites = getLangList('drSites');
-  if (!p.dressings[idx] || !drSites[siteIdx]) return;
-  p.dressings[idx].l = (p.dressings[idx].l === drSites[siteIdx]) ? '' : drSites[siteIdx];
-  p.dressings[idx].done = false;
-  saveDB();
-  renderUI();
-}
-
-function updDressingField(idx, k, val, rerender) {
-  const p = getPt(curBed);
-  if (!p.dressings[idx]) return;
-  p.dressings[idx][k] = val;
-  p.dressings[idx].done = false;
-  saveDB();
-  refreshSubNavCounts();
-  if (rerender) renderSection();
-}
-
-function toggleDressingStatus(idx, stCode) {
-  const p = getPt(curBed);
-  if (!p.dressings[idx]) return;
-  p.dressings[idx].st = (p.dressings[idx].st === stCode) ? '' : stCode;
-  p.dressings[idx].done = false;
-  saveDB();
-  renderSection();
-}
-
-function delDressing(idx) {
-  if (!confirm(t('delConfirm'))) return;
-  const p = getPt(curBed);
-  p.dressings.splice(idx, 1);
-  saveDB();
-  renderUI();
-}
-
-function setMeal(mealKey, val) {
-  const p = getPt(curBed);
-  p.diet[mealKey] = (p.diet[mealKey] === val) ? '' : val;
-  p.diet.done = false;
-  saveDB();
-  renderUI();
-}
-
-function quickLogSupp(statusCode) {
-  const p = getPt(curBed);
-  p.diet.supps.push({ t: nowTimeStr(), v: statusCode });
-  p.diet.done = false;
-  saveDB();
-  renderUI();
-}
-
-function updSuppText(val) {
-  const p = getPt(curBed);
-  p.diet.supp = val;
-  p.diet.done = false;
-  saveDB();
-  refreshSubNavCounts();
-}
-
-function addCustomSupp() {
-  const inp = document.getElementById('suppInput');
-  const val = (inp ? inp.value : '').trim();
-  if (!val) return;
-  const p = getPt(curBed);
-  p.diet.supps.push({ t: nowTimeStr(), v: val });
-  p.diet.supp = '';
-  p.diet.done = false;
-  saveDB();
-  renderUI();
-}
-
-function delSupp(idx) {
-  const p = getPt(curBed);
-  p.diet.supps.splice(idx, 1);
-  saveDB();
-  renderUI();
-}
-
-function toggleDietFlag(fl) {
-  const p = getPt(curBed);
-  const idx = p.diet.flags.indexOf(fl);
-  if (idx > -1) p.diet.flags.splice(idx, 1);
-  else p.diet.flags.push(fl);
-  p.diet.done = false;
-  saveDB();
-  renderUI();
-}
-
-function setTurnFreq(val) {
-  const p = getPt(curBed);
-  p.turnFreq = val;
-  p.turnPlanDone = false;
-  saveDB();
-  renderUI();
-}
-
-function createTurnEntry() {
-  const p = getPt(curBed);
-  p.turns.push({ t: nowTimeStr(), p: '', done: false });
-  saveDB();
-  renderUI();
-}
-
-function updTurnField(idx, k, val) {
-  const p = getPt(curBed);
-  if (!p.turns[idx]) return;
-  p.turns[idx][k] = val;
-  p.turns[idx].done = false;
-  saveDB();
-  refreshSubNavCounts();
-}
-
-function toggleTurnCheck(ck) {
-  const p = getPt(curBed);
-  const idx = p.turnChecks.indexOf(ck);
-  if (idx > -1) p.turnChecks.splice(idx, 1);
-  else p.turnChecks.push(ck);
-  saveDB();
-  renderUI();
-}
-
-function setMhLevel(val) {
-  const p = getPt(curBed);
-  p.mhLevel = val;
-  saveDB();
-}
-
-function createMhEntry() {
-  const p = getPt(curBed);
-  p.mh.push({ t: nowTimeStr(), m: '', r: '', rat: '', n: '', done: false });
-  saveDB();
-  renderUI();
-}
-
-function updMhField(idx, k, val) {
-  const p = getPt(curBed);
-  if (!p.mh[idx]) return;
-  p.mh[idx][k] = val;
-  p.mh[idx].done = false;
-  saveDB();
-  refreshSubNavCounts();
-}
-
-function addQuickPhrase(pIdx) {
-  const p = getPt(curBed);
-  const phrases = getLangList('phrases');
-  p.events.push({ t: nowTimeStr(), pIdx, e: phrases[pIdx] || '', o: '', done: false });
-  saveDB();
-  renderUI();
-}
-
-function createEventEntry() {
-  const p = getPt(curBed);
-  p.events.push({ t: nowTimeStr(), e: '', o: '', done: false });
-  saveDB();
-  renderUI();
-}
-
-function updEventField(idx, k, val) {
-  const p = getPt(curBed);
-  if (!p.events[idx]) return;
-  p.events[idx][k] = val;
-  if (k === 'e') p.events[idx].customEdited = true;
-  p.events[idx].done = false;
-  saveDB();
-  refreshSubNavCounts();
-}
+function addQuickPhrase(pIdx) { const phrases = getLangList('phrases'); getPt(curBed).events.push({ t: nowTimeStr(), pIdx, e: phrases[pIdx] || '', o: '', done: false }); saveDB(); renderUI(); }
+function createEventEntry() { getPt(curBed).events.push({ t: nowTimeStr(), e: '', o: '', done: false }); saveDB(); renderUI(); }
+function updEventField(idx, k, val) { const p = getPt(curBed); if (!p.events[idx]) return; p.events[idx][k] = val; if (k === 'e') p.events[idx].customEdited = true; p.events[idx].done = false; saveDB(); refreshSubNavCounts(); }
 
 function quickAddTaskPreset(tIdx) {
-  const p = getPt(curBed);
-  const taskList = getLangList('tasks');
-  const nowMs = Date.now();
-  const due = nowTimeStr();
-  p.reminders.push({
-    due,
-    createdTs: nowMs,
-    dueTs: nowMs + 30 * 60 * 1000,
-    txt: taskList[tIdx] || '',
-    tIdx,
-    done: false,
-    alerted: false
-  });
-  const dt = new Date(nowMs + 30 * 60 * 1000);
-  p.reminders[p.reminders.length - 1].due = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-  saveDB();
-  renderUI();
-}
-
-function createTaskEntry() {
-  const p = getPt(curBed);
-  const nowMs = Date.now();
-  const dt = new Date(nowMs + 30 * 60 * 1000);
+  const p = getPt(curBed), taskList = getLangList('tasks'), nowMs = Date.now(), dt = new Date(nowMs + 30 * 60 * 1000);
   const due = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-  p.reminders.push({
-    due,
-    createdTs: nowMs,
-    dueTs: dt.getTime(),
-    txt: '',
-    done: false,
-    alerted: false
-  });
-  saveDB();
-  renderUI();
+  p.reminders.push({ due, createdTs: nowMs, dueTs: dt.getTime(), txt: taskList[tIdx] || '', tIdx, done: false, alerted: false });
+  saveDB(); renderUI();
 }
-
+function createTaskEntry() {
+  const p = getPt(curBed), nowMs = Date.now(), dt = new Date(nowMs + 30 * 60 * 1000);
+  const due = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+  p.reminders.push({ due, createdTs: nowMs, dueTs: dt.getTime(), txt: '', done: false, alerted: false });
+  saveDB(); renderUI();
+}
 function setTaskOffset(idx, mins) {
-  const p = getPt(curBed);
-  if (!p.reminders[idx]) return;
-  const targetMs = Date.now() + mins * 60 * 1000;
-  const dt = new Date(targetMs);
+  const p = getPt(curBed); if (!p.reminders[idx]) return;
+  const targetMs = Date.now() + mins * 60 * 1000, dt = new Date(targetMs);
   p.reminders[idx].due = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-  p.reminders[idx].createdTs = Date.now();
-  p.reminders[idx].dueTs = targetMs;
-  p.reminders[idx].alerted = false;
-  saveDB();
-  renderUI();
+  p.reminders[idx].createdTs = Date.now(); p.reminders[idx].dueTs = targetMs; p.reminders[idx].alerted = false;
+  saveDB(); renderUI();
 }
-
 function updTaskDue(idx, dueStr) {
-  const p = getPt(curBed);
-  if (!p.reminders[idx]) return;
+  const p = getPt(curBed); if (!p.reminders[idx]) return;
   const nowMs = Date.now();
-  p.reminders[idx].due = dueStr;
-  p.reminders[idx].createdTs = nowMs;
-  p.reminders[idx].dueTs = computeTaskDueTs(dueStr, nowMs);
-  p.reminders[idx].alerted = false;
-  saveDB();
-  renderUI();
+  p.reminders[idx].due = dueStr; p.reminders[idx].createdTs = nowMs; p.reminders[idx].dueTs = computeTaskDueTs(dueStr, nowMs); p.reminders[idx].alerted = false;
+  saveDB(); renderUI();
 }
+function updTaskText(idx, val) { const p = getPt(curBed); if (!p.reminders[idx]) return; p.reminders[idx].txt = val; p.reminders[idx].customEdited = true; saveDB(); refreshSubNavCounts(); }
+function toggleTaskDone(idx) { const p = getPt(curBed); if (!p.reminders[idx]) return; p.reminders[idx].done = !p.reminders[idx].done; saveDB(); renderUI(); }
 
-function updTaskText(idx, val) {
-  const p = getPt(curBed);
-  if (!p.reminders[idx]) return;
-  p.reminders[idx].txt = val;
-  p.reminders[idx].customEdited = true;
-  saveDB();
-  refreshSubNavCounts();
-}
-
-function toggleTaskDone(idx) {
-  const p = getPt(curBed);
-  if (!p.reminders[idx]) return;
-  p.reminders[idx].done = !p.reminders[idx].done;
-  saveDB();
-  renderUI();
-}
-
-function updAdmitField(k, val) {
-  const p = getPt(curBed);
-  p.admit[k] = val;
-  p.admit.done = false;
-  saveDB();
-  refreshSubNavCounts();
-}
-
-function toggleAdmitPill(idx) {
-  const p = getPt(curBed);
-  const pos = p.admit.list.indexOf(idx);
-  if (pos > -1) p.admit.list.splice(pos, 1);
-  else p.admit.list.push(idx);
-  p.admit.done = false;
-  saveDB();
-  renderUI();
-}
-
-function toggleAdmitLoc(lc) {
-  const p = getPt(curBed);
-  p.admit.loc = (p.admit.loc === lc) ? '' : lc;
-  p.admit.done = false;
-  saveDB();
-  renderUI();
-}
+function updAdmitField(k, val) { const p = getPt(curBed); p.admit[k] = val; p.admit.done = false; saveDB(); refreshSubNavCounts(); }
+function toggleAdmitPill(idx) { const p = getPt(curBed), pos = p.admit.list.indexOf(idx); if (pos > -1) p.admit.list.splice(pos, 1); else p.admit.list.push(idx); p.admit.done = false; saveDB(); renderUI(); }
+function toggleAdmitLoc(lc) { const p = getPt(curBed); p.admit.loc = (p.admit.loc === lc) ? '' : lc; p.admit.done = false; saveDB(); renderUI(); }
 
 function delItem(sec, idx) {
   if (!confirm(t('delConfirm'))) return;
   const p = getPt(curBed);
-  if (Array.isArray(p[sec])) {
-    p[sec].splice(idx, 1);
-    saveDB();
-    renderUI();
-  }
+  if (Array.isArray(p[sec])) { p[sec].splice(idx, 1); saveDB(); renderUI(); }
 }
 
 function jumpToBedMod(bIdx, modId) {
   if (!alloc[bIdx]) return;
-  curBed = alloc[bIdx];
-  curSec = modId;
-  showSummary = false;
-  renderUI();
+  curBed = alloc[bIdx]; curSec = modId; showSummary = false; renderUI();
 }
 
 function doneBtnHtml(bIdx, sec, idx, isDone) {
@@ -1357,42 +1085,21 @@ function toggleSumDone(bedOrIdx, sec, idx) {
   else if (sec === 'diet') p.diet.done = !p.diet.done;
   else if (sec === 'turnPlan') p.turnPlanDone = !p.turnPlanDone;
   else if (sec === 'admit') p.admit.done = !p.admit.done;
-  else if (Array.isArray(p[sec]) && p[sec][idx]) {
-    p[sec][idx].done = !p[sec][idx].done;
-  }
-  saveDB();
-  renderSummary();
+  else if (Array.isArray(p[sec]) && p[sec][idx]) p[sec][idx].done = !p[sec][idx].done;
+  saveDB(); renderSummary();
 }
 
 function markBedDone(bedOrIdx) {
   const bed = typeof bedOrIdx === 'number' ? alloc[bedOrIdx] : bedOrIdx;
   if (!bed) return;
   const p = getPt(bed);
-  p.obs.forEach(x => x.done = true);
-  p.bm.forEach(x => x.done = true);
-  p.bp.forEach(x => x.done = true);
-  p.fluids.forEach(x => x.done = true);
-  p.bowel.forEach(x => x.done = true);
-  p.skinDone = true;
-  p.dressings.forEach(x => x.done = true);
-  p.diet.done = true;
-  p.turnPlanDone = true;
-  p.turns.forEach(x => x.done = true);
-  p.mh.forEach(x => x.done = true);
-  p.events.forEach(x => x.done = true);
-  p.reminders.forEach(x => x.done = true);
-  p.admit.done = true;
-  saveDB();
-  renderSummary();
+  ['obs','bm','bp','fluids','bowel','dressings','turns','mh','events','reminders'].forEach(k => p[k].forEach(x => x.done = true));
+  p.skinDone = true; p.diet.done = true; p.turnPlanDone = true; p.admit.done = true;
+  saveDB(); renderSummary();
 }
 
 function buildModuleSummaryForBed(b, modId) {
-  const bIdx = alloc.indexOf(b);
-  const p = getPt(b);
-  const acvpuList = getLangList('acvpu');
-  const phrases = getLangList('phrases');
-  const taskList = getLangList('tasks');
-  const admitList = getLangList('admits');
+  const bIdx = alloc.indexOf(b), p = getPt(b), acvpuList = getLangList('acvpu'), phrases = getLangList('phrases'), taskList = getLangList('tasks'), admitList = getLangList('admits');
   let rows = '';
 
   if (modId === 'obs') {
@@ -1400,157 +1107,96 @@ function buildModuleSummaryForBed(b, modId) {
       if (!isObsFilled(o)) return;
       const parts = [];
       if (o.rr && o.rr !== '-') parts.push(`RR <b>${esc(o.rr)}</b>`);
-      if (o.sp && o.sp !== '-') {
-        const o2Txt = (o.o2 && o.o2 !== '-') ? ` (${esc(trCode(o.o2))})` : '';
-        parts.push(`SpO2 <b>${esc(o.sp)}%</b>${o2Txt}`);
-      } else if (o.o2 && o.o2 !== '-') {
-        parts.push(`<b>${esc(trCode(o.o2))}</b>`);
-      }
+      if (o.sp && o.sp !== '-') parts.push(`SpO2 <b>${esc(o.sp)}%</b>${(o.o2 && o.o2 !== '-') ? ` (${esc(trCode(o.o2))})` : ''}`);
+      else if (o.o2 && o.o2 !== '-') parts.push(`<b>${esc(trCode(o.o2))}</b>`);
       if (o.bp && o.bp !== '-' && o.bp !== '-/-') parts.push(`BP <b>${esc(o.bp)}</b>`);
       if (o.hr && o.hr !== '-') parts.push(`HR <b>${esc(o.hr)}</b>`);
       if (typeof o.aIdx === 'number' && acvpuList[o.aIdx]) parts.push(`<b>${esc(acvpuList[o.aIdx])}</b>`);
       if (o.tm && o.tm !== '-') parts.push(`Temp <b>${esc(o.tm)}${esc(o.u || tempUnit)}</b>`);
       if (o.pn !== '' && o.pn !== undefined && o.pn !== null && o.pn !== '-') parts.push(`${esc(t('pain'))} <b>${esc(o.pn)}/10</b>`);
-      const txt = `<strong>${esc(o.t || '--:--')}</strong> — ${parts.join(' • ')}`;
-      rows += sumRowWrap(txt, bIdx, 'obs', i, !!o.done);
+      rows += sumRowWrap(`<strong>${esc(o.t || '--:--')}</strong> — ${parts.join(' • ')}`, bIdx, 'obs', i, !!o.done);
     });
-  }
-
-  else if (modId === 'bm') {
+  } else if (modId === 'bm') {
     p.bm.forEach((x, i) => {
       if (!x.v || String(x.v).trim() === '') return;
-      const txt = `<strong>${esc(x.t)}</strong> — <b>${esc(x.v)} ${esc(x.u || bmUnit)}</b>${x.c ? ' (' + esc(trCode(x.c)) + ')' : ''}${(x.f && x.f.length) ? ' • ' + x.f.map(f => esc(trCode(f))).join(', ') : ''}`;
-      rows += sumRowWrap(txt, bIdx, 'bm', i, !!x.done);
+      rows += sumRowWrap(`<strong>${esc(x.t)}</strong> — <b>${esc(x.v)} ${esc(x.u || bmUnit)}</b>${x.c ? ' (' + esc(trCode(x.c)) + ')' : ''}${(x.f && x.f.length) ? ' • ' + x.f.map(f => esc(trCode(f))).join(', ') : ''}`, bIdx, 'bm', i, !!x.done);
     });
-  }
-
-  else if (modId === 'bp') {
+  } else if (modId === 'bp') {
     p.bp.forEach((x, i) => {
-      const hasL = x.l && x.l !== '-' && x.l !== '-/-';
-      const hasS = x.s && x.s !== '-' && x.s !== '-/-';
+      const hasL = x.l && x.l !== '-' && x.l !== '-/-', hasS = x.s && x.s !== '-' && x.s !== '-/-';
       if (!hasL && !hasS && (!x.sym || !x.sym.length)) return;
       const bpParts = [];
       if (hasL) bpParts.push(`${esc(t('lying'))}: <b>${esc(x.l)}</b>`);
       if (hasS) bpParts.push(`${esc(t('standing'))}: <b>${esc(x.s)}</b>`);
-      const txt = `<strong>${esc(x.t)}</strong> — ${bpParts.join(' | ')}${(x.sym && x.sym.length) ? ' (' + x.sym.map(s => esc(trCode(s))).join(', ') + ')' : ''}`;
-      rows += sumRowWrap(txt, bIdx, 'bp', i, !!x.done);
+      rows += sumRowWrap(`<strong>${esc(x.t)}</strong> — ${bpParts.join(' | ')}${(x.sym && x.sym.length) ? ' (' + x.sym.map(s => esc(trCode(s))).join(', ') + ')' : ''}`, bIdx, 'bp', i, !!x.done);
     });
-  }
-
-  else if (modId === 'fluid') {
+  } else if (modId === 'fluid') {
     let totI = 0, totO = 0;
     p.fluids.forEach((f, i) => {
-      const fi = Number(f.i) || 0;
-      const fo = Number(f.o) || 0;
-      const fw = Number(f.wet) || 0;
-      totI += fi;
-      totO += fo;
+      const fi = Number(f.i) || 0, fo = Number(f.o) || 0, fw = Number(f.wet) || 0;
+      totI += fi; totO += fo;
       if (fi > 0 || fo > 0 || fw > 0) {
         const segs = [];
         if (fi > 0) segs.push(`${esc(t('flIn'))} <b>${fi}ml</b>`);
         if (fo > 0) segs.push(`${esc(t('flOut'))} <b>${fo}ml</b>${f.src ? ' (' + esc(trCode(f.src)) + ')' : ''}`);
         else if (f.src) segs.push(`<b>${esc(trCode(f.src))}</b>`);
         if (fw > 0) segs.push(`${esc(t('wetPad'))} x<b>${fw}</b>`);
-        const txt = `<strong>${esc(f.t || '')}</strong> — ${segs.join(' | ')}`;
-        rows += sumRowWrap(txt, bIdx, 'fluids', i, !!f.done);
+        rows += sumRowWrap(`<strong>${esc(f.t || '')}</strong> — ${segs.join(' | ')}`, bIdx, 'fluids', i, !!f.done);
       }
     });
     if (rows) {
       const net = totI - totO;
       rows += `<div style="padding-top:6px; font-size:0.9rem;"><strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b>${totI}ml</b> | ${esc(t('flOut'))} <b>${totO}ml</b> | ${esc(t('flNet'))} <b>${net > 0 ? '+' + net : net}ml</b></div>`;
     }
-  }
-
-  else if (modId === 'bowel') {
+  } else if (modId === 'bowel') {
     p.bowel.forEach((x, i) => {
       if (!x.a) return;
-      const txt = x.a === 'bno'
-        ? `<strong>${esc(x.t)}</strong> — <b>${esc(t('bnoFull'))}</b>`
-        : `<strong>${esc(x.t)}</strong> — <b>${esc(trCode(x.a))}</b>${x.ty ? ' — ' + esc(trCode(x.ty)) : ''}${x.m ? ' • ' + esc(trCode(x.m)) : ''}`;
+      const txt = x.a === 'bno' ? `<strong>${esc(x.t)}</strong> — <b>${esc(t('bnoFull'))}</b>` : `<strong>${esc(x.t)}</strong> — <b>${esc(trCode(x.a))}</b>${x.ty ? ' — ' + esc(trCode(x.ty)) : ''}${x.m ? ' • ' + esc(trCode(x.m)) : ''}`;
       rows += sumRowWrap(txt, bIdx, 'bowel', i, !!x.done);
     });
-  }
-
-  else if (modId === 'amy') {
+  } else if (modId === 'amy') {
     const skParts = [];
-    ['sacrum', 'groin', 'heels', 'elbows'].forEach(st => {
-      if (p.skin[st]) skParts.push(`${esc(t(st))}: <b>${esc(trCode(p.skin[st]))}</b>`);
-    });
-    p.skinCustom.forEach(c => {
-      if (c.site && c.cond) {
-        skParts.push(`${esc(trCode(c.site))}${c.side ? ' (' + esc(trCode(c.side)) + ')' : ''}: <b>${esc(trCode(c.cond))}</b>`);
-      }
-    });
-    if (p.skinCare.length > 0) {
-      skParts.push(p.skinCare.map(ck => `<b>${esc(trCode(ck))}</b>`).join(', '));
-    }
-    if (skParts.length > 0) {
-      rows += sumRowWrap(skParts.join(', '), bIdx, 'skin', 0, !!p.skinDone);
-    }
+    ['sacrum', 'groin', 'heels', 'elbows'].forEach(st => { if (p.skin[st]) skParts.push(`${esc(t(st))}: <b>${esc(trCode(p.skin[st]))}</b>`); });
+    p.skinCustom.forEach(c => { if (c.site && c.cond) skParts.push(`${esc(trCode(c.site))}${c.side ? ' (' + esc(trCode(c.side)) + ')' : ''}: <b>${esc(trCode(c.cond))}</b>`); });
+    if (p.skinCare.length > 0) skParts.push(p.skinCare.map(ck => `<b>${esc(trCode(ck))}</b>`).join(', '));
+    if (skParts.length > 0) rows += sumRowWrap(skParts.join(', '), bIdx, 'skin', 0, !!p.skinDone);
     p.dressings.forEach((d, i) => {
       if (!d.l || !d.l.trim()) return;
-      const txt = `<strong>${esc(t('dressing'))}:</strong> <b>${esc(d.l)}</b>${d.st ? ' (' + esc(trCode(d.st)) + ')' : ''}${d.f ? ` — ${esc(t('due'))}: <b>${esc(calcDue(d.dt, d.f))}</b>` : ` — ${esc(formatIsoDate(d.dt))}`}`;
-      rows += sumRowWrap(txt, bIdx, 'dressings', i, !!d.done);
+      rows += sumRowWrap(`<strong>${esc(t('dressing'))}:</strong> <b>${esc(d.l)}</b>${d.st ? ' (' + esc(trCode(d.st)) + ')' : ''}${d.f ? ` — ${esc(t('due'))}: <b>${esc(calcDue(d.dt, d.f))}</b>` : ` — ${esc(formatIsoDate(d.dt))}`}`, bIdx, 'dressings', i, !!d.done);
     });
-  }
-
-  else if (modId === 'food') {
+  } else if (modId === 'food') {
     const dParts = [];
     if (p.diet.b) dParts.push(`${esc(t('b'))}: <b>${esc(trCode(p.diet.b))}</b>`);
     if (p.diet.l) dParts.push(`${esc(t('l'))}: <b>${esc(trCode(p.diet.l))}</b>`);
     if (p.diet.d) dParts.push(`${esc(t('d'))}: <b>${esc(trCode(p.diet.d))}</b>`);
     if (p.diet.supp) dParts.push(`${esc(t('supp'))}: <b>${esc(p.diet.supp)}</b>`);
-    p.diet.supps.forEach(s => {
-      dParts.push(`${esc(s.t)} <b>${esc(trCode(s.v))}</b>`);
-    });
-    if (p.diet.flags.length > 0) {
-      dParts.push(p.diet.flags.map(fl => `<b>${esc(trCode(fl))}</b>`).join(', '));
-    }
-    if (dParts.length > 0) {
-      rows += sumRowWrap(dParts.join(' | '), bIdx, 'diet', 0, !!p.diet.done);
-    }
-  }
-
-  else if (modId === 'turn') {
+    p.diet.supps.forEach(s => dParts.push(`${esc(s.t)} <b>${esc(trCode(s.v))}</b>`));
+    if (p.diet.flags.length > 0) dParts.push(p.diet.flags.map(fl => `<b>${esc(trCode(fl))}</b>`).join(', '));
+    if (dParts.length > 0) rows += sumRowWrap(dParts.join(' | '), bIdx, 'diet', 0, !!p.diet.done);
+  } else if (modId === 'turn') {
     if (p.turnFreq || p.turnChecks.length > 0) {
       const planTxt = `${p.turnFreq ? `${esc(t('turnFreqLbl'))}: <b>${esc(trCode(p.turnFreq))}</b>` : ''}${p.turnChecks.length ? (p.turnFreq ? ' • ' : '') + p.turnChecks.map(ck => `<b>${esc(trCode(ck))}</b>`).join(', ') : ''}`;
       rows += sumRowWrap(planTxt, bIdx, 'turnPlan', 0, !!p.turnPlanDone);
     }
-    p.turns.forEach((tr, i) => {
-      if (!tr.p) return;
-      const txt = `<strong>${esc(tr.t)}</strong> — <b>${esc(trCode(tr.p))}</b>`;
-      rows += sumRowWrap(txt, bIdx, 'turns', i, !!tr.done);
-    });
-  }
-
-  else if (modId === 'mh') {
+    p.turns.forEach((tr, i) => { if (tr.p) rows += sumRowWrap(`<strong>${esc(tr.t)}</strong> — <b>${esc(trCode(tr.p))}</b>`, bIdx, 'turns', i, !!tr.done); });
+  } else if (modId === 'mh') {
     p.mh.forEach((m, i) => {
       if (!m.m && !m.r && !m.rat && !m.n) return;
-      const txt = `<strong>${esc(m.t)}</strong>${p.mhLevel ? ' (' + esc(trCode(p.mhLevel)) + ')' : ''} — ${m.m ? `<b>${esc(trCode(m.m))}</b>` : ''}${m.r ? (m.m ? ' • ' : '') + esc(trCode(m.r)) : ''}${m.rat ? ' • ' + esc(trCode(m.rat)) : ''}${m.n ? ' (' + esc(m.n) + ')' : ''}`;
-      rows += sumRowWrap(txt, bIdx, 'mh', i, !!m.done);
+      rows += sumRowWrap(`<strong>${esc(m.t)}</strong>${p.mhLevel ? ' (' + esc(trCode(p.mhLevel)) + ')' : ''} — ${m.m ? `<b>${esc(trCode(m.m))}</b>` : ''}${m.r ? (m.m ? ' • ' : '') + esc(trCode(m.r)) : ''}${m.rat ? ' • ' + esc(trCode(m.rat)) : ''}${m.n ? ' (' + esc(m.n) + ')' : ''}`, bIdx, 'mh', i, !!m.done);
     });
-  }
-
-  else if (modId === 'events') {
+  } else if (modId === 'events') {
     p.events.forEach((e, i) => {
       const noteTxt = (typeof e.pIdx === 'number' && phrases[e.pIdx] && !e.customEdited) ? phrases[e.pIdx] : (e.e || '');
-      if (!noteTxt.trim()) return;
-      const txt = `<strong>${esc(e.t)}</strong> — ${esc(noteTxt)}${e.o ? ' → <b>' + esc(e.o) + '</b>' : ''}`;
-      rows += sumRowWrap(txt, bIdx, 'events', i, !!e.done);
+      if (noteTxt.trim()) rows += sumRowWrap(`<strong>${esc(e.t)}</strong> — ${esc(noteTxt)}${e.o ? ' → <b>' + esc(e.o) + '</b>' : ''}`, bIdx, 'events', i, !!e.done);
     });
-  }
-
-  else if (modId === 'reminders') {
+  } else if (modId === 'reminders') {
     p.reminders.forEach((r, i) => {
       const tkTxt = (typeof r.tIdx === 'number' && taskList[r.tIdx] && !r.customEdited) ? taskList[r.tIdx] : (r.txt || '');
       if (!tkTxt.trim()) return;
       const overdue = isTaskOverdue(r);
-      const txt = `<strong>${esc(r.due || '--:--')}</strong> — <b>${esc(tkTxt)}</b>${overdue ? ' <span class="task-badge overdue">OVERDUE</span>' : ''}`;
-      rows += sumRowWrap(txt, bIdx, 'reminders', i, !!r.done);
+      rows += sumRowWrap(`<strong>${esc(r.due || '--:--')}</strong> — <b>${esc(tkTxt)}</b>${overdue ? ' <span class="task-badge overdue">OVERDUE</span>' : ''}`, bIdx, 'reminders', i, !!r.done);
     });
-  }
-
-  else if (modId === 'admit') {
+  } else if (modId === 'admit') {
     const aParts = [];
     if (p.admit.w) aParts.push(`${esc(t('weight'))}: <b>${esc(p.admit.w)}kg</b>`);
     if (p.admit.h) aParts.push(`${esc(t('height'))}: <b>${esc(p.admit.h)}cm</b>`);
@@ -1559,29 +1205,21 @@ function buildModuleSummaryForBed(b, modId) {
       const itemsTxt = p.admit.list.map(idx => admitList[idx] ? esc(admitList[idx]) : '').filter(Boolean).join(', ');
       if (itemsTxt) aParts.push(`<b>${itemsTxt}</b>`);
     }
-    if (p.admit.other && p.admit.other.trim()) {
-      aParts.push(`<b>${esc(p.admit.other.trim())}</b>`);
-    }
-    if (p.admit.loc) {
-      aParts.push(`(${esc(trCode(p.admit.loc))})`);
-    }
-    if (aParts.length > 0) {
-      rows += sumRowWrap(aParts.join(' • '), bIdx, 'admit', 0, !!p.admit.done);
-    }
+    if (p.admit.other && p.admit.other.trim()) aParts.push(`<b>${esc(p.admit.other.trim())}</b>`);
+    if (p.admit.loc) aParts.push(`(${esc(trCode(p.admit.loc))})`);
+    if (aParts.length > 0) rows += sumRowWrap(aParts.join(' • '), bIdx, 'admit', 0, !!p.admit.done);
   }
-
   return rows;
 }
 
 function renderSummary() {
   const area = document.getElementById('contentArea');
   const activeSecs = getActiveSections();
-
   let html = `<div class="summary-toolbar">
     <button type="button" class="tool-btn ${summaryGroup === 'bed' ? 'active' : ''}" onclick="setSumGroup('bed')">${esc(t('byBed'))}</button>
     <button type="button" class="tool-btn ${summaryGroup === 'mod' ? 'active' : ''}" onclick="setSumGroup('mod')">${esc(t('byMod'))}</button>
     <button type="button" class="tool-btn ${hideCompleted ? 'active' : ''}" onclick="toggleHideCompleted()">${esc(hideCompleted ? t('showAll') : t('pending'))}</button>
-    <button type="button" class="tool-btn ${wakeLockObj ? 'active' : ''}" onclick="toggleWakeLock()">💡 ${esc(t('keepOn'))}</button>
+    <button type="button" class="tool-btn ${wakeLockObj ? 'active' : ''}" onclick="toggleWakeLock()">${esc(t('keepOn'))}</button>
   </div>`;
 
   if (summaryGroup === 'bed') {
@@ -1589,21 +1227,10 @@ function renderSummary() {
       let bedContent = '';
       activeSecs.forEach(s => {
         const modRows = buildModuleSummaryForBed(b, s.id);
-        if (modRows) {
-          bedContent += `<div class="summary-sec">
-            <div class="sum-mod-hdr" onclick="jumpToBedMod(${bIdx}, '${s.id}')">${esc(t(s.id))} ✎</div>
-            ${modRows}
-          </div>`;
-        }
+        if (modRows) bedContent += `<div class="summary-sec"><div class="sum-mod-hdr" onclick="jumpToBedMod(${bIdx}, '${s.id}')">${esc(t(s.id))} ✎</div>${modRows}</div>`;
       });
       if (bedContent) {
-        html += `<div class="card">
-          <h3>
-            <span>${esc(b)}</span>
-            <button type="button" class="btn-subtle btn-sm" style="background:var(--header-bg); color:#fff; border:none;" onclick="markBedDone(${bIdx})">${esc(t('markBed'))}</button>
-          </h3>
-          ${bedContent}
-        </div>`;
+        html += `<div class="card"><h3><span>${esc(b)}</span><button type="button" class="btn-subtle btn-sm" style="background:var(--header-bg); color:#fff; border:none;" onclick="markBedDone(${bIdx})">${esc(t('markBed'))}</button></h3>${bedContent}</div>`;
       }
     });
   } else {
@@ -1611,31 +1238,13 @@ function renderSummary() {
       let modContent = '';
       alloc.forEach((b, bIdx) => {
         const modRows = buildModuleSummaryForBed(b, s.id);
-        if (modRows) {
-          modContent += `<div class="summary-sec">
-            <div class="sum-mod-hdr" onclick="jumpToBedMod(${bIdx}, '${s.id}')">${esc(b)} ✎</div>
-            ${modRows}
-          </div>`;
-        }
+        if (modRows) modContent += `<div class="summary-sec"><div class="sum-mod-hdr" onclick="jumpToBedMod(${bIdx}, '${s.id}')">${esc(b)} ✎</div>${modRows}</div>`;
       });
-      if (modContent) {
-        html += `<div class="card">
-          <h3><span>${esc(t(s.id))}</span></h3>
-          ${modContent}
-        </div>`;
-      }
+      if (modContent) html += `<div class="card"><h3><span>${esc(t(s.id))}</span></h3>${modContent}</div>`;
     });
   }
-
   area.innerHTML = html;
 }
 
-function setSumGroup(g) {
-  summaryGroup = g;
-  renderSummary();
-}
-
-function toggleHideCompleted() {
-  hideCompleted = !hideCompleted;
-  renderSummary();
-}
+function setSumGroup(g) { summaryGroup = g; renderSummary(); }
+function toggleHideCompleted() { hideCompleted = !hideCompleted; renderSummary(); }
