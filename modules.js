@@ -90,22 +90,21 @@ function getPt(b) {
   if (!Array.isArray(p.turns)) p.turns = [];
   if (!Array.isArray(p.turnChecks)) p.turnChecks = [];
   if (typeof p.mhLevel !== 'string') p.mhLevel = '';
+  if (typeof p.mhLevelDone !== 'boolean') p.mhLevelDone = false;
   if (!Array.isArray(p.mh)) p.mh = [];
   if (!Array.isArray(p.events)) p.events = [];
   if (!Array.isArray(p.reminders)) p.reminders = [];
-  if (!p.admit || typeof p.admit !== 'object') p.admit = { w: '', h: '', wb: false, list: [], other: '', loc: '', items: {}, done: false };
-  if (!Array.isArray(p.admit.list)) {
-    p.admit.list = [];
-    if (p.admit.items && typeof p.admit.items === 'object') {
-      Object.keys(p.admit.items).forEach(k => {
-        const idx = parseInt(k.replace('std_', ''));
-        if (!isNaN(idx) && !p.admit.list.includes(idx)) p.admit.list.push(idx);
-        if (!p.admit.loc && p.admit.items[k]) p.admit.loc = p.admit.items[k];
-      });
-    }
+  if (!p.admit || typeof p.admit !== 'object') p.admit = { w: '', h: '', wb: false, items: {}, custom: [], other: '', done: false };
+  if (!p.admit.items || typeof p.admit.items !== 'object') p.admit.items = {};
+  if (!Array.isArray(p.admit.custom)) p.admit.custom = [];
+  if (Array.isArray(p.admit.list)) {
+    p.admit.list.forEach(idx => {
+      const k = 'std_' + idx;
+      if (p.admit.items[k] === undefined) p.admit.items[k] = p.admit.loc || 'locPt';
+    });
+    delete p.admit.list;
   }
   if (typeof p.admit.other !== 'string') p.admit.other = '';
-  if (typeof p.admit.loc !== 'string') p.admit.loc = '';
   return p;
 }
 
@@ -113,6 +112,20 @@ function isObsFilled(o) {
   if (!o) return false;
   const hasVal = v => v !== undefined && v !== null && String(v).trim() !== '' && String(v).trim() !== '-';
   return hasVal(o.rr) || hasVal(o.sp) || hasVal(o.o2) || hasVal(o.sys) || hasVal(o.dia) || (hasVal(o.bp) && o.bp !== '-/-') || hasVal(o.hr) || hasVal(o.tm) || (o.aIdx !== null && o.aIdx !== undefined && o.aIdx !== '') || hasVal(o.pn);
+}
+
+function formatObsLine(o) {
+  const acvpuList = getLangList('acvpu');
+  const parts = [];
+  if (o.rr && o.rr !== '-') parts.push(`RR <b>${esc(o.rr)}</b>`);
+  if (o.sp && o.sp !== '-') parts.push(`SpO2 <b>${esc(o.sp)}%</b>${(o.o2 && o.o2 !== '-') ? ` (${esc(trCode(o.o2))})` : ''}`);
+  else if (o.o2 && o.o2 !== '-') parts.push(`<b>${esc(trCode(o.o2))}</b>`);
+  if (o.bp && o.bp !== '-' && o.bp !== '-/-') parts.push(`BP <b>${esc(o.bp)}</b>`);
+  if (o.hr && o.hr !== '-') parts.push(`HR <b>${esc(o.hr)}</b>`);
+  if (typeof o.aIdx === 'number' && acvpuList[o.aIdx]) parts.push(`<b>${esc(acvpuList[o.aIdx])}</b>`);
+  if (o.tm && o.tm !== '-') parts.push(`Temp <b>${esc(o.tm)}${esc(o.u || tempUnit)}</b>`);
+  if (o.pn !== '' && o.pn !== undefined && o.pn !== null && o.pn !== '-') parts.push(`${esc(t('pain'))} <b>${esc(o.pn)}/10</b>`);
+  return parts.join(' • ');
 }
 
 function modEntryCount(b, modId) {
@@ -126,12 +139,25 @@ function modEntryCount(b, modId) {
     case 'amy': return Object.values(p.skin).filter(Boolean).length + p.skinCustom.filter(c => c.site && c.cond).length + p.dressings.filter(d => d.l && d.l.trim() !== '').length;
     case 'food': return [p.diet.b, p.diet.l, p.diet.d].filter(Boolean).length + p.diet.supps.length + (p.diet.supp ? 1 : 0);
     case 'turn': return p.turns.filter(tr => !!tr.p).length + (p.turnFreq ? 1 : 0);
-    case 'mh': return p.mh.filter(m => m.m || m.r || m.rat || m.n).length;
+    case 'mh': return p.mh.filter(m => m.m || m.r || m.rat || m.n).length + (p.mhLevel ? 1 : 0);
     case 'events': return p.events.filter(e => (e.e && e.e.trim() !== '') || typeof e.pIdx === 'number').length;
     case 'reminders': return p.reminders.filter(r => !r.done && ((r.txt && r.txt.trim() !== '') || typeof r.tIdx === 'number')).length;
-    case 'admit': return (p.admit.w || p.admit.h || p.admit.wb || p.admit.list.length > 0 || (p.admit.other && p.admit.other.trim() !== '')) ? 1 : 0;
+    case 'admit': return (p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length > 0 || p.admit.custom.length > 0 || (p.admit.other && p.admit.other.trim() !== '')) ? 1 : 0;
     default: return 0;
   }
+}
+
+function getExpIdx(sec, len) {
+  if (len === 0) return -1;
+  const key = curBed + '_' + sec;
+  if (expandedCards[key] === undefined) return len - 1;
+  return expandedCards[key];
+}
+
+function setExpIdx(sec, idx) {
+  const key = curBed + '_' + sec;
+  expandedCards[key] = (expandedCards[key] === idx) ? -1 : idx;
+  renderSection();
 }
 
 function renderUI() {
@@ -199,7 +225,7 @@ function selectBedIdx(bIdx) {
   showManageBed = false;
   showQuickAddBed = false;
   curBed = alloc[bIdx];
-  activeFluidIdx = 0;
+  activeFluidIdx = typeof getCurrentShiftHourIdx === 'function' ? getCurrentShiftHourIdx() : 0;
   renderUI();
 }
 
@@ -314,10 +340,10 @@ async function toggleWakeLock() {
   } catch (e) {}
 }
 
-function autoJumpBp(val, nextId) {
+function autoJumpBp(val, nextId, minTwoDigit = 60) {
   const s = String(val || '').trim();
   const n = Number(s);
-  if (s.length >= 3 || (s.length === 2 && n >= 60 && n <= 99)) {
+  if (s.length >= 3 || (s.length === 2 && n >= minTwoDigit && n <= 99)) {
     const nextEl = document.getElementById(nextId);
     if (nextEl) { nextEl.focus(); if (nextEl.select) nextEl.select(); }
   }
@@ -341,7 +367,7 @@ function renderSection() {
 
   let topHtml = `<div class="bed-bar">
     <div style="font-weight:800; font-size:1.1rem; color:var(--teal);">${esc(curBed)} — ${esc(t(curSec))}</div>
-    <button type="button" class="btn-subtle btn-sm" onclick="toggleManageBed()">⚙ ${esc(t('manageBed'))}</button>
+    <button type="button" class="btn-subtle btn-sm" onclick="toggleManageBed()">${esc(t('manageBed'))}</button>
   </div>`;
 
   if (showQuickAddBed) {
@@ -377,7 +403,14 @@ function renderSection() {
 
   if (curSec === 'obs') {
     const acvpuList = getLangList('acvpu');
+    const expIdx = getExpIdx('obs', p.obs.length);
     bodyHtml = p.obs.map((o, i) => {
+      if (i !== expIdx && isObsFilled(o)) {
+        return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('obs', ${i})">
+          <div><strong>${esc(o.t || '--:--')}</strong> — ${formatObsLine(o)} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:6px;">✎</span></div>
+          <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('obs', ${i})">✕</button>
+        </div>`;
+      }
       const [sysVal, diaVal] = splitBpParts(o, 'sys', 'dia', 'bp');
       const o2Val = (o.o2 && o.o2 !== '-') ? o.o2 : '';
       const rrVal = (o.rr && o.rr !== '-') ? o.rr : '';
@@ -387,7 +420,7 @@ function renderSection() {
       const pnVal = (o.pn !== undefined && o.pn !== null && o.pn !== '-') ? o.pn : '';
       return `<div class="card entry-card">
         <div class="entry-hdr">
-          <span class="entry-num">${esc(t('obs'))} #${i + 1}</span>
+          <span class="entry-num" style="cursor:pointer;" onclick="setExpIdx('obs', ${i})">${esc(t('obs'))} #${i + 1} ▲</span>
           <button type="button" class="del-btn" onclick="delItem('obs', ${i})">✕</button>
         </div>
         <div class="row">
@@ -400,7 +433,10 @@ function renderSection() {
             <label>${esc(t('o2Lbl'))}</label>
             <select onchange="updObsField(${i}, 'o2', this.value)">
               <option value="" ${!o2Val ? 'selected' : ''}>—</option>
-              <option value="air" ${o2Val === 'air' || o2Val === t('air') ? 'selected' : ''}>${esc(t('air'))}</option>
+              <option value="air" ${o2Val === 'air' ? 'selected' : ''}>${esc(t('air'))}</option>
+              <option value="o2Nasal" ${o2Val === 'o2Nasal' ? 'selected' : ''}>${esc(t('o2Nasal'))}</option>
+              <option value="o2Mask" ${o2Val === 'o2Mask' ? 'selected' : ''}>${esc(t('o2Mask'))}</option>
+              <option value="o2Venturi" ${o2Val === 'o2Venturi' ? 'selected' : ''}>${esc(t('o2Venturi'))}</option>
               <option value="o2" ${o2Val === 'o2' ? 'selected' : ''}>${esc(getOxygenLabel())}</option>
             </select>
           </div>
@@ -409,25 +445,20 @@ function renderSection() {
           <div>
             <label>${esc(t('bpLbl'))}</label>
             <div class="bp-pair">
-              <input type="number" id="obsSys_${i}" inputmode="numeric" value="${esc(sysVal)}" oninput="updObsBp(${i}, 'sys', this.value); autoJumpBp(this.value, 'obsDia_${i}')">
+              <input type="number" id="obsSys_${i}" inputmode="numeric" value="${esc(sysVal)}" oninput="updObsBp(${i}, 'sys', this.value); autoJumpBp(this.value, 'obsDia_${i}', 60)">
               <span>/</span>
-              <input type="number" id="obsDia_${i}" inputmode="numeric" value="${esc(diaVal)}" oninput="updObsBp(${i}, 'dia', this.value)">
+              <input type="number" id="obsDia_${i}" inputmode="numeric" value="${esc(diaVal)}" oninput="updObsBp(${i}, 'dia', this.value); autoJumpBp(this.value, 'obsHr_${i}', 40)">
             </div>
           </div>
-          <div><label>${esc(t('hrLbl'))}</label><input type="number" inputmode="numeric" value="${esc(hrVal)}" oninput="updObsField(${i}, 'hr', this.value)"></div>
+          <div><label>${esc(t('hrLbl'))}</label><input type="number" id="obsHr_${i}" inputmode="numeric" value="${esc(hrVal)}" oninput="updObsField(${i}, 'hr', this.value)"></div>
         </div>
         <div class="row">
           <div><label>${esc(t('tempLbl'))} (${esc(o.u || tempUnit)})</label><input type="number" step="0.1" inputmode="decimal" value="${esc(tmVal)}" oninput="updObsField(${i}, 'tm', this.value)"></div>
-          <div>
-            <label>${esc(t('acvpuLbl'))}</label>
-            <select onchange="updObsField(${i}, 'aIdx', this.value === '' ? null : parseInt(this.value))">
-              <option value="" ${o.aIdx === null || o.aIdx === undefined || o.aIdx === '' ? 'selected' : ''}>—</option>
-              ${acvpuList.map((v, idx) => `<option value="${idx}" ${o.aIdx === idx ? 'selected' : ''}>${esc(v)}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-        <div class="row" style="margin-bottom:0;">
           <div><label>${esc(t('painLbl'))}</label><input type="number" min="0" max="10" inputmode="numeric" value="${esc(pnVal)}" oninput="updObsField(${i}, 'pn', this.value)"></div>
+        </div>
+        <label>${esc(t('acvpuLbl'))}</label>
+        <div class="chip-row" style="margin-bottom:0;">
+          ${acvpuList.map((v, idx) => `<span class="chip ${o.aIdx === idx ? 'active' : ''}" onclick="toggleObsAcvpu(${i}, ${idx})">${esc(v)}</span>`).join('')}
         </div>
       </div>`;
     }).join('') + `<button type="button" class="btn btn-primary" style="margin-bottom:12px;" onclick="createObsEntry()">${esc(t('add'))} ${esc(t('obs'))}</button>`;
@@ -435,11 +466,18 @@ function renderSection() {
 
   else if (curSec === 'bm') {
     const ctxOpts = ['bmPreB','bmPostB','bmPreL','bmPostL','bmPreD','bmPostD','bmBed','bmNight','bmRandom','bmRepeat'];
+    const expIdx = getExpIdx('bm', p.bm.length);
     bodyHtml = p.bm.map((b, i) => {
       const flags = Array.isArray(b.f) ? b.f : [];
+      if (i !== expIdx && b.v) {
+        return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bm', ${i})">
+          <div><strong>${esc(b.t)}</strong> — <b>${esc(b.v)} ${esc(b.u || bmUnit)}</b>${b.c ? ' (' + esc(trCode(b.c)) + ')' : ''}${flags.length ? ' • ' + flags.map(f => esc(trCode(f))).join(', ') : ''} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:6px;">✎</span></div>
+          <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bm', ${i})">✕</button>
+        </div>`;
+      }
       return `<div class="card entry-card">
         <div class="entry-hdr">
-          <span class="entry-num">${esc(t('bm'))} #${i + 1}</span>
+          <span class="entry-num" style="cursor:pointer;" onclick="setExpIdx('bm', ${i})">${esc(t('bm'))} #${i + 1} ▲</span>
           <button type="button" class="del-btn" onclick="delItem('bm', ${i})">✕</button>
         </div>
         <div class="row">
@@ -463,13 +501,20 @@ function renderSection() {
   }
 
   else if (curSec === 'bp') {
+    const expIdx = getExpIdx('bp', p.bp.length);
     bodyHtml = p.bp.map((x, i) => {
       const [lSys, lDia] = splitBpParts(x, 'lSys', 'lDia', 'l');
       const [sSys, sDia] = splitBpParts(x, 'sSys', 'sDia', 's');
       const syms = Array.isArray(x.sym) ? x.sym : [];
+      if (i !== expIdx && ((x.l && x.l !== '-') || (x.s && x.s !== '-'))) {
+        return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bp', ${i})">
+          <div><strong>${esc(x.t)}</strong> — ${esc(t('lying'))}: <b>${esc(x.l)}</b> | ${esc(t('standing'))}: <b>${esc(x.s)}</b>${syms.length ? ' (' + syms.map(s => esc(trCode(s))).join(', ') + ')' : ''} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:6px;">✎</span></div>
+          <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bp', ${i})">✕</button>
+        </div>`;
+      }
       return `<div class="card entry-card">
         <div class="entry-hdr">
-          <span class="entry-num">${esc(t('bp'))} #${i + 1}</span>
+          <span class="entry-num" style="cursor:pointer;" onclick="setExpIdx('bp', ${i})">${esc(t('bp'))} #${i + 1} ▲</span>
           <button type="button" class="del-btn" onclick="delItem('bp', ${i})">✕</button>
         </div>
         <div class="row">
@@ -479,9 +524,9 @@ function renderSection() {
           <div>
             <label>${esc(t('lying'))} BP (Sys / Dia)</label>
             <div class="bp-pair">
-              <input type="number" id="bpLSys_${i}" inputmode="numeric" value="${esc(lSys)}" oninput="updBpPair(${i}, 'l', 'Sys', this.value); autoJumpBp(this.value, 'bpLDia_${i}')">
+              <input type="number" id="bpLSys_${i}" inputmode="numeric" value="${esc(lSys)}" oninput="updBpPair(${i}, 'l', 'Sys', this.value); autoJumpBp(this.value, 'bpLDia_${i}', 60)">
               <span>/</span>
-              <input type="number" id="bpLDia_${i}" inputmode="numeric" value="${esc(lDia)}" oninput="updBpPair(${i}, 'l', 'Dia', this.value)">
+              <input type="number" id="bpLDia_${i}" inputmode="numeric" value="${esc(lDia)}" oninput="updBpPair(${i}, 'l', 'Dia', this.value); autoJumpBp(this.value, 'bpSSys_${i}', 40)">
             </div>
           </div>
         </div>
@@ -489,7 +534,7 @@ function renderSection() {
           <div>
             <label>${esc(t('standing'))} BP (Sys / Dia)</label>
             <div class="bp-pair">
-              <input type="number" id="bpSSys_${i}" inputmode="numeric" value="${esc(sSys)}" oninput="updBpPair(${i}, 's', 'Sys', this.value); autoJumpBp(this.value, 'bpSDia_${i}')">
+              <input type="number" id="bpSSys_${i}" inputmode="numeric" value="${esc(sSys)}" oninput="updBpPair(${i}, 's', 'Sys', this.value); autoJumpBp(this.value, 'bpSDia_${i}', 60)">
               <span>/</span>
               <input type="number" id="bpSDia_${i}" inputmode="numeric" value="${esc(sDia)}" oninput="updBpPair(${i}, 's', 'Dia', this.value)">
             </div>
@@ -557,40 +602,50 @@ function renderSection() {
     const amtOpts = ['bno','small','medium','large','smear'];
     const typeOpts = ['type1','type2','type3','type4','type5','type6','type7'];
     const methOpts = ['mToilet','mCommode','mBedpan','mPad'];
-    bodyHtml = p.bowel.map((b, i) => `<div class="card entry-card">
-      <div class="entry-hdr">
-        <span class="entry-num">${esc(t('bowel'))} #${i + 1}</span>
-        <button type="button" class="del-btn" onclick="delItem('bowel', ${i})">✕</button>
-      </div>
-      <div class="row">
-        <div><label>${esc(t('time'))}</label><input type="time" value="${esc(b.t || '')}" oninput="updBowelField(${i}, 't', this.value)"></div>
-        <div>
-          <label>${esc(t('amt'))}</label>
-          <select onchange="updBowelField(${i}, 'a', this.value, true)">
-            <option value="" ${!b.a ? 'selected' : ''}>—</option>
-            ${amtOpts.map(k => `<option value="${k}" ${b.a === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
-          </select>
+    const expIdx = getExpIdx('bowel', p.bowel.length);
+    bodyHtml = p.bowel.map((b, i) => {
+      if (i !== expIdx && b.a) {
+        const sumTxt = b.a === 'bno' ? `<b>${esc(t('bnoFull'))}</b>` : `<b>${esc(trCode(b.a))}</b>${b.ty ? ' — ' + esc(trCode(b.ty)) : ''}${b.m ? ' • ' + esc(trCode(b.m)) : ''}`;
+        return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bowel', ${i})">
+          <div><strong>${esc(b.t)}</strong> — ${sumTxt} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:6px;">✎</span></div>
+          <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bowel', ${i})">✕</button>
+        </div>`;
+      }
+      return `<div class="card entry-card">
+        <div class="entry-hdr">
+          <span class="entry-num" style="cursor:pointer;" onclick="setExpIdx('bowel', ${i})">${esc(t('bowel'))} #${i + 1} ▲</span>
+          <button type="button" class="del-btn" onclick="delItem('bowel', ${i})">✕</button>
         </div>
-      </div>
-      ${b.a !== 'bno' ? `<div class="row">
-        <div>
-          <label>${esc(t('type'))}</label>
-          <select onchange="updBowelField(${i}, 'ty', this.value)">
-            <option value="" ${!b.ty ? 'selected' : ''}>—</option>
-            ${typeOpts.map(k => `<option value="${k}" ${b.ty === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
-          </select>
+        <div class="row">
+          <div><label>${esc(t('time'))}</label><input type="time" value="${esc(b.t || '')}" oninput="updBowelField(${i}, 't', this.value)"></div>
+          <div>
+            <label>${esc(t('amt'))}</label>
+            <select onchange="updBowelField(${i}, 'a', this.value, true)">
+              <option value="" ${!b.a ? 'selected' : ''}>—</option>
+              ${amtOpts.map(k => `<option value="${k}" ${b.a === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
+            </select>
+          </div>
         </div>
-      </div>
-      <div class="row" style="margin-bottom:0;">
-        <div>
-          <label>${esc(t('method'))}</label>
-          <select onchange="updBowelField(${i}, 'm', this.value)">
-            <option value="" ${!b.m ? 'selected' : ''}>—</option>
-            ${methOpts.map(k => `<option value="${k}" ${b.m === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
-          </select>
+        ${b.a !== 'bno' ? `<div class="row">
+          <div>
+            <label>${esc(t('type'))}</label>
+            <select onchange="updBowelField(${i}, 'ty', this.value)">
+              <option value="" ${!b.ty ? 'selected' : ''}>—</option>
+              ${typeOpts.map(k => `<option value="${k}" ${b.ty === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
+            </select>
+          </div>
         </div>
-      </div>` : ''}
-    </div>`).join('') + `<button type="button" class="btn btn-primary" style="margin-bottom:12px;" onclick="createBowelEntry()">${esc(t('add'))} ${esc(t('bowel'))}</button>`;
+        <div class="row" style="margin-bottom:0;">
+          <div>
+            <label>${esc(t('method'))}</label>
+            <select onchange="updBowelField(${i}, 'm', this.value)">
+              <option value="" ${!b.m ? 'selected' : ''}>—</option>
+              ${methOpts.map(k => `<option value="${k}" ${b.m === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
+            </select>
+          </div>
+        </div>` : ''}
+      </div>`;
+    }).join('') + `<button type="button" class="btn btn-primary" style="margin-bottom:12px;" onclick="createBowelEntry()">${esc(t('add'))} ${esc(t('bowel'))}</button>`;
   }
 
   else if (curSec === 'amy') {
@@ -620,7 +675,7 @@ function renderSection() {
             </select>
           </div>
           <div>
-            <label>Side</label>
+            <label>${esc(t('sideLbl'))}</label>
             <select onchange="updCustomSkinField(${idx}, 'side', this.value)">
               ${sides.map(s => `<option value="${s}" ${c.side === s ? 'selected' : ''}>${s ? esc(t(s)) : '—'}</option>`).join('')}
             </select>
@@ -628,7 +683,7 @@ function renderSection() {
         </div>
         <div class="row" style="margin-bottom:0;">
           <div>
-            <label>Status</label>
+            <label>${esc(t('statusLbl'))}</label>
             <select onchange="updCustomSkinField(${idx}, 'cond', this.value)">
               <option value="" ${!c.cond ? 'selected' : ''}>—</option>
               ${skinStates.filter(Boolean).map(s => `<option value="${s}" ${c.cond === s ? 'selected' : ''}>${esc(t(s))}</option>`).join('')}
@@ -671,7 +726,7 @@ function renderSection() {
       <div class="row" style="margin-bottom:0; align-items:center;">
         <div>
           <label>${esc(t('date'))}</label>
-          <input type="date" value="${esc(d.dt || todayIsoStr())}" onchange="updDressingField(${i}, 'dt', this.value, true)">
+          <input type="date" value="${esc(d.dt || todayIsoStr())}" oninput="updDressingField(${i}, 'dt', this.value, true)">
         </div>
         <div style="font-size:0.84rem; padding-top:14px;">
           ${d.f ? `<strong>${esc(t('due'))}:</strong> <b style="color:var(--teal);">${esc(calcDue(d.dt || todayIsoStr(), d.f))}</b>` : ''}
@@ -699,7 +754,7 @@ function renderSection() {
         <span class="chip" onclick="quickLogSupp('refused')">+ ${esc(t('refused'))}</span>
       </div>
       <div style="display:flex; gap:8px; margin-bottom:10px;">
-        <input type="text" id="suppInput" value="${esc(p.diet.supp || '')}" oninput="updSuppText(this.value)">
+        <input type="text" id="suppInput" value="${esc(p.diet.supp || '')}" oninput="updSuppText(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSupp();}">
         <button type="button" class="btn btn-primary btn-sm" onclick="addCustomSupp()">${esc(t('add'))}</button>
       </div>
       ${p.diet.supps.map((s, idx) => `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:var(--bg); border-radius:6px; margin-bottom:6px; font-size:0.86rem;">
@@ -752,6 +807,7 @@ function renderSection() {
     const moodOpts = ['calm', 'anxious', 'agitated', 'low', 'confused', 'vocal', 'elevated', 'hostile'];
     const locOpts = ['asleep', 'settled', 'mhChair', 'restless', 'mhBath', 'mhCommunal', 'mhVisit', 'outOfBed'];
     const ratOpts = ['mhRatRoutine', 'mhRatEngage', 'mhRatDeesc', 'mhRatReorient', 'mhRatEnv', 'mhRatFluids', 'mhRatPrn', 'mhRatEsc'];
+    const expIdx = getExpIdx('mh', p.mh.length);
 
     const lvlCard = `<div class="card">
       <label>${esc(t('obsLevel'))}</label>
@@ -760,44 +816,52 @@ function renderSection() {
       </select>
     </div>`;
 
-    const listHtml = p.mh.map((m, i) => `<div class="card entry-card">
-      <div class="entry-hdr">
-        <span class="entry-num">${esc(t('mh'))} #${i + 1}</span>
-        <button type="button" class="del-btn" onclick="delItem('mh', ${i})">✕</button>
-      </div>
-      <div class="row">
-        <div><label>${esc(t('time'))}</label><input type="time" value="${esc(m.t || '')}" oninput="updMhField(${i}, 't', this.value)"></div>
-        <div>
-          <label>${esc(t('mood'))}</label>
-          <select onchange="updMhField(${i}, 'm', this.value)">
-            <option value="" ${!m.m ? 'selected' : ''}>—</option>
-            ${moodOpts.map(k => `<option value="${k}" ${m.m === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
-          </select>
+    const listHtml = p.mh.map((m, i) => {
+      if (i !== expIdx && (m.m || m.r || m.rat || m.n)) {
+        return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('mh', ${i})">
+          <div><strong>${esc(m.t)}</strong> — ${m.m ? `<b>${esc(trCode(m.m))}</b>` : ''}${m.r ? (m.m ? ' • ' : '') + esc(trCode(m.r)) : ''}${m.rat ? ' • ' + esc(trCode(m.rat)) : ''}${m.n ? ' (' + esc(m.n) + ')' : ''} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:6px;">✎</span></div>
+          <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('mh', ${i})">✕</button>
+        </div>`;
+      }
+      return `<div class="card entry-card">
+        <div class="entry-hdr">
+          <span class="entry-num" style="cursor:pointer;" onclick="setExpIdx('mh', ${i})">${esc(t('mh'))} #${i + 1} ▲</span>
+          <button type="button" class="del-btn" onclick="delItem('mh', ${i})">✕</button>
         </div>
-      </div>
-      <div class="row">
-        <div>
-          <label>${esc(t('rest'))}</label>
-          <select onchange="updMhField(${i}, 'r', this.value)">
-            <option value="" ${!m.r ? 'selected' : ''}>—</option>
-            ${locOpts.map(k => `<option value="${k}" ${m.r === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
-          </select>
+        <div class="row">
+          <div><label>${esc(t('time'))}</label><input type="time" value="${esc(m.t || '')}" oninput="updMhField(${i}, 't', this.value)"></div>
+          <div>
+            <label>${esc(t('mood'))}</label>
+            <select onchange="updMhField(${i}, 'm', this.value)">
+              <option value="" ${!m.m ? 'selected' : ''}>—</option>
+              ${moodOpts.map(k => `<option value="${k}" ${m.m === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
+            </select>
+          </div>
         </div>
-      </div>
-      <div class="row">
-        <div>
-          <label>${esc(t('mhRationaleLbl'))}</label>
-          <select onchange="updMhField(${i}, 'rat', this.value)">
-            <option value="" ${!m.rat ? 'selected' : ''}>—</option>
-            ${ratOpts.map(k => `<option value="${k}" ${m.rat === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
-          </select>
+        <div class="row">
+          <div>
+            <label>${esc(t('rest'))}</label>
+            <select onchange="updMhField(${i}, 'r', this.value)">
+              <option value="" ${!m.r ? 'selected' : ''}>—</option>
+              ${locOpts.map(k => `<option value="${k}" ${m.r === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
+            </select>
+          </div>
         </div>
-      </div>
-      <div style="margin-bottom:0;">
-        <label>${esc(t('mhNoteLbl'))}</label>
-        <input type="text" value="${esc(m.n || '')}" oninput="updMhField(${i}, 'n', this.value)">
-      </div>
-    </div>`).join('');
+        <div class="row">
+          <div>
+            <label>${esc(t('mhRationaleLbl'))}</label>
+            <select onchange="updMhField(${i}, 'rat', this.value)">
+              <option value="" ${!m.rat ? 'selected' : ''}>—</option>
+              ${ratOpts.map(k => `<option value="${k}" ${m.rat === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:0;">
+          <label>${esc(t('mhNoteLbl'))}</label>
+          <input type="text" value="${esc(m.n || '')}" oninput="updMhField(${i}, 'n', this.value)">
+        </div>
+      </div>`;
+    }).join('');
 
     bodyHtml = lvlCard + listHtml + `<button type="button" class="btn btn-primary" style="margin-bottom:12px;" onclick="createMhEntry()">${esc(t('add'))} ${esc(t('mh'))}</button>`;
   }
@@ -837,6 +901,7 @@ function renderSection() {
 
   else if (curSec === 'reminders') {
     const taskList = getLangList('tasks');
+    const expIdx = getExpIdx('reminders', p.reminders.length);
     const quickCard = `<div class="card">
       <label>${esc(t('reminders'))}</label>
       <div class="chip-row" style="margin-bottom:0;">
@@ -847,19 +912,32 @@ function renderSection() {
     const listHtml = p.reminders.map((r, i) => {
       const tkTxt = (typeof r.tIdx === 'number' && taskList[r.tIdx] && !r.customEdited) ? taskList[r.tIdx] : (r.txt || '');
       const overdue = isTaskOverdue(r);
+      if (i !== expIdx && tkTxt.trim()) {
+        return `<div class="card entry-card ${overdue ? 'task-alert' : ''}" style="display:flex; justify-content:space-between; align-items:center;">
+          <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.92rem; color:var(--text); cursor:pointer; flex:1;" onclick="event.stopPropagation()">
+            <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleTaskDone(${i})">
+            <span class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? 'OVERDUE' : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
+            <span style="${r.done ? 'text-decoration:line-through; opacity:0.55;' : 'font-weight:700;'}" onclick="event.preventDefault(); setExpIdx('reminders', ${i})">${esc(tkTxt)} <span style="color:var(--teal); font-size:0.78rem;">✎</span></span>
+          </label>
+          <button type="button" class="del-btn" onclick="delItem('reminders', ${i})">✕</button>
+        </div>`;
+      }
       return `<div class="card entry-card ${overdue ? 'task-alert' : ''}">
         <div class="entry-hdr">
           <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.9rem; color:var(--text); cursor:pointer;">
             <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleTaskDone(${i})">
             <span class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? 'OVERDUE' : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
           </label>
-          <button type="button" class="del-btn" onclick="delItem('reminders', ${i})">✕</button>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <button type="button" class="btn-subtle btn-sm" style="padding:2px 8px; font-size:0.74rem;" onclick="setExpIdx('reminders', ${i})">▲</button>
+            <button type="button" class="del-btn" onclick="delItem('reminders', ${i})">✕</button>
+          </div>
         </div>
         <div class="chip-row" style="margin-bottom:8px;">
           ${[[15,'+15m'],[30,'+30m'],[60,'+1h'],[120,'+2h'],[240,'+4h']].map(([mins, lbl]) => `<span class="chip" onclick="setTaskOffset(${i}, ${mins})">${lbl}</span>`).join('')}
         </div>
         <div class="row" style="margin-bottom:0;">
-          <div style="flex:0 0 115px;"><label>${esc(t('dueTime'))}</label><input type="time" value="${esc(r.due || '')}" onchange="updTaskDue(${i}, this.value)"></div>
+          <div style="flex:0 0 115px;"><label>${esc(t('dueTime'))}</label><input type="time" value="${esc(r.due || '')}" oninput="updTaskDue(${i}, this.value)"></div>
           <div><label>${esc(t('reminders'))}</label><input type="text" value="${esc(tkTxt)}" oninput="updTaskText(${i}, this.value)"></div>
         </div>
       </div>`;
@@ -871,6 +949,7 @@ function renderSection() {
   else if (curSec === 'admit') {
     const admitList = getLangList('admits');
     const locs = ['locPt', 'locSafe', 'locHome'];
+    const selectedStdKeys = Object.keys(p.admit.items);
 
     bodyHtml = `<div class="card">
       <div class="row">
@@ -883,25 +962,51 @@ function renderSection() {
       <label>${esc(t('admit'))}</label>
       <div class="chip-row">
         ${admitList.map((itemLbl, idx) => {
-          const isOn = p.admit.list.includes(idx);
-          return `<span class="chip ${isOn ? 'active' : ''}" onclick="toggleAdmitPill(${idx})">${isOn ? '✓ ' : '+ '}${esc(itemLbl)}</span>`;
+          const isOn = p.admit.items['std_' + idx] !== undefined;
+          return `<span class="chip ${isOn ? 'active' : ''}" onclick="toggleAdmitStdItem(${idx})">${isOn ? '✓ ' : '+ '}${esc(itemLbl)}</span>`;
         }).join('')}
       </div>
-      <div style="margin-bottom:12px;">
-        <label>${esc(t('locNotes'))}</label>
-        <input type="text" placeholder="Other belongings / notes..." value="${esc(p.admit.other || '')}" oninput="updAdmitField('other', this.value)">
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <input type="text" id="admitCustomInput" placeholder="${esc(t('otherItemPh'))}" value="${esc(p.admit.other || '')}" oninput="updAdmitField('other', this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();addAdmitCustomItem();}">
+        <button type="button" class="btn btn-primary btn-sm" onclick="addAdmitCustomItem()">${esc(t('add'))}</button>
       </div>
-      <div class="chip-row" style="margin-bottom:0;">
-        ${locs.map(lc => `<span class="chip ${p.admit.loc === lc ? 'active' : ''}" onclick="toggleAdmitLoc('${lc}')">${esc(t(lc))}</span>`).join('')}
-      </div>
+      ${selectedStdKeys.map(k => {
+        const idx = parseInt(k.replace('std_', ''));
+        const lbl = !isNaN(idx) && admitList[idx] ? admitList[idx] : k;
+        const curLoc = p.admit.items[k] || '';
+        return `<div style="display:flex; justify-content:space-between; align-items:center; gap:6px; padding:8px 10px; background:var(--bg); border-radius:8px; border:1px solid var(--border); margin-bottom:6px; flex-wrap:wrap;">
+          <span style="font-weight:700; font-size:0.86rem;">${esc(lbl)}</span>
+          <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+            ${locs.map(lc => `<span class="chip ${curLoc === lc ? 'active' : ''}" style="padding:4px 8px; font-size:0.74rem;" onclick="setAdmitStdLoc('${k}', '${lc}')">${esc(t(lc))}</span>`).join('')}
+            <button type="button" class="del-btn" onclick="toggleAdmitStdItem(${idx})">✕</button>
+          </div>
+        </div>`;
+      }).join('')}
+      ${p.admit.custom.map((ci, cIdx) => `<div style="display:flex; justify-content:space-between; align-items:center; gap:6px; padding:8px 10px; background:var(--bg); border-radius:8px; border:1px solid var(--border); margin-bottom:6px; flex-wrap:wrap;">
+        <span style="font-weight:700; font-size:0.86rem;">${esc(ci.name)}</span>
+        <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+          ${locs.map(lc => `<span class="chip ${ci.loc === lc ? 'active' : ''}" style="padding:4px 8px; font-size:0.74rem;" onclick="setAdmitCustomLoc(${cIdx}, '${lc}')">${esc(t(lc))}</span>`).join('')}
+          <button type="button" class="del-btn" onclick="delAdmitCustomItem(${cIdx})">✕</button>
+        </div>
+      </div>`).join('')}
     </div>`;
   }
 
   area.innerHTML = topHtml + bodyHtml;
 }
 
-function createObsEntry() { getPt(curBed).obs.push({ t: nowTimeStr(), rr: '', sp: '', o2: '', sys: '', dia: '', bp: '-', hr: '', tm: '', u: tempUnit, aIdx: null, pn: '', done: false }); saveDB(); renderUI(); }
+function createObsEntry() {
+  const p = getPt(curBed);
+  p.obs.push({ t: nowTimeStr(), rr: '', sp: '', o2: '', sys: '', dia: '', bp: '-', hr: '', tm: '', u: tempUnit, aIdx: null, pn: '', done: false });
+  expandedCards[curBed + '_obs'] = p.obs.length - 1;
+  saveDB(); renderUI();
+}
 function updObsField(idx, k, val) { const p = getPt(curBed); if (!p.obs[idx]) return; p.obs[idx][k] = val; p.obs[idx].done = false; saveDB(); refreshSubNavCounts(); }
+function toggleObsAcvpu(idx, aIdx) {
+  const p = getPt(curBed); if (!p.obs[idx]) return;
+  p.obs[idx].aIdx = (p.obs[idx].aIdx === aIdx) ? null : aIdx;
+  p.obs[idx].done = false; saveDB(); renderSection(); refreshSubNavCounts();
+}
 function updObsBp(idx, part, val) {
   const p = getPt(curBed); if (!p.obs[idx]) return;
   const o = p.obs[idx]; const [curSys, curDia] = splitBpParts(o, 'sys', 'dia', 'bp');
@@ -909,7 +1014,12 @@ function updObsBp(idx, part, val) {
   o.bp = (o.sys || o.dia) ? `${o.sys || '-'}/${o.dia || '-'}` : '-'; o.done = false; saveDB(); refreshSubNavCounts();
 }
 
-function createBmEntry() { getPt(curBed).bm.push({ t: nowTimeStr(), v: '', u: bmUnit, c: '', f: [], done: false }); saveDB(); renderUI(); }
+function createBmEntry() {
+  const p = getPt(curBed);
+  p.bm.push({ t: nowTimeStr(), v: '', u: bmUnit, c: '', f: [], done: false });
+  expandedCards[curBed + '_bm'] = p.bm.length - 1;
+  saveDB(); renderUI();
+}
 function updBmField(idx, k, val) { const p = getPt(curBed); if (!p.bm[idx]) return; p.bm[idx][k] = val; p.bm[idx].done = false; saveDB(); refreshSubNavCounts(); }
 function toggleBmFlag(idx, code) {
   const p = getPt(curBed); if (!p.bm[idx]) return;
@@ -919,7 +1029,12 @@ function toggleBmFlag(idx, code) {
   p.bm[idx].done = false; saveDB(); renderSection();
 }
 
-function createBpEntry() { getPt(curBed).bp.push({ t: nowTimeStr(), lSys: '', lDia: '', sSys: '', sDia: '', l: '-', s: '-', sym: [], done: false }); saveDB(); renderUI(); }
+function createBpEntry() {
+  const p = getPt(curBed);
+  p.bp.push({ t: nowTimeStr(), lSys: '', lDia: '', sSys: '', sDia: '', l: '-', s: '-', sym: [], done: false });
+  expandedCards[curBed + '_bp'] = p.bp.length - 1;
+  saveDB(); renderUI();
+}
 function updBpField(idx, k, val) { const p = getPt(curBed); if (!p.bp[idx]) return; p.bp[idx][k] = val; p.bp[idx].done = false; saveDB(); }
 function updBpPair(idx, posKey, part, val) {
   const p = getPt(curBed); if (!p.bp[idx]) return;
@@ -974,7 +1089,12 @@ function addWetPad() { const p = getPt(curBed); if (!p.fluids[activeFluidIdx]) a
 function decWetPad(idx) { const p = getPt(curBed); if (!p.fluids[idx]) return; p.fluids[idx].wet = Math.max(0, (Number(p.fluids[idx].wet) || 0) - 1); saveDB(); renderUI(); }
 function clrFluidRow(idx) { const p = getPt(curBed); if (!p.fluids[idx]) return; p.fluids[idx] = { t: p.fluids[idx].t, i: 0, o: 0, src: '', wet: 0, done: false }; saveDB(); renderUI(); }
 
-function createBowelEntry() { getPt(curBed).bowel.push({ t: nowTimeStr(), a: '', ty: '', m: '', done: false }); saveDB(); renderUI(); }
+function createBowelEntry() {
+  const p = getPt(curBed);
+  p.bowel.push({ t: nowTimeStr(), a: '', ty: '', m: '', done: false });
+  expandedCards[curBed + '_bowel'] = p.bowel.length - 1;
+  saveDB(); renderUI();
+}
 function updBowelField(idx, k, val, rerender) {
   const p = getPt(curBed); if (!p.bowel[idx]) return;
   p.bowel[idx][k] = val;
@@ -984,8 +1104,10 @@ function updBowelField(idx, k, val, rerender) {
 
 function updSkin(site, val) { const p = getPt(curBed); p.skin[site] = val; p.skinDone = false; saveDB(); renderUI(); }
 function markAllSkinIntact() {
-  const p = getPt(curBed), allIntact = ['sacrum', 'groin', 'heels', 'elbows'].every(s => p.skin[s] === 'intact');
-  ['sacrum', 'groin', 'heels', 'elbows'].forEach(s => { p.skin[s] = allIntact ? '' : 'intact'; });
+  const p = getPt(curBed), core = ['sacrum', 'groin', 'heels', 'elbows'];
+  const allIntact = core.every(s => p.skin[s] === 'intact');
+  if (allIntact) core.forEach(s => { p.skin[s] = ''; });
+  else core.forEach(s => { if (!p.skin[s]) p.skin[s] = 'intact'; });
   p.skinDone = false; saveDB(); renderUI();
 }
 function createCustomSkin() { const p = getPt(curBed); p.skinCustom.push({ site: '', side: '', cond: '' }); p.skinDone = false; saveDB(); renderUI(); }
@@ -1011,8 +1133,13 @@ function createTurnEntry() { getPt(curBed).turns.push({ t: nowTimeStr(), p: '', 
 function updTurnField(idx, k, val) { const p = getPt(curBed); if (!p.turns[idx]) return; p.turns[idx][k] = val; p.turns[idx].done = false; saveDB(); refreshSubNavCounts(); }
 function toggleTurnCheck(ck) { const p = getPt(curBed), idx = p.turnChecks.indexOf(ck); if (idx > -1) p.turnChecks.splice(idx, 1); else p.turnChecks.push(ck); saveDB(); renderUI(); }
 
-function setMhLevel(val) { getPt(curBed).mhLevel = val; saveDB(); }
-function createMhEntry() { getPt(curBed).mh.push({ t: nowTimeStr(), m: '', r: '', rat: '', n: '', done: false }); saveDB(); renderUI(); }
+function setMhLevel(val) { const p = getPt(curBed); p.mhLevel = val; p.mhLevelDone = false; saveDB(); refreshSubNavCounts(); }
+function createMhEntry() {
+  const p = getPt(curBed);
+  p.mh.push({ t: nowTimeStr(), m: '', r: '', rat: '', n: '', done: false });
+  expandedCards[curBed + '_mh'] = p.mh.length - 1;
+  saveDB(); renderUI();
+}
 function updMhField(idx, k, val) { const p = getPt(curBed); if (!p.mh[idx]) return; p.mh[idx][k] = val; p.mh[idx].done = false; saveDB(); refreshSubNavCounts(); }
 
 function addQuickPhrase(pIdx) { const phrases = getLangList('phrases'); getPt(curBed).events.push({ t: nowTimeStr(), pIdx, e: phrases[pIdx] || '', o: '', done: false }); saveDB(); renderUI(); }
@@ -1023,12 +1150,14 @@ function quickAddTaskPreset(tIdx) {
   const p = getPt(curBed), taskList = getLangList('tasks'), nowMs = Date.now(), dt = new Date(nowMs + 30 * 60 * 1000);
   const due = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
   p.reminders.push({ due, createdTs: nowMs, dueTs: dt.getTime(), txt: taskList[tIdx] || '', tIdx, done: false, alerted: false });
+  expandedCards[curBed + '_reminders'] = p.reminders.length - 1;
   saveDB(); renderUI();
 }
 function createTaskEntry() {
   const p = getPt(curBed), nowMs = Date.now(), dt = new Date(nowMs + 30 * 60 * 1000);
   const due = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
   p.reminders.push({ due, createdTs: nowMs, dueTs: dt.getTime(), txt: '', done: false, alerted: false });
+  expandedCards[curBed + '_reminders'] = p.reminders.length - 1;
   saveDB(); renderUI();
 }
 function setTaskOffset(idx, mins) {
@@ -1042,14 +1171,42 @@ function updTaskDue(idx, dueStr) {
   const p = getPt(curBed); if (!p.reminders[idx]) return;
   const nowMs = Date.now();
   p.reminders[idx].due = dueStr; p.reminders[idx].createdTs = nowMs; p.reminders[idx].dueTs = computeTaskDueTs(dueStr, nowMs); p.reminders[idx].alerted = false;
-  saveDB(); renderUI();
+  saveDB(); refreshSubNavCounts();
 }
 function updTaskText(idx, val) { const p = getPt(curBed); if (!p.reminders[idx]) return; p.reminders[idx].txt = val; p.reminders[idx].customEdited = true; saveDB(); refreshSubNavCounts(); }
 function toggleTaskDone(idx) { const p = getPt(curBed); if (!p.reminders[idx]) return; p.reminders[idx].done = !p.reminders[idx].done; saveDB(); renderUI(); }
 
 function updAdmitField(k, val) { const p = getPt(curBed); p.admit[k] = val; p.admit.done = false; saveDB(); refreshSubNavCounts(); }
-function toggleAdmitPill(idx) { const p = getPt(curBed), pos = p.admit.list.indexOf(idx); if (pos > -1) p.admit.list.splice(pos, 1); else p.admit.list.push(idx); p.admit.done = false; saveDB(); renderUI(); }
-function toggleAdmitLoc(lc) { const p = getPt(curBed); p.admit.loc = (p.admit.loc === lc) ? '' : lc; p.admit.done = false; saveDB(); renderUI(); }
+function toggleAdmitStdItem(idx) {
+  const p = getPt(curBed), k = 'std_' + idx;
+  if (p.admit.items[k] !== undefined) delete p.admit.items[k];
+  else p.admit.items[k] = 'locPt';
+  p.admit.done = false; saveDB(); renderUI();
+}
+function setAdmitStdLoc(key, lc) {
+  const p = getPt(curBed);
+  p.admit.items[key] = (p.admit.items[key] === lc) ? '' : lc;
+  p.admit.done = false; saveDB(); renderSection();
+}
+function addAdmitCustomItem() {
+  const inp = document.getElementById('admitCustomInput');
+  const val = (inp ? inp.value : '').trim();
+  if (!val) return;
+  const p = getPt(curBed);
+  p.admit.custom.push({ name: val, loc: 'locPt' });
+  p.admit.other = '';
+  p.admit.done = false; saveDB(); renderUI();
+}
+function setAdmitCustomLoc(cIdx, lc) {
+  const p = getPt(curBed); if (!p.admit.custom[cIdx]) return;
+  p.admit.custom[cIdx].loc = (p.admit.custom[cIdx].loc === lc) ? '' : lc;
+  p.admit.done = false; saveDB(); renderSection();
+}
+function delAdmitCustomItem(cIdx) {
+  const p = getPt(curBed);
+  p.admit.custom.splice(cIdx, 1);
+  p.admit.done = false; saveDB(); renderUI();
+}
 
 function delItem(sec, idx) {
   if (!confirm(t('delConfirm'))) return;
@@ -1086,37 +1243,39 @@ function toggleSumDone(bedOrIdx, sec, idx) {
   if (sec === 'skin') p.skinDone = !p.skinDone;
   else if (sec === 'diet') p.diet.done = !p.diet.done;
   else if (sec === 'turnPlan') p.turnPlanDone = !p.turnPlanDone;
+  else if (sec === 'mhLevel') p.mhLevelDone = !p.mhLevelDone;
   else if (sec === 'admit') p.admit.done = !p.admit.done;
   else if (Array.isArray(p[sec]) && p[sec][idx]) p[sec][idx].done = !p[sec][idx].done;
   saveDB(); renderSummary();
+}
+
+function isBedAllDone(b) {
+  const p = getPt(b);
+  const lists = ['obs','bm','bp','fluids','bowel','dressings','turns','mh','events','reminders'];
+  for (const k of lists) {
+    if (p[k].some(x => !x.done)) return false;
+  }
+  return p.skinDone && p.diet.done && p.turnPlanDone && p.mhLevelDone && p.admit.done;
 }
 
 function markBedDone(bedOrIdx) {
   const bed = typeof bedOrIdx === 'number' ? alloc[bedOrIdx] : bedOrIdx;
   if (!bed) return;
   const p = getPt(bed);
-  ['obs','bm','bp','fluids','bowel','dressings','turns','mh','events','reminders'].forEach(k => p[k].forEach(x => x.done = true));
-  p.skinDone = true; p.diet.done = true; p.turnPlanDone = true; p.admit.done = true;
+  const targetState = !isBedAllDone(bed);
+  ['obs','bm','bp','fluids','bowel','dressings','turns','mh','events','reminders'].forEach(k => p[k].forEach(x => x.done = targetState));
+  p.skinDone = targetState; p.diet.done = targetState; p.turnPlanDone = targetState; p.mhLevelDone = targetState; p.admit.done = targetState;
   saveDB(); renderSummary();
 }
 
 function buildModuleSummaryForBed(b, modId) {
-  const bIdx = alloc.indexOf(b), p = getPt(b), acvpuList = getLangList('acvpu'), phrases = getLangList('phrases'), taskList = getLangList('tasks'), admitList = getLangList('admits');
+  const bIdx = alloc.indexOf(b), p = getPt(b), phrases = getLangList('phrases'), taskList = getLangList('tasks'), admitList = getLangList('admits');
   let rows = '';
 
   if (modId === 'obs') {
     p.obs.forEach((o, i) => {
       if (!isObsFilled(o)) return;
-      const parts = [];
-      if (o.rr && o.rr !== '-') parts.push(`RR <b>${esc(o.rr)}</b>`);
-      if (o.sp && o.sp !== '-') parts.push(`SpO2 <b>${esc(o.sp)}%</b>${(o.o2 && o.o2 !== '-') ? ` (${esc(trCode(o.o2))})` : ''}`);
-      else if (o.o2 && o.o2 !== '-') parts.push(`<b>${esc(trCode(o.o2))}</b>`);
-      if (o.bp && o.bp !== '-' && o.bp !== '-/-') parts.push(`BP <b>${esc(o.bp)}</b>`);
-      if (o.hr && o.hr !== '-') parts.push(`HR <b>${esc(o.hr)}</b>`);
-      if (typeof o.aIdx === 'number' && acvpuList[o.aIdx]) parts.push(`<b>${esc(acvpuList[o.aIdx])}</b>`);
-      if (o.tm && o.tm !== '-') parts.push(`Temp <b>${esc(o.tm)}${esc(o.u || tempUnit)}</b>`);
-      if (o.pn !== '' && o.pn !== undefined && o.pn !== null && o.pn !== '-') parts.push(`${esc(t('pain'))} <b>${esc(o.pn)}/10</b>`);
-      rows += sumRowWrap(`<strong>${esc(o.t || '--:--')}</strong> — ${parts.join(' • ')}`, bIdx, 'obs', i, !!o.done);
+      rows += sumRowWrap(`<strong>${esc(o.t || '--:--')}</strong> — ${formatObsLine(o)}`, bIdx, 'obs', i, !!o.done);
     });
   } else if (modId === 'bm') {
     p.bm.forEach((x, i) => {
@@ -1133,11 +1292,12 @@ function buildModuleSummaryForBed(b, modId) {
       rows += sumRowWrap(`<strong>${esc(x.t)}</strong> — ${bpParts.join(' | ')}${(x.sym && x.sym.length) ? ' (' + x.sym.map(s => esc(trCode(s))).join(', ') + ')' : ''}`, bIdx, 'bp', i, !!x.done);
     });
   } else if (modId === 'fluid') {
-    let totI = 0, totO = 0;
+    let totI = 0, totO = 0, hasFluidActivity = false;
     p.fluids.forEach((f, i) => {
       const fi = Number(f.i) || 0, fo = Number(f.o) || 0, fw = Number(f.wet) || 0;
       totI += fi; totO += fo;
       if (fi > 0 || fo > 0 || fw > 0) {
+        hasFluidActivity = true;
         const segs = [];
         if (fi > 0) segs.push(`${esc(t('flIn'))} <b>${fi}ml</b>`);
         if (fo > 0) segs.push(`${esc(t('flOut'))} <b>${fo}ml</b>${f.src ? ' (' + esc(trCode(f.src)) + ')' : ''}`);
@@ -1146,7 +1306,7 @@ function buildModuleSummaryForBed(b, modId) {
         rows += sumRowWrap(`<strong>${esc(f.t || '')}</strong> — ${segs.join(' | ')}`, bIdx, 'fluids', i, !!f.done);
       }
     });
-    if (rows) {
+    if (rows || (hasFluidActivity && !hideCompleted)) {
       const net = totI - totO;
       rows += `<div style="padding-top:6px; font-size:0.9rem;"><strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b>${totI}ml</b> | ${esc(t('flOut'))} <b>${totO}ml</b> | ${esc(t('flNet'))} <b>${net > 0 ? '+' + net : net}ml</b></div>`;
     }
@@ -1182,6 +1342,9 @@ function buildModuleSummaryForBed(b, modId) {
     }
     p.turns.forEach((tr, i) => { if (tr.p) rows += sumRowWrap(`<strong>${esc(tr.t)}</strong> — <b>${esc(trCode(tr.p))}</b>`, bIdx, 'turns', i, !!tr.done); });
   } else if (modId === 'mh') {
+    if (p.mhLevel && p.mh.length === 0) {
+      rows += sumRowWrap(`${esc(t('obsLevel'))}: <b>${esc(trCode(p.mhLevel))}</b>`, bIdx, 'mhLevel', 0, !!p.mhLevelDone);
+    }
     p.mh.forEach((m, i) => {
       if (!m.m && !m.r && !m.rat && !m.n) return;
       rows += sumRowWrap(`<strong>${esc(m.t)}</strong>${p.mhLevel ? ' (' + esc(trCode(p.mhLevel)) + ')' : ''} — ${m.m ? `<b>${esc(trCode(m.m))}</b>` : ''}${m.r ? (m.m ? ' • ' : '') + esc(trCode(m.r)) : ''}${m.rat ? ' • ' + esc(trCode(m.rat)) : ''}${m.n ? ' (' + esc(m.n) + ')' : ''}`, bIdx, 'mh', i, !!m.done);
@@ -1203,12 +1366,15 @@ function buildModuleSummaryForBed(b, modId) {
     if (p.admit.w) aParts.push(`${esc(t('weight'))}: <b>${esc(p.admit.w)}kg</b>`);
     if (p.admit.h) aParts.push(`${esc(t('height'))}: <b>${esc(p.admit.h)}cm</b>`);
     if (p.admit.wb) aParts.push(`<b>✓ ${esc(t('wristband'))}</b>`);
-    if (p.admit.list.length > 0) {
-      const itemsTxt = p.admit.list.map(idx => admitList[idx] ? esc(admitList[idx]) : '').filter(Boolean).join(', ');
-      if (itemsTxt) aParts.push(`<b>${itemsTxt}</b>`);
-    }
+    Object.entries(p.admit.items).forEach(([k, lc]) => {
+      const idx = parseInt(k.replace('std_', ''));
+      const lbl = !isNaN(idx) && admitList[idx] ? admitList[idx] : k;
+      aParts.push(`<b>${esc(lbl)}</b>${lc ? ' (' + esc(trCode(lc)) + ')' : ''}`);
+    });
+    p.admit.custom.forEach(ci => {
+      aParts.push(`<b>${esc(ci.name)}</b>${ci.loc ? ' (' + esc(trCode(ci.loc)) + ')' : ''}`);
+    });
     if (p.admit.other && p.admit.other.trim()) aParts.push(`<b>${esc(p.admit.other.trim())}</b>`);
-    if (p.admit.loc) aParts.push(`(${esc(trCode(p.admit.loc))})`);
     if (aParts.length > 0) rows += sumRowWrap(aParts.join(' • '), bIdx, 'admit', 0, !!p.admit.done);
   }
   return rows;
@@ -1225,6 +1391,7 @@ function renderSummary() {
     <button type="button" class="tool-btn ${wakeLockObj ? 'active' : ''}" onclick="toggleWakeLock()">${esc(t('keepOn'))}</button>
   </div>`;
 
+  let anyVisible = false;
   if (summaryGroup === 'bed') {
     alloc.forEach((b, bIdx) => {
       let bedContent = '';
@@ -1233,7 +1400,9 @@ function renderSummary() {
         if (modRows) bedContent += `<div class="summary-sec"><div class="sum-mod-hdr" onclick="jumpToBedMod(${bIdx}, '${s.id}')">${esc(t(s.id))} ✎</div>${modRows}</div>`;
       });
       if (bedContent) {
-        html += `<div class="card"><h3><span>${esc(b)}</span><button type="button" class="btn-subtle btn-sm" style="background:var(--header-bg); color:#fff; border:none;" onclick="markBedDone(${bIdx})">${esc(t('markBed'))}</button></h3>${bedContent}</div>`;
+        anyVisible = true;
+        const allDone = isBedAllDone(b);
+        html += `<div class="card"><h3><span>${esc(b)}</span><button type="button" class="btn-subtle btn-sm" style="background:var(--header-bg); color:#fff; border:none;" onclick="markBedDone(${bIdx})">${esc(allDone ? t('undoBed') : t('markBed'))}</button></h3>${bedContent}</div>`;
       }
     });
   } else {
@@ -1243,8 +1412,15 @@ function renderSummary() {
         const modRows = buildModuleSummaryForBed(b, s.id);
         if (modRows) modContent += `<div class="summary-sec"><div class="sum-mod-hdr" onclick="jumpToBedMod(${bIdx}, '${s.id}')">${esc(b)} ✎</div>${modRows}</div>`;
       });
-      if (modContent) html += `<div class="card"><h3><span>${esc(t(s.id))}</span></h3>${modContent}</div>`;
+      if (modContent) {
+        anyVisible = true;
+        html += `<div class="card"><h3><span>${esc(t(s.id))}</span></h3>${modContent}</div>`;
+      }
     });
+  }
+
+  if (!anyVisible) {
+    html += `<div class="card" style="text-align:center; color:var(--text-sub); padding:24px 14px; font-weight:600;">${esc(hideCompleted ? t('allDoneMsg') : t('nothingLoggedMsg'))}</div>`;
   }
   area.innerHTML = html;
 }
@@ -1252,10 +1428,4 @@ function renderSummary() {
 function setSumGroup(g) { summaryGroup = g; renderSummary(); }
 function toggleHideCompleted() { hideCompleted = !hideCompleted; renderSummary(); }
 
-window.CDP_MOD_VER = 5;
-function applyModVerBadge() {
-  const h = document.getElementById('hdrTitle');
-  if (h) h.innerHTML = 'Care Digipad <small style="font-size:0.68rem; opacity:0.9; font-weight:700; color:#5eead4;">v5 ✓</small>';
-}
-applyModVerBadge();
-window.addEventListener('DOMContentLoaded', applyModVerBadge);
+window.CDP_MOD_VER = 6;
