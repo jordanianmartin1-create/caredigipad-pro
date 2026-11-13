@@ -273,6 +273,12 @@ const ALL_MODS = [
   {id:'mh', pro:true}, {id:'events', pro:false}, {id:'reminders', pro:true}, {id:'admit', pro:true}
 ];
 
+function sortBedArray(arr) {
+  if (!Array.isArray(arr)) return [];
+  const unique = [...new Set(arr.map(x => String(x || '').trim().toUpperCase()).filter(Boolean))];
+  return unique.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+}
+
 let isPro = localStorage.getItem('cdu_pro') === '1';
 let curLang = localStorage.getItem('cdu_lang') || 'en';
 let curTheme = localStorage.getItem('cdu_color') || 'teal';
@@ -281,8 +287,8 @@ let curShift = localStorage.getItem('cdu_shift') || 'day';
 let bmUnit = localStorage.getItem('cdu_bm_unit') || 'mmol/L';
 let tempUnit = localStorage.getItem('cdu_temp_unit') || '°C';
 
-let wardBeds = JSON.parse(localStorage.getItem('cdu_ward') || '[]');
-let alloc = JSON.parse(localStorage.getItem('cdu_alloc') || '[]');
+let wardBeds = sortBedArray(JSON.parse(localStorage.getItem('cdu_ward') || '[]'));
+let alloc = sortBedArray(JSON.parse(localStorage.getItem('cdu_alloc') || '[]'));
 let db = JSON.parse(localStorage.getItem('cdu_db') || '{}');
 let layouts = JSON.parse(localStorage.getItem('cdu_layouts') || '{}');
 let activeLayoutName = localStorage.getItem('cdu_active_lay') || '';
@@ -329,14 +335,18 @@ function normalizeLayouts() {
   if (!layouts || typeof layouts !== 'object') { layouts = {}; return; }
   Object.keys(layouts).forEach(k => {
     const val = layouts[k];
-    if (Array.isArray(val)) return;
+    if (Array.isArray(val)) {
+      layouts[k] = sortBedArray(val);
+      return;
+    }
     if (val && typeof val === 'object') {
-      if (Array.isArray(val.alloc)) layouts[k] = val.alloc;
-      else if (Array.isArray(val.beds)) layouts[k] = val.beds;
-      else if (Array.isArray(val.ward)) layouts[k] = val.ward;
+      if (Array.isArray(val.alloc)) layouts[k] = sortBedArray(val.alloc);
+      else if (Array.isArray(val.beds)) layouts[k] = sortBedArray(val.beds);
+      else if (Array.isArray(val.ward)) layouts[k] = sortBedArray(val.ward);
       else delete layouts[k];
     } else delete layouts[k];
   });
+  localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
 }
 normalizeLayouts();
 
@@ -436,6 +446,8 @@ function getActiveSections() {
 }
 
 function saveDB() {
+  wardBeds = sortBedArray(wardBeds);
+  alloc = sortBedArray(alloc);
   localStorage.setItem('cdu_db', JSON.stringify(db));
   localStorage.setItem('cdu_alloc', JSON.stringify(alloc));
   localStorage.setItem('cdu_ward', JSON.stringify(wardBeds));
@@ -480,6 +492,8 @@ async function unlockPro() {
 function initSetup() {
   if (checkShiftExpiry()) return;
   normalizeLayouts();
+  wardBeds = sortBedArray(wardBeds);
+  alloc = sortBedArray(alloc);
   document.documentElement.lang = curLang;
   document.documentElement.dir = RTL_LANGS.includes(curLang) ? 'rtl' : 'ltr';
   document.body.setAttribute('data-theme', isDark ? 'night' : 'day');
@@ -504,8 +518,8 @@ function initSetup() {
     if (!curBed || !alloc.includes(curBed)) curBed = alloc[0];
     const activeSecs = getActiveSections();
     if (activeSecs.length > 0 && !activeSecs.some(s => s.id === curSec)) curSec = activeSecs[0].id;
-    renderUI();
-    startAlertTimer();
+    if (typeof renderUI === 'function') renderUI();
+    if (typeof startAlertTimer === 'function') startAlertTimer();
   } else {
     document.getElementById('setupView').classList.remove('hidden');
     document.getElementById('mainView').classList.add('hidden');
@@ -589,8 +603,10 @@ function loadLayout(name) {
   }
   activeLayoutName = name;
   localStorage.setItem('cdu_active_lay', name);
+  layouts[name] = sortBedArray(layouts[name]);
   layouts[name].forEach(b => { if (!wardBeds.includes(b)) wardBeds.push(b); });
-  alloc = [...layouts[name]];
+  wardBeds = sortBedArray(wardBeds);
+  alloc = sortBedArray(layouts[name]);
   saveDB();
   renderLayoutDropdown();
   renderSetupBeds();
@@ -602,7 +618,7 @@ function saveLayout() {
   const name = (inp ? inp.value : '').trim();
   if (!name) return;
   if (alloc.length === 0) { alert(t('selectAtLeastOne')); return; }
-  layouts[name] = [...alloc];
+  layouts[name] = sortBedArray(alloc);
   activeLayoutName = name;
   localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
   localStorage.setItem('cdu_active_lay', name);
@@ -622,6 +638,8 @@ function deleteLayout() {
 function renderSetupBeds() {
   const grid = document.getElementById('setupBedGrid');
   if (!grid) return;
+  wardBeds = sortBedArray(wardBeds);
+  alloc = sortBedArray(alloc);
   if (wardBeds.length === 0) {
     grid.innerHTML = `<div style="grid-column:1/-1; font-size:0.84rem; color:var(--text-sub); padding:8px 0;">${esc(t('noBedsYet'))}</div>`;
   } else {
@@ -717,6 +735,7 @@ function moveMod(idx, dir) {
 
 function startShift() {
   if (alloc.length === 0) { alert(t('selectAtLeastOne')); return; }
+  alloc = sortBedArray(alloc);
   const curSt = Number(localStorage.getItem('cdu_start'));
   if (!curSt || curSt < 1000000000000) localStorage.setItem('cdu_start', String(Date.now()));
   if (!curBed || !alloc.includes(curBed)) curBed = alloc[0];
