@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f172a">
 <title>Care Digipad</title>
-<link rel="manifest" href="manifest.json?v=4">
-<link rel="icon" type="image/png" href="icon.png?v=4">
-<link rel="apple-touch-icon" href="icon.png?v=4">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="manifest" href="manifest.json?v=5">
+<link rel="icon" type="image/png" href="icon.png?v=5">
+<link rel="apple-touch-icon" href="icon.png?v=5">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body data-theme="day" data-color="teal">
 
@@ -21,7 +21,7 @@
 
 <header>
   <div class="hdr-left">
-    <span class="hdr-title" id="hdrTitle">Care Digipad <small style="font-size:0.68rem; opacity:0.75; font-weight:600;">v4</small></span>
+    <span class="hdr-title" id="hdrTitle">Care Digipad <small style="font-size:0.68rem; opacity:0.75; font-weight:600;">v5</small></span>
     <button type="button" class="hdr-btn hidden" id="editBtn" onclick="editBeds()">Edit</button>
     <button type="button" class="hdr-btn" id="hideBtn" onclick="togglePrivacy(true)">Hide</button>
   </div>
@@ -163,8 +163,27 @@
   </div>
 </div>
 
-<script src="lang.js?v=4" onerror="window.CDU_LANGS = null"></script>
-<script src="core.js?v=4"></script>
-<script src="modules.js?v=4"></script>
+<script src="lang.js?v=5" onerror="window.CDU_LANGS = null"></script>
+<script src="core.js?v=5"></script>
+<script src="modules.js?v=5"></script>
+<script>
+window.addEventListener('load', function() {
+  if (window.CDP_MOD_VER !== 5) {
+    var ts = Date.now();
+    var s1 = document.createElement('script');
+    s1.src = 'core.js?v=' + ts;
+    s1.onload = function() {
+      var s2 = document.createElement('script');
+      s2.src = 'modules.js?v=' + ts;
+      s2.onload = function() {
+        if (typeof initSetup === 'function') initSetup();
+        if (typeof applyModVerBadge === 'function') applyModVerBadge();
+      };
+      document.body.appendChild(s2);
+    };
+    document.body.appendChild(s1);
+  }
+});
+</script>
 </body>
 </html>
