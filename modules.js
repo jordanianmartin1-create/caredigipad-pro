@@ -7,159 +7,9 @@
     .sum-mod-hdr { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--teal); background: var(--teal-light); padding: 3px 8px; border-radius: 6px; margin-bottom: 4px; cursor: pointer; }
     .task-badge { font-size: 0.72rem; font-weight: 800; padding: 2px 7px; border-radius: 10px; background: var(--bg); color: var(--text-sub); border: 1px solid var(--border); }
     .task-badge.overdue { background: var(--red); color: #fff; border-color: var(--red); }
-    .bed-item { padding: 12px 6px; border-radius: 10px; border: 1.5px dashed var(--input-border); background: var(--bg); color: var(--text-sub); font-weight: 800; font-size: 0.95rem; opacity: 0.72; transition: 0.15s; }
-    .bed-item.selected { border: 2px solid var(--teal); background: var(--teal); color: #fff; opacity: 1; box-shadow: 0 2px 5px rgba(13, 148, 136, 0.25); }
-    .admit-item-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; flex-wrap: wrap; }
-    .admit-loc-group { display: flex; gap: 4px; flex-wrap: wrap; }
-    .admit-loc-btn { padding: 5px 8px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--card); color: var(--text-sub); font-size: 0.74rem; font-weight: 700; cursor: pointer; }
-    .admit-loc-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
   `;
   document.head.appendChild(st);
 })();
-
-function sortBedList(arr) {
-  if (!Array.isArray(arr)) return [];
-  return arr.sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }));
-}
-
-function sortAllBedCollections() {
-  sortBedList(wardBeds);
-  sortBedList(alloc);
-  if (layouts && typeof layouts === 'object') {
-    Object.keys(layouts).forEach(k => {
-      if (Array.isArray(layouts[k])) sortBedList(layouts[k]);
-    });
-  }
-}
-sortAllBedCollections();
-
-function renderSetupBeds() {
-  const grid = document.getElementById('setupBedGrid');
-  if (!grid) return;
-  sortAllBedCollections();
-
-  let helperEl = document.getElementById('lblBedHelper');
-  if (helperEl && wardBeds.length > 0) {
-    helperEl.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin:4px 0;">
-      <span>Tap beds for today's shift (<b>${alloc.length}/${wardBeds.length}</b> selected):</span>
-      <span style="display:inline-flex; gap:6px;">
-        <button type="button" class="btn-subtle btn-sm" style="padding:3px 8px; font-size:0.74rem;" onclick="selectAllSetupBeds()">Select All</button>
-        <button type="button" class="btn-subtle btn-sm" style="padding:3px 8px; font-size:0.74rem;" onclick="clearSetupBeds()">Clear</button>
-      </span>
-    </div>`;
-  }
-
-  if (wardBeds.length === 0) {
-    grid.innerHTML = `<div style="grid-column:1/-1; font-size:0.84rem; color:var(--text-sub); padding:8px 0;">${esc(t('noBedsYet'))}</div>`;
-  } else {
-    grid.innerHTML = wardBeds.map((b, idx) => {
-      const sel = alloc.includes(b);
-      return `<div class="bed-item ${sel ? 'selected' : ''}" onclick="toggleBedAlloc(${idx})">
-        ${esc(b)}
-        <button type="button" class="bed-del" onclick="event.stopPropagation(); deleteWardBed(${idx})">✕</button>
-      </div>`;
-    }).join('');
-  }
-  updateStartBtn();
-}
-
-function selectAllSetupBeds() {
-  if (!isPro && wardBeds.length > 4) {
-    alloc = wardBeds.slice(0, 4);
-    alert(t('proSub'));
-  } else {
-    alloc = [...wardBeds];
-  }
-  sortAllBedCollections();
-  saveDB();
-  renderSetupBeds();
-}
-
-function clearSetupBeds() {
-  alloc = [];
-  saveDB();
-  renderSetupBeds();
-}
-
-function addCustomBed() {
-  const inp = document.getElementById('newBedInput');
-  const val = (inp ? inp.value : '').trim().toUpperCase().slice(0, 4);
-  if (!val) return;
-  if (!isPro && alloc.length >= 4 && !alloc.includes(val)) {
-    alert(t('proSub'));
-    return;
-  }
-  if (!wardBeds.includes(val)) wardBeds.push(val);
-  if (!alloc.includes(val)) alloc.push(val);
-  sortAllBedCollections();
-  inp.value = '';
-  saveDB();
-  renderSetupBeds();
-}
-
-function toggleBedAlloc(idx) {
-  const b = wardBeds[idx];
-  if (!b) return;
-  const pos = alloc.indexOf(b);
-  if (pos > -1) {
-    alloc.splice(pos, 1);
-  } else {
-    if (!isPro && alloc.length >= 4) {
-      alert(t('proSub'));
-      return;
-    }
-    alloc.push(b);
-  }
-  sortAllBedCollections();
-  saveDB();
-  renderSetupBeds();
-}
-
-function deleteWardBed(idx) {
-  const b = wardBeds[idx];
-  if (!b) return;
-  if (!confirm(`${t('del')}: ${b}?`)) return;
-  wardBeds.splice(idx, 1);
-  alloc = alloc.filter(x => x !== b);
-  sortAllBedCollections();
-  saveDB();
-  renderSetupBeds();
-}
-
-function loadLayout(name) {
-  if (!name || !Array.isArray(layouts[name])) {
-    activeLayoutName = '';
-    localStorage.setItem('cdu_active_lay', '');
-    renderLayoutDropdown();
-    return;
-  }
-  activeLayoutName = name;
-  localStorage.setItem('cdu_active_lay', name);
-  const layBeds = layouts[name];
-  layBeds.forEach(b => { if (!wardBeds.includes(b)) wardBeds.push(b); });
-  alloc = [...layBeds];
-  sortAllBedCollections();
-  saveDB();
-  renderLayoutDropdown();
-  renderSetupBeds();
-}
-
-function quickAddBedToShift(bedName) {
-  const inp = document.getElementById('quickBedInput');
-  const val = (bedName || (inp ? inp.value : '')).trim().toUpperCase().slice(0, 4);
-  if (!val) return;
-  if (!isPro && alloc.length >= 4 && !alloc.includes(val)) {
-    alert(t('proSub'));
-    return;
-  }
-  if (!wardBeds.includes(val)) wardBeds.push(val);
-  if (!alloc.includes(val)) alloc.push(val);
-  sortAllBedCollections();
-  curBed = val;
-  showQuickAddBed = false;
-  saveDB();
-  renderUI();
-}
 
 function getLocaleCode() {
   if (curLang === 'en') return 'en-GB';
@@ -255,20 +105,19 @@ function getPt(b) {
   if (!Array.isArray(p.mh)) p.mh = [];
   if (!Array.isArray(p.events)) p.events = [];
   if (!Array.isArray(p.reminders)) p.reminders = [];
-  if (!p.admit || typeof p.admit !== 'object') {
-    p.admit = { w: '', h: '', wb: false, items: {}, custom: [], notes: '', done: false };
+  if (!p.admit || typeof p.admit !== 'object') p.admit = { w: '', h: '', wb: false, list: [], other: '', loc: '', items: {}, done: false };
+  if (!Array.isArray(p.admit.list)) {
+    p.admit.list = [];
+    if (p.admit.items && typeof p.admit.items === 'object') {
+      Object.keys(p.admit.items).forEach(k => {
+        const idx = parseInt(k.replace('std_', ''));
+        if (!isNaN(idx) && !p.admit.list.includes(idx)) p.admit.list.push(idx);
+        if (!p.admit.loc && p.admit.items[k]) p.admit.loc = p.admit.items[k];
+      });
+    }
   }
-  if (!p.admit.items || typeof p.admit.items !== 'object') p.admit.items = {};
-  if (!Array.isArray(p.admit.custom)) p.admit.custom = [];
-  if (typeof p.admit.notes !== 'string') p.admit.notes = p.admit.other || '';
-  if (Array.isArray(p.admit.list) && p.admit.list.length > 0) {
-    const defLoc = p.admit.loc || 'locPt';
-    p.admit.list.forEach(idx => {
-      const k = 'std_' + idx;
-      if (!p.admit.items[k]) p.admit.items[k] = defLoc;
-    });
-    delete p.admit.list;
-  }
+  if (typeof p.admit.other !== 'string') p.admit.other = '';
+  if (typeof p.admit.loc !== 'string') p.admit.loc = '';
   return p;
 }
 
@@ -292,7 +141,7 @@ function modEntryCount(b, modId) {
     case 'mh': return p.mh.filter(m => m.m || m.r || m.rat || m.n).length;
     case 'events': return p.events.filter(e => (e.e && e.e.trim() !== '') || typeof e.pIdx === 'number').length;
     case 'reminders': return p.reminders.filter(r => !r.done && ((r.txt && r.txt.trim() !== '') || typeof r.tIdx === 'number')).length;
-    case 'admit': return (p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length > 0 || p.admit.custom.length > 0 || (p.admit.notes && p.admit.notes.trim() !== '')) ? 1 : 0;
+    case 'admit': return (p.admit.w || p.admit.h || p.admit.wb || p.admit.list.length > 0 || (p.admit.other && p.admit.other.trim() !== '')) ? 1 : 0;
     default: return 0;
   }
 }
@@ -302,7 +151,6 @@ function commitPendingForm() {
 }
 
 function refreshSubNavCounts() {
-  sortAllBedCollections();
   const subNav = document.getElementById('subNav');
   const bedTabs = document.getElementById('bedTabs');
   if (!subNav || showSummary) return;
@@ -349,7 +197,6 @@ function splitBpParts(entry, sysKey, diaKey, legacyKey) {
 }
 
 function renderSection() {
-  sortAllBedCollections();
   const area = document.getElementById('contentArea');
   if (!curBed || !area) return;
   const p = getPt(curBed);
@@ -819,6 +666,13 @@ function renderSection() {
 
   else if (curSec === 'events') {
     const phrases = getLangList('phrases');
+    const quickCard = `<div class="card">
+      <label>${esc(t('events'))}</label>
+      <div class="chip-row" style="margin-bottom:0;">
+        ${phrases.map((ph, idx) => `<span class="chip" onclick="addQuickPhrase(${idx})">+ ${esc(ph)}</span>`).join('')}
+      </div>
+    </div>`;
+
     const listHtml = p.events.map((e, i) => {
       const noteTxt = (typeof e.pIdx === 'number' && phrases[e.pIdx] && !e.customEdited) ? phrases[e.pIdx] : (e.e || '');
       return `<div class="card entry-card">
@@ -826,18 +680,12 @@ function renderSection() {
           <span class="entry-num">${esc(t('events'))} #${i + 1}</span>
           <button type="button" class="del-btn" onclick="delItem('events', ${i})">✕</button>
         </div>
-        <div class="chip-row" style="margin-bottom:8px;">
-          ${phrases.map((ph, idx) => {
-            const hasPh = noteTxt.toLowerCase().includes(ph.toLowerCase());
-            return `<span class="chip ${hasPh ? 'active' : ''}" onclick="insertNotePhrase(${i}, ${idx})">${hasPh ? '✓ ' : '+ '}${esc(ph)}</span>`;
-          }).join('')}
-        </div>
         <div class="row">
           <div><label>${esc(t('time'))}</label><input type="time" value="${esc(e.t || '')}" oninput="updEventField(${i}, 't', this.value)"></div>
         </div>
         <div style="margin-bottom:8px;">
           <label>${esc(t('events'))}</label>
-          <textarea id="evNote_${i}" rows="2" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';updEventField(${i}, 'e', this.value)">${esc(noteTxt)}</textarea>
+          <textarea rows="2" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';updEventField(${i}, 'e', this.value)">${esc(noteTxt)}</textarea>
         </div>
         <div style="margin-bottom:0;">
           <label>${esc(t('outcome'))}</label>
@@ -846,11 +694,18 @@ function renderSection() {
       </div>`;
     }).join('');
 
-    bodyHtml = listHtml + `<button type="button" class="btn btn-primary" style="margin-bottom:12px;" onclick="createEventEntry()">${esc(t('add'))} ${esc(t('events'))}</button>`;
+    bodyHtml = quickCard + listHtml + `<button type="button" class="btn btn-primary" style="margin-bottom:12px;" onclick="createEventEntry()">${esc(t('add'))} ${esc(t('events'))}</button>`;
   }
 
   else if (curSec === 'reminders') {
     const taskList = getLangList('tasks');
+    const quickCard = `<div class="card">
+      <label>${esc(t('reminders'))}</label>
+      <div class="chip-row" style="margin-bottom:0;">
+        ${taskList.map((tk, idx) => `<span class="chip" onclick="quickAddTaskPreset(${idx})">+ ${esc(tk)}</span>`).join('')}
+      </div>
+    </div>`;
+
     const listHtml = p.reminders.map((r, i) => {
       const tkTxt = (typeof r.tIdx === 'number' && taskList[r.tIdx] && !r.customEdited) ? taskList[r.tIdx] : (r.txt || '');
       const overdue = isTaskOverdue(r);
@@ -863,31 +718,21 @@ function renderSection() {
           <button type="button" class="del-btn" onclick="delItem('reminders', ${i})">✕</button>
         </div>
         <div class="chip-row" style="margin-bottom:8px;">
-          ${taskList.map((tk, idx) => {
-            const isSel = tkTxt.toLowerCase() === tk.toLowerCase();
-            return `<span class="chip ${isSel ? 'active' : ''}" onclick="insertTaskPreset(${i}, ${idx})">${isSel ? '✓ ' : '+ '}${esc(tk)}</span>`;
-          }).join('')}
-        </div>
-        <div class="chip-row" style="margin-bottom:8px;">
           ${[[15,'+15m'],[30,'+30m'],[60,'+1h'],[120,'+2h'],[240,'+4h']].map(([mins, lbl]) => `<span class="chip" onclick="setTaskOffset(${i}, ${mins})">${lbl}</span>`).join('')}
         </div>
         <div class="row" style="margin-bottom:0;">
           <div style="flex:0 0 115px;"><label>${esc(t('dueTime'))}</label><input type="time" value="${esc(r.due || '')}" onchange="updTaskDue(${i}, this.value)"></div>
-          <div><label>${esc(t('reminders'))}</label><input type="text" id="remTxt_${i}" value="${esc(tkTxt)}" oninput="updTaskText(${i}, this.value)"></div>
+          <div><label>${esc(t('reminders'))}</label><input type="text" value="${esc(tkTxt)}" oninput="updTaskText(${i}, this.value)"></div>
         </div>
       </div>`;
     }).join('');
 
-    bodyHtml = listHtml + `<button type="button" class="btn btn-primary" style="margin-bottom:12px;" onclick="createTaskEntry()">${esc(t('add'))} ${esc(t('reminders'))}</button>`;
+    bodyHtml = quickCard + listHtml + `<button type="button" class="btn btn-primary" style="margin-bottom:12px;" onclick="createTaskEntry()">${esc(t('add'))} ${esc(t('reminders'))}</button>`;
   }
 
   else if (curSec === 'admit') {
     const admitList = getLangList('admits');
     const locs = ['locPt', 'locSafe', 'locHome'];
-    const selectedStdIndices = Object.keys(p.admit.items)
-      .map(k => parseInt(k.replace('std_', '')))
-      .filter(idx => !isNaN(idx) && admitList[idx])
-      .sort((a, b) => a - b);
 
     bodyHtml = `<div class="card">
       <div class="row">
@@ -897,41 +742,19 @@ function renderSection() {
       <div style="margin-bottom:12px;">
         <span class="chip ${p.admit.wb ? 'active' : ''}" onclick="updAdmitField('wb', !getPt(curBed).admit.wb); renderSection();">✓ ${esc(t('wristband'))}</span>
       </div>
-
       <label>${esc(t('admit'))}</label>
       <div class="chip-row">
         ${admitList.map((itemLbl, idx) => {
-          const isOn = !!p.admit.items['std_' + idx];
-          return `<span class="chip ${isOn ? 'active' : ''}" onclick="toggleAdmitStdItem(${idx})">${isOn ? '✓ ' : '+ '}${esc(itemLbl)}</span>`;
+          const isOn = p.admit.list.includes(idx);
+          return `<span class="chip ${isOn ? 'active' : ''}" onclick="toggleAdmitPill(${idx})">${isOn ? '✓ ' : '+ '}${esc(itemLbl)}</span>`;
         }).join('')}
       </div>
-
-      <div style="display:flex; gap:8px; margin-bottom:12px;">
-        <input type="text" id="admitCustomInp" placeholder="Other item (e.g. Watch, Ring, Bag)" onkeydown="if(event.key==='Enter'){event.preventDefault();addAdmitCustomItem();}">
-        <button type="button" class="btn btn-primary btn-sm" onclick="addAdmitCustomItem()">${esc(t('add'))}</button>
-      </div>
-
-      ${(selectedStdIndices.length > 0 || p.admit.custom.length > 0) ? `<div style="margin-bottom:12px;">
-        ${selectedStdIndices.map(idx => {
-          const curLoc = p.admit.items['std_' + idx] || 'locPt';
-          return `<div class="admit-item-row">
-            <span style="font-weight:700; font-size:0.86rem;">${esc(admitList[idx])}</span>
-            <div class="admit-loc-group">
-              ${locs.map(lc => `<button type="button" class="admit-loc-btn ${curLoc === lc ? 'active' : ''}" onclick="setAdmitStdItemLoc(${idx}, '${lc}')">${esc(t(lc))}</button>`).join('')}
-            </div>
-          </div>`;
-        }).join('')}
-        ${p.admit.custom.map((c, cIdx) => `<div class="admit-item-row">
-          <span style="font-weight:700; font-size:0.86rem;">${esc(c.name)} <button type="button" class="del-btn" style="padding:0 4px;" onclick="delAdmitCustomItem(${cIdx})">✕</button></span>
-          <div class="admit-loc-group">
-            ${locs.map(lc => `<button type="button" class="admit-loc-btn ${(c.loc || 'locPt') === lc ? 'active' : ''}" onclick="setAdmitCustomItemLoc(${cIdx}, '${lc}')">${esc(t(lc))}</button>`).join('')}
-          </div>
-        </div>`).join('')}
-      </div>` : ''}
-
-      <div style="margin-bottom:0;">
+      <div style="margin-bottom:12px;">
         <label>${esc(t('locNotes'))}</label>
-        <input type="text" value="${esc(p.admit.notes || '')}" oninput="updAdmitField('notes', this.value)">
+        <input type="text" value="${esc(p.admit.other || '')}" oninput="updAdmitField('other', this.value)">
+      </div>
+      <div class="chip-row" style="margin-bottom:0;">
+        ${locs.map(lc => `<span class="chip ${p.admit.loc === lc ? 'active' : ''}" onclick="toggleAdmitLoc('${lc}')">${esc(t(lc))}</span>`).join('')}
       </div>
     </div>`;
   }
@@ -1263,10 +1086,7 @@ function setMeal(mealKey, val) {
 
 function quickLogSupp(statusCode) {
   const p = getPt(curBed);
-  const typed = (p.diet.supp || '').trim();
-  const val = typed ? `${typed} (${trCode(statusCode)})` : statusCode;
-  p.diet.supps.push({ t: nowTimeStr(), v: val });
-  p.diet.supp = '';
+  p.diet.supps.push({ t: nowTimeStr(), v: statusCode });
   p.diet.done = false;
   saveDB();
   renderUI();
@@ -1364,31 +1184,17 @@ function updMhField(idx, k, val) {
   refreshSubNavCounts();
 }
 
-function createEventEntry() {
+function addQuickPhrase(pIdx) {
   const p = getPt(curBed);
-  p.events.push({ t: nowTimeStr(), e: '', o: '', customEdited: true, done: false });
+  const phrases = getLangList('phrases');
+  p.events.push({ t: nowTimeStr(), pIdx, e: phrases[pIdx] || '', o: '', done: false });
   saveDB();
   renderUI();
 }
 
-function insertNotePhrase(idx, pIdx) {
+function createEventEntry() {
   const p = getPt(curBed);
-  const phrases = getLangList('phrases');
-  const ph = phrases[pIdx];
-  if (!p.events[idx] || !ph) return;
-  const ev = p.events[idx];
-  let cur = (typeof ev.pIdx === 'number' && phrases[ev.pIdx] && !ev.customEdited) ? phrases[ev.pIdx] : (ev.e || '');
-  const parts = cur.split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
-  const existingPos = parts.findIndex(s => s.toLowerCase() === ph.toLowerCase());
-  if (existingPos > -1) {
-    parts.splice(existingPos, 1);
-  } else {
-    parts.push(ph);
-  }
-  ev.e = parts.join(', ');
-  ev.customEdited = true;
-  delete ev.pIdx;
-  ev.done = false;
+  p.events.push({ t: nowTimeStr(), e: '', o: '', done: false });
   saveDB();
   renderUI();
 }
@@ -1403,6 +1209,26 @@ function updEventField(idx, k, val) {
   refreshSubNavCounts();
 }
 
+function quickAddTaskPreset(tIdx) {
+  const p = getPt(curBed);
+  const taskList = getLangList('tasks');
+  const nowMs = Date.now();
+  const due = nowTimeStr();
+  p.reminders.push({
+    due,
+    createdTs: nowMs,
+    dueTs: nowMs + 30 * 60 * 1000,
+    txt: taskList[tIdx] || '',
+    tIdx,
+    done: false,
+    alerted: false
+  });
+  const dt = new Date(nowMs + 30 * 60 * 1000);
+  p.reminders[p.reminders.length - 1].due = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+  saveDB();
+  renderUI();
+}
+
 function createTaskEntry() {
   const p = getPt(curBed);
   const nowMs = Date.now();
@@ -1413,31 +1239,9 @@ function createTaskEntry() {
     createdTs: nowMs,
     dueTs: dt.getTime(),
     txt: '',
-    customEdited: true,
     done: false,
     alerted: false
   });
-  saveDB();
-  renderUI();
-}
-
-function insertTaskPreset(idx, tIdx) {
-  const p = getPt(curBed);
-  const taskList = getLangList('tasks');
-  const tk = taskList[tIdx];
-  if (!p.reminders[idx] || !tk) return;
-  const r = p.reminders[idx];
-  const cur = (typeof r.tIdx === 'number' && taskList[r.tIdx] && !r.customEdited) ? taskList[r.tIdx] : (r.txt || '');
-  if (cur.toLowerCase() === tk.toLowerCase()) {
-    r.txt = '';
-    delete r.tIdx;
-    r.customEdited = true;
-  } else {
-    r.txt = tk;
-    r.tIdx = tIdx;
-    r.customEdited = false;
-  }
-  r.done = false;
   saveDB();
   renderUI();
 }
@@ -1492,51 +1296,19 @@ function updAdmitField(k, val) {
   refreshSubNavCounts();
 }
 
-function toggleAdmitStdItem(idx) {
+function toggleAdmitPill(idx) {
   const p = getPt(curBed);
-  const key = 'std_' + idx;
-  if (p.admit.items[key]) {
-    delete p.admit.items[key];
-  } else {
-    p.admit.items[key] = 'locPt';
-  }
+  const pos = p.admit.list.indexOf(idx);
+  if (pos > -1) p.admit.list.splice(pos, 1);
+  else p.admit.list.push(idx);
   p.admit.done = false;
   saveDB();
   renderUI();
 }
 
-function setAdmitStdItemLoc(idx, lc) {
+function toggleAdmitLoc(lc) {
   const p = getPt(curBed);
-  p.admit.items['std_' + idx] = lc;
-  p.admit.done = false;
-  saveDB();
-  renderSection();
-}
-
-function addAdmitCustomItem() {
-  const inp = document.getElementById('admitCustomInp');
-  const val = (inp ? inp.value : '').trim();
-  if (!val) return;
-  const p = getPt(curBed);
-  p.admit.custom.push({ name: val, loc: 'locPt' });
-  p.admit.done = false;
-  inp.value = '';
-  saveDB();
-  renderUI();
-}
-
-function setAdmitCustomItemLoc(cIdx, lc) {
-  const p = getPt(curBed);
-  if (!p.admit.custom[cIdx]) return;
-  p.admit.custom[cIdx].loc = lc;
-  p.admit.done = false;
-  saveDB();
-  renderSection();
-}
-
-function delAdmitCustomItem(cIdx) {
-  const p = getPt(curBed);
-  p.admit.custom.splice(cIdx, 1);
+  p.admit.loc = (p.admit.loc === lc) ? '' : lc;
   p.admit.done = false;
   saveDB();
   renderUI();
@@ -1771,4 +1543,99 @@ function buildModuleSummaryForBed(b, modId) {
   else if (modId === 'reminders') {
     p.reminders.forEach((r, i) => {
       const tkTxt = (typeof r.tIdx === 'number' && taskList[r.tIdx] && !r.customEdited) ? taskList[r.tIdx] : (r.txt || '');
-      if
+      if (!tkTxt.trim()) return;
+      const overdue = isTaskOverdue(r);
+      const txt = `<strong>${esc(r.due || '--:--')}</strong> — <b>${esc(tkTxt)}</b>${overdue ? ' <span class="task-badge overdue">OVERDUE</span>' : ''}`;
+      rows += sumRowWrap(txt, bIdx, 'reminders', i, !!r.done);
+    });
+  }
+
+  else if (modId === 'admit') {
+    const aParts = [];
+    if (p.admit.w) aParts.push(`${esc(t('weight'))}: <b>${esc(p.admit.w)}kg</b>`);
+    if (p.admit.h) aParts.push(`${esc(t('height'))}: <b>${esc(p.admit.h)}cm</b>`);
+    if (p.admit.wb) aParts.push(`<b>✓ ${esc(t('wristband'))}</b>`);
+    if (p.admit.list.length > 0) {
+      const itemsTxt = p.admit.list.map(idx => admitList[idx] ? esc(admitList[idx]) : '').filter(Boolean).join(', ');
+      if (itemsTxt) aParts.push(`<b>${itemsTxt}</b>`);
+    }
+    if (p.admit.other && p.admit.other.trim()) {
+      aParts.push(`<b>${esc(p.admit.other.trim())}</b>`);
+    }
+    if (p.admit.loc) {
+      aParts.push(`(${esc(trCode(p.admit.loc))})`);
+    }
+    if (aParts.length > 0) {
+      rows += sumRowWrap(aParts.join(' • '), bIdx, 'admit', 0, !!p.admit.done);
+    }
+  }
+
+  return rows;
+}
+
+function renderSummary() {
+  const area = document.getElementById('contentArea');
+  const activeSecs = getActiveSections();
+
+  let html = `<div class="summary-toolbar">
+    <button type="button" class="tool-btn ${summaryGroup === 'bed' ? 'active' : ''}" onclick="setSumGroup('bed')">${esc(t('byBed'))}</button>
+    <button type="button" class="tool-btn ${summaryGroup === 'mod' ? 'active' : ''}" onclick="setSumGroup('mod')">${esc(t('byMod'))}</button>
+    <button type="button" class="tool-btn ${hideCompleted ? 'active' : ''}" onclick="toggleHideCompleted()">${esc(hideCompleted ? t('showAll') : t('pending'))}</button>
+    <button type="button" class="tool-btn ${wakeLockObj ? 'active' : ''}" onclick="toggleWakeLock()">💡 ${esc(t('keepOn'))}</button>
+  </div>`;
+
+  if (summaryGroup === 'bed') {
+    alloc.forEach((b, bIdx) => {
+      let bedContent = '';
+      activeSecs.forEach(s => {
+        const modRows = buildModuleSummaryForBed(b, s.id);
+        if (modRows) {
+          bedContent += `<div class="summary-sec">
+            <div class="sum-mod-hdr" onclick="jumpToBedMod(${bIdx}, '${s.id}')">${esc(t(s.id))} ✎</div>
+            ${modRows}
+          </div>`;
+        }
+      });
+      if (bedContent) {
+        html += `<div class="card">
+          <h3>
+            <span>${esc(b)}</span>
+            <button type="button" class="btn-subtle btn-sm" style="background:var(--header-bg); color:#fff; border:none;" onclick="markBedDone(${bIdx})">${esc(t('markBed'))}</button>
+          </h3>
+          ${bedContent}
+        </div>`;
+      }
+    });
+  } else {
+    activeSecs.forEach(s => {
+      let modContent = '';
+      alloc.forEach((b, bIdx) => {
+        const modRows = buildModuleSummaryForBed(b, s.id);
+        if (modRows) {
+          modContent += `<div class="summary-sec">
+            <div class="sum-mod-hdr" onclick="jumpToBedMod(${bIdx}, '${s.id}')">${esc(b)} ✎</div>
+            ${modRows}
+          </div>`;
+        }
+      });
+      if (modContent) {
+        html += `<div class="card">
+          <h3><span>${esc(t(s.id))}</span></h3>
+          ${modContent}
+        </div>`;
+      }
+    });
+  }
+
+  area.innerHTML = html;
+}
+
+function setSumGroup(g) {
+  summaryGroup = g;
+  renderSummary();
+}
+
+function toggleHideCompleted() {
+  hideCompleted = !hideCompleted;
+  renderSummary();
+}
