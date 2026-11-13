@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f172a">
 <title>Care Digipad</title>
-<link rel="manifest" href="manifest.json?v=5">
-<link rel="icon" type="image/png" href="icon.png?v=5">
-<link rel="apple-touch-icon" href="icon.png?v=5">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="manifest" href="manifest.json?v=6">
+<link rel="icon" type="image/png" href="icon.png?v=6">
+<link rel="apple-touch-icon" href="icon.png?v=6">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body data-theme="day" data-color="teal">
 
@@ -21,7 +21,7 @@
 
 <header>
   <div class="hdr-left">
-    <span class="hdr-title" id="hdrTitle">Care Digipad <small style="font-size:0.68rem; opacity:0.75; font-weight:600;">v5</small></span>
+    <span class="hdr-title" id="hdrTitle">Care Digipad</span>
     <button type="button" class="hdr-btn hidden" id="editBtn" onclick="editBeds()">Edit</button>
     <button type="button" class="hdr-btn" id="hideBtn" onclick="togglePrivacy(true)">Hide</button>
   </div>
@@ -71,7 +71,7 @@
         <option value="sw">Kiswahili</option>
       </select>
     </div>
-    <p id="lblSub" style="font-size:0.84rem; color:var(--text-sub); margin:0 0 6px 0;">100% offline digital shift notepad. Data never leaves your device and automatically wipes after 14 hours.</p>
+    <p id="lblSub" style="font-size:0.84rem; color:var(--text-sub); margin:0 0 6px 0;">100% offline digital shift notepad. Data never leaves your device.</p>
     <p id="lblDisclaimer" style="font-size:0.74rem; color:var(--text-sub); margin:0; opacity:0.85;">Personal shift scratchpad only. Does not provide clinical advice, diagnosis or decision support.</p>
   </div>
 
@@ -99,7 +99,7 @@
       <input type="text" id="newBedInput" maxlength="4" style="flex:1; text-transform:uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomBed();}">
       <button type="button" id="btnAddBed" class="btn btn-primary btn-sm" onclick="addCustomBed()">+ Add</button>
     </div>
-    <div id="lblBedHelper" style="font-size:0.78rem; color:var(--text-sub); margin-bottom:4px;">Tap a bed below to select (✓) or deselect it for today:</div>
+    <div id="lblBedHelper" style="font-size:0.78rem; color:var(--text-sub); margin-bottom:4px;">Tap a bed below to select or deselect it for today:</div>
     <div id="setupBedGrid" class="bed-grid"></div>
   </div>
 
@@ -163,12 +163,12 @@
   </div>
 </div>
 
-<script src="lang.js?v=5" onerror="window.CDU_LANGS = null"></script>
-<script src="core.js?v=5"></script>
-<script src="modules.js?v=5"></script>
+<script src="lang.js?v=6" onerror="window.CDU_LANGS = null"></script>
+<script src="core.js?v=6"></script>
+<script src="modules.js?v=6"></script>
 <script>
 window.addEventListener('load', function() {
-  if (window.CDP_MOD_VER !== 5) {
+  if (window.CDP_MOD_VER !== 6) {
     var ts = Date.now();
     var s1 = document.createElement('script');
     s1.src = 'core.js?v=' + ts;
@@ -177,7 +177,6 @@ window.addEventListener('load', function() {
       s2.src = 'modules.js?v=' + ts;
       s2.onload = function() {
         if (typeof initSetup === 'function') initSetup();
-        if (typeof applyModVerBadge === 'function') applyModVerBadge();
       };
       document.body.appendChild(s2);
     };
