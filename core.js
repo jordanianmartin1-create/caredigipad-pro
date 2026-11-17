@@ -82,6 +82,9 @@ const EN_DICT = {
   byMod: "By Module",
   allDoneMsg: "All logged entries are marked as done.",
   nothingLoggedMsg: "No entries logged for this shift yet.",
+  overdue: "OVERDUE",
+  copyHandover: "Copy Handover",
+  copiedMsg: "Handover notes copied to clipboard",
   time: "Time",
   dueTime: "Due Time",
   air: "Air",
@@ -279,10 +282,23 @@ const ALL_MODS = [
   {id:'mh', pro:true}, {id:'events', pro:false}, {id:'reminders', pro:true}, {id:'admit', pro:true}
 ];
 
+function safeLoad(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+const bedCollator = (typeof Intl !== 'undefined' && Intl.Collator)
+  ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+  : null;
+
 function sortBedArray(arr) {
   if (!Array.isArray(arr)) return [];
   const unique = [...new Set(arr.map(x => String(x || '').trim().toUpperCase()).filter(Boolean))];
-  return unique.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+  return unique.sort((a, b) => bedCollator ? bedCollator.compare(a, b) : a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 }
 
 let isPro = localStorage.getItem('cdu_pro') === '1';
@@ -293,12 +309,12 @@ let curShift = localStorage.getItem('cdu_shift') || 'day';
 let bmUnit = localStorage.getItem('cdu_bm_unit') || 'mmol/L';
 let tempUnit = localStorage.getItem('cdu_temp_unit') || '°C';
 
-let wardBeds = sortBedArray(JSON.parse(localStorage.getItem('cdu_ward') || '[]'));
-let alloc = sortBedArray(JSON.parse(localStorage.getItem('cdu_alloc') || '[]'));
-let db = JSON.parse(localStorage.getItem('cdu_db') || '{}');
-let layouts = JSON.parse(localStorage.getItem('cdu_layouts') || '{}');
+let wardBeds = sortBedArray(safeLoad('cdu_ward', []));
+let alloc = sortBedArray(safeLoad('cdu_alloc', []));
+let db = safeLoad('cdu_db', {});
+let layouts = safeLoad('cdu_layouts', {});
 let activeLayoutName = localStorage.getItem('cdu_active_lay') || '';
-let modConfig = JSON.parse(localStorage.getItem('cdu_mods') || 'null');
+let modConfig = safeLoad('cdu_mods', null);
 
 let curBed = alloc[0] || '';
 let curSec = 'obs';
@@ -315,6 +331,15 @@ let activeFluidType = 'i';
 let wakeLockObj = null;
 let alertTimerId = null;
 let alarmAudioCtx = null;
+
+function unlockAudioContext() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!alarmAudioCtx) alarmAudioCtx = new Ctx();
+    if (alarmAudioCtx.state === 'suspended') alarmAudioCtx.resume();
+  } catch (e) {}
+}
 
 function checkShiftExpiry() {
   const st = localStorage.getItem('cdu_start');
@@ -379,7 +404,7 @@ function getDict() {
 
 function t(k) {
   const dict = getDict();
-  let val = (dict && dict[k] !== undefined) ? dict[k] : (EN_DICT[k] || k);
+  let val = (dict && dict[k] !== undefined && dict[k] !== '') ? dict[k] : (EN_DICT[k] || k);
   if (k === 'proTitle' && typeof val === 'string') val = val.replace(/£9\.99\s*|9,99\s*£\s*/g, '');
   if (k === 'bedHelper' && typeof val === 'string') val = val.replace(/\s*\(✓\)/g, '');
   return val;
@@ -392,14 +417,14 @@ function getOxygenLabel() {
 
 function getLangList(k) {
   const dict = getDict();
-  return (dict && Array.isArray(dict[k])) ? dict[k] : (EN_DICT[k] || []);
+  return (dict && Array.isArray(dict[k]) && dict[k].length > 0) ? dict[k] : (EN_DICT[k] || []);
 }
 
 function trCode(val) {
   if (!val) return '';
   if (val === 'o2') return getOxygenLabel();
   const dict = getDict();
-  if (dict && typeof dict[val] === 'string') return dict[val];
+  if (dict && typeof dict[val] === 'string' && dict[val] !== '') return dict[val];
   if (typeof EN_DICT[val] === 'string') return EN_DICT[val];
   return val;
 }
@@ -421,16 +446,16 @@ function formatIsoDate(isoStr) {
   if (!isoStr) return '';
   const p = isoStr.split('-');
   if (p.length !== 3) return isoStr;
-  const dt = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+  const dt = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
   return isNaN(dt) ? isoStr : dt.toLocaleDateString(getLocaleCode(), { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function calcDue(dateStr, days = 3) {
   if (!dateStr || !days) return '—';
   const p = dateStr.split('-');
-  const dt = p.length === 3 ? new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])) : new Date(dateStr);
+  const dt = p.length === 3 ? new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10)) : new Date(dateStr);
   if (isNaN(dt)) return '—';
-  dt.setDate(dt.getDate() + (parseInt(days) || 3));
+  dt.setDate(dt.getDate() + (parseInt(days, 10) || 3));
   return dt.toLocaleDateString(getLocaleCode(), { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
@@ -507,6 +532,9 @@ async function unlockPro() {
 
 function initSetup() {
   if (checkShiftExpiry()) return;
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(() => {});
+  }
   normalizeLayouts();
   wardBeds = sortBedArray(wardBeds);
   alloc = sortBedArray(alloc);
@@ -516,8 +544,10 @@ function initSetup() {
   document.body.setAttribute('data-color', isPro ? curTheme : 'teal');
   const hdr = document.getElementById('hdrTitle');
   if (hdr) hdr.textContent = 'Care Digipad';
-  document.getElementById('darkToggle').checked = isDark;
-  document.getElementById('langSelect').value = curLang;
+  const dtog = document.getElementById('darkToggle');
+  if (dtog) dtog.checked = isDark;
+  const lsel = document.getElementById('langSelect');
+  if (lsel) lsel.value = curLang;
 
   initModConfig();
   applyStaticTranslations();
@@ -570,7 +600,12 @@ function applyStaticTranslations() {
   document.getElementById('btnTempF').classList.toggle('selected', tempUnit === '°F');
 }
 
-function setLang(l) { curLang = l; localStorage.setItem('cdu_lang', l); initSetup(); }
+function setLang(l) {
+  if (!l) return;
+  curLang = l;
+  localStorage.setItem('cdu_lang', l);
+  initSetup();
+}
 
 function renderThemeOptions() {
   const themes = [['teal',t('thTeal')],['blue',t('thBlue')],['green',t('thGreen')],['berry',t('thBerry')],['slate',t('thSlate')],['coral',t('thCoral')]];
@@ -754,6 +789,7 @@ function moveMod(idx, dir) {
 
 function startShift() {
   if (alloc.length === 0) { alert(t('selectAtLeastOne')); return; }
+  unlockAudioContext();
   alloc = sortBedArray(alloc);
   const curSt = Number(localStorage.getItem('cdu_start'));
   if (!curSt || curSt < 1000000000000) localStorage.setItem('cdu_start', String(Date.now()));
@@ -765,6 +801,9 @@ function startShift() {
   document.getElementById('setupView').classList.add('hidden');
   document.getElementById('mainView').classList.remove('hidden');
   document.getElementById('editBtn').classList.remove('hidden');
+  if (window.history && window.history.pushState) {
+    window.history.pushState({ cduInShift: true }, '');
+  }
   renderUI();
   startAlertTimer();
 }
@@ -796,12 +835,41 @@ function toggleDark(checked) {
   document.body.setAttribute('data-theme', isDark ? 'night' : 'day');
 }
 
-function togglePrivacy(show) { document.getElementById('privacyScreen').classList.toggle('hidden', !show); }
+function togglePrivacy(show) {
+  document.getElementById('privacyScreen').classList.toggle('hidden', !show);
+  if (show && window.history && window.history.pushState) {
+    window.history.pushState({ cduPrivacy: true }, '');
+  }
+}
 
 function shareApp() {
   if (navigator.share) navigator.share({ title: 'Care Digipad', text: t('sub'), url: window.location.href }).catch(() => {});
   else if (navigator.clipboard) { navigator.clipboard.writeText(window.location.href); alert('Link copied to clipboard'); }
 }
 
+window.addEventListener('popstate', () => {
+  const priv = document.getElementById('privacyScreen');
+  if (priv && !priv.classList.contains('hidden')) {
+    priv.classList.add('hidden');
+    return;
+  }
+  if (showManageBed || showQuickAddBed || showSummary) {
+    showManageBed = false;
+    showQuickAddBed = false;
+    showSummary = false;
+    if (typeof renderUI === 'function') renderUI();
+    if (window.history && window.history.pushState) {
+      window.history.pushState({ cduInShift: true }, '');
+    }
+  }
+});
+
 document.addEventListener('visibilitychange', () => { if (!document.hidden) checkShiftExpiry(); });
+window.addEventListener('pageshow', checkShiftExpiry);
 window.addEventListener('DOMContentLoaded', initSetup);
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js?v=7').catch(() => {});
+  });
+}
