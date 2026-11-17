@@ -1,3 +1,8 @@
+function normDec(val) {
+  if (val === null || val === undefined) return '';
+  return String(val).replace(/,/g, '.');
+}
+
 function computeTaskDueTs(dueStr, refMs) {
   if (!dueStr) return null;
   const parts = dueStr.split(':').map(Number);
@@ -25,6 +30,7 @@ function playAlarmBeep() {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return;
     if (!alarmAudioCtx) alarmAudioCtx = new Ctx();
+    if (alarmAudioCtx.state === 'suspended') alarmAudioCtx.resume();
     const osc = alarmAudioCtx.createOscillator();
     const gain = alarmAudioCtx.createGain();
     osc.type = 'sine';
@@ -145,6 +151,11 @@ function modEntryCount(b, modId) {
     case 'admit': return (p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length > 0 || p.admit.custom.length > 0 || (p.admit.other && p.admit.other.trim() !== '')) ? 1 : 0;
     default: return 0;
   }
+}
+
+function hasAnyBedData(b) {
+  if (!db[b]) return false;
+  return ALL_MODS.some(m => modEntryCount(b, m.id) > 0);
 }
 
 function getExpIdx(sec, len) {
@@ -282,21 +293,23 @@ function renameCurrentBed() {
 function transferCurrentBed() {
   const dest = (prompt(t('transferPrompt')) || '').trim().toUpperCase().slice(0, 4);
   if (!dest || dest === curBed) return;
-  if (db[dest] && Object.keys(db[dest]).length > 0) {
+  if (hasAnyBedData(dest)) {
     if (confirm(`${dest} ${t('swapConfirm')}`)) {
-      const temp = db[dest]; db[dest] = db[curBed]; db[curBed] = temp;
+      const temp = db[dest];
+      db[dest] = db[curBed];
+      db[curBed] = temp;
     } else {
-      db[dest] = db[curBed]; delete db[curBed];
+      db[dest] = db[curBed];
+      delete db[curBed];
+      alloc = alloc.filter(b => b !== curBed);
     }
   } else {
-    db[dest] = db[curBed]; delete db[curBed];
+    db[dest] = db[curBed];
+    delete db[curBed];
+    alloc = alloc.filter(b => b !== curBed);
   }
   if (!wardBeds.includes(dest)) wardBeds.push(dest);
-  if (!alloc.includes(dest)) {
-    const idx = alloc.indexOf(curBed);
-    if (idx > -1) alloc[idx] = dest;
-    else alloc.push(dest);
-  }
+  if (!alloc.includes(dest)) alloc.push(dest);
   curBed = dest;
   showManageBed = false;
   saveDB();
@@ -375,7 +388,7 @@ function renderSection() {
     topHtml += `<div class="manage-panel">
       <div style="font-weight:800; margin-bottom:8px;">${esc(t('quickAddBedTitle'))}</div>
       <div style="display:flex; gap:8px; margin-bottom:8px;">
-        <input type="text" id="quickBedInput" maxlength="4" style="text-transform:uppercase;">
+        <input type="text" id="quickBedInput" maxlength="4" style="text-transform:uppercase; font-size:1rem;">
         <button type="button" class="btn btn-primary btn-sm" onclick="quickAddBedToShift()">${esc(t('add'))}</button>
       </div>
       ${unalloc.length > 0 ? `<div style="font-size:0.78rem; color:var(--text-sub); margin-bottom:6px;">${esc(t('savedWardBeds'))}</div>
@@ -387,7 +400,7 @@ function renderSection() {
     topHtml += `<div class="manage-panel">
       <div style="font-weight:800; margin-bottom:8px;">${esc(t('manageBed'))}: ${esc(curBed)}</div>
       <div style="display:flex; gap:8px; margin-bottom:8px;">
-        <input type="text" id="renameBedInput" maxlength="4" value="${esc(curBed)}" style="text-transform:uppercase;">
+        <input type="text" id="renameBedInput" maxlength="4" value="${esc(curBed)}" style="text-transform:uppercase; font-size:1rem;">
         <button type="button" class="btn btn-primary btn-sm" onclick="renameCurrentBed()">${esc(t('renameBed'))}</button>
       </div>
       <div class="manage-grid">
@@ -453,7 +466,7 @@ function renderSection() {
           <div><label>${esc(t('hrLbl'))}</label><input type="number" id="obsHr_${i}" inputmode="numeric" value="${esc(hrVal)}" oninput="updObsField(${i}, 'hr', this.value)"></div>
         </div>
         <div class="row">
-          <div><label>${esc(t('tempLbl'))} (${esc(o.u || tempUnit)})</label><input type="number" step="0.1" inputmode="decimal" value="${esc(tmVal)}" oninput="updObsField(${i}, 'tm', this.value)"></div>
+          <div><label>${esc(t('tempLbl'))} (${esc(o.u || tempUnit)})</label><input type="text" inputmode="decimal" value="${esc(tmVal)}" oninput="updObsField(${i}, 'tm', normDec(this.value))"></div>
           <div><label>${esc(t('painLbl'))}</label><input type="number" min="0" max="10" inputmode="numeric" value="${esc(pnVal)}" oninput="updObsField(${i}, 'pn', this.value)"></div>
         </div>
         <label>${esc(t('acvpuLbl'))}</label>
@@ -482,7 +495,7 @@ function renderSection() {
         </div>
         <div class="row">
           <div><label>${esc(t('time'))}</label><input type="time" value="${esc(b.t || '')}" oninput="updBmField(${i}, 't', this.value)"></div>
-          <div><label>${esc(t('bmValLbl'))} (${esc(b.u || bmUnit)})</label><input type="number" step="0.1" inputmode="decimal" value="${esc(b.v || '')}" oninput="updBmField(${i}, 'v', this.value)"></div>
+          <div><label>${esc(t('bmValLbl'))} (${esc(b.u || bmUnit)})</label><input type="text" inputmode="decimal" value="${esc(b.v || '')}" oninput="updBmField(${i}, 'v', normDec(this.value))"></div>
         </div>
         <div style="margin-bottom:10px;">
           <label>${esc(t('context'))}</label>
@@ -710,7 +723,7 @@ function renderSection() {
         <div><label>${esc(t('locNotes'))}</label><input type="text" id="drLoc_${i}" value="${esc(d.l || '')}" oninput="updDressingField(${i}, 'l', this.value)"></div>
         <div>
           <label>${esc(t('dueIn'))}</label>
-          <select onchange="updDressingField(${i}, 'f', this.value ? parseInt(this.value) : 0, true)">
+          <select onchange="updDressingField(${i}, 'f', this.value ? parseInt(this.value, 10) : 0, true)">
             <option value="" ${!d.f ? 'selected' : ''}>—</option>
             <option value="1" ${d.f === 1 ? 'selected' : ''}>${esc(t('day1'))}</option>
             <option value="2" ${d.f === 2 ? 'selected' : ''}>${esc(t('day2'))}</option>
@@ -916,7 +929,7 @@ function renderSection() {
         return `<div class="card entry-card ${overdue ? 'task-alert' : ''}" style="display:flex; justify-content:space-between; align-items:center;">
           <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.92rem; color:var(--text); cursor:pointer; flex:1;" onclick="event.stopPropagation()">
             <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleTaskDone(${i})">
-            <span class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? 'OVERDUE' : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
+            <span class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? esc(t('overdue')) : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
             <span style="${r.done ? 'text-decoration:line-through; opacity:0.55;' : 'font-weight:700;'}" onclick="event.preventDefault(); setExpIdx('reminders', ${i})">${esc(tkTxt)} <span style="color:var(--teal); font-size:0.78rem;">✎</span></span>
           </label>
           <button type="button" class="del-btn" onclick="delItem('reminders', ${i})">✕</button>
@@ -926,7 +939,7 @@ function renderSection() {
         <div class="entry-hdr">
           <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.9rem; color:var(--text); cursor:pointer;">
             <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleTaskDone(${i})">
-            <span class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? 'OVERDUE' : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
+            <span class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? esc(t('overdue')) : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
           </label>
           <div style="display:flex; align-items:center; gap:4px;">
             <button type="button" class="btn-subtle btn-sm" style="padding:2px 8px; font-size:0.74rem;" onclick="setExpIdx('reminders', ${i})">▲</button>
@@ -953,8 +966,8 @@ function renderSection() {
 
     bodyHtml = `<div class="card">
       <div class="row">
-        <div><label>${esc(t('weight'))}</label><input type="number" step="0.1" inputmode="decimal" value="${esc(p.admit.w)}" oninput="updAdmitField('w', this.value)"></div>
-        <div><label>${esc(t('height'))}</label><input type="number" step="0.1" inputmode="decimal" value="${esc(p.admit.h)}" oninput="updAdmitField('h', this.value)"></div>
+        <div><label>${esc(t('weight'))}</label><input type="text" inputmode="decimal" value="${esc(p.admit.w)}" oninput="updAdmitField('w', normDec(this.value))"></div>
+        <div><label>${esc(t('height'))}</label><input type="text" inputmode="decimal" value="${esc(p.admit.h)}" oninput="updAdmitField('h', normDec(this.value))"></div>
       </div>
       <div style="margin-bottom:12px;">
         <span class="chip ${p.admit.wb ? 'active' : ''}" onclick="updAdmitField('wb', !getPt(curBed).admit.wb); renderSection();">✓ ${esc(t('wristband'))}</span>
@@ -971,7 +984,7 @@ function renderSection() {
         <button type="button" class="btn btn-primary btn-sm" onclick="addAdmitCustomItem()">${esc(t('add'))}</button>
       </div>
       ${selectedStdKeys.map(k => {
-        const idx = parseInt(k.replace('std_', ''));
+        const idx = parseInt(k.replace('std_', ''), 10);
         const lbl = !isNaN(idx) && admitList[idx] ? admitList[idx] : k;
         const curLoc = p.admit.items[k] || '';
         return `<div style="display:flex; justify-content:space-between; align-items:center; gap:6px; padding:8px 10px; background:var(--bg); border-radius:8px; border:1px solid var(--border); margin-bottom:6px; flex-wrap:wrap;">
@@ -1075,7 +1088,7 @@ function setFluidTarget(idx, type) {
 
 function updFluid(idx, type, val) {
   const p = getPt(curBed); if (!p.fluids[idx]) return;
-  p.fluids[idx][type] = Math.max(0, parseInt(val) || 0); p.fluids[idx].done = false; saveDB();
+  p.fluids[idx][type] = Math.max(0, parseInt(val, 10) || 0); p.fluids[idx].done = false; saveDB();
   let totI = 0, totO = 0;
   p.fluids.forEach(f => { totI += (Number(f.i) || 0); totO += (Number(f.o) || 0); });
   const net = totI - totO, totEl = document.getElementById('flHdrTotal');
@@ -1131,7 +1144,7 @@ function toggleDietFlag(fl) { const p = getPt(curBed), idx = p.diet.flags.indexO
 function setTurnFreq(val) { const p = getPt(curBed); p.turnFreq = val; p.turnPlanDone = false; saveDB(); renderUI(); }
 function createTurnEntry() { getPt(curBed).turns.push({ t: nowTimeStr(), p: '', done: false }); saveDB(); renderUI(); }
 function updTurnField(idx, k, val) { const p = getPt(curBed); if (!p.turns[idx]) return; p.turns[idx][k] = val; p.turns[idx].done = false; saveDB(); refreshSubNavCounts(); }
-function toggleTurnCheck(ck) { const p = getPt(curBed), idx = p.turnChecks.indexOf(ck); if (idx > -1) p.turnChecks.splice(idx, 1); else p.turnChecks.push(ck); saveDB(); renderUI(); }
+function toggleTurnCheck(ck) { const p = getPt(curBed), idx = p.turnChecks.indexOf(ck); if (idx > -1) p.turnChecks.splice(idx, 1); else p.turnChecks.push(ck); p.turnPlanDone = false; saveDB(); renderUI(); }
 
 function setMhLevel(val) { const p = getPt(curBed); p.mhLevel = val; p.mhLevelDone = false; saveDB(); refreshSubNavCounts(); }
 function createMhEntry() {
@@ -1245,17 +1258,38 @@ function toggleSumDone(bedOrIdx, sec, idx) {
   else if (sec === 'turnPlan') p.turnPlanDone = !p.turnPlanDone;
   else if (sec === 'mhLevel') p.mhLevelDone = !p.mhLevelDone;
   else if (sec === 'admit') p.admit.done = !p.admit.done;
-  else if (Array.isArray(p[sec]) && p[sec][idx]) p[sec][idx].done = !p[sec][idx].done;
+  else if (Array.isArray(p[sec]) && p[sec][idx]) p.sec ? (p[sec][idx].done = !p[sec][idx].done) : (p[sec][idx].done = !p[sec][idx].done);
   saveDB(); renderSummary();
 }
 
 function isBedAllDone(b) {
   const p = getPt(b);
-  const lists = ['obs','bm','bp','fluids','bowel','dressings','turns','mh','events','reminders'];
-  for (const k of lists) {
-    if (p[k].some(x => !x.done)) return false;
-  }
-  return p.skinDone && p.diet.done && p.turnPlanDone && p.mhLevelDone && p.admit.done;
+  if (p.obs.filter(isObsFilled).some(x => !x.done)) return false;
+  if (p.bm.filter(x => x.v && String(x.v).trim() !== '').some(x => !x.done)) return false;
+  if (p.bp.filter(x => (x.l && x.l !== '-' && x.l !== '-/-') || (x.s && x.s !== '-' && x.s !== '-/-') || (x.sym && x.sym.length)).some(x => !x.done)) return false;
+  if (p.fluids.filter(f => (Number(f.i) || 0) > 0 || (Number(f.o) || 0) > 0 || (Number(f.wet) || 0) > 0).some(f => !f.done)) return false;
+  if (p.bowel.filter(x => !!x.a).some(x => !x.done)) return false;
+  if (p.dressings.filter(d => d.l && d.l.trim() !== '').some(d => !d.done)) return false;
+  if (p.turns.filter(tr => !!tr.p).some(tr => !tr.done)) return false;
+  if (p.mh.filter(m => m.m || m.r || m.rat || m.n).some(m => !m.done)) return false;
+  if (p.events.filter(e => (e.e && e.e.trim() !== '') || typeof e.pIdx === 'number').some(e => !e.done)) return false;
+  if (p.reminders.filter(r => (r.txt && r.txt.trim() !== '') || typeof r.tIdx === 'number').some(r => !r.done)) return false;
+
+  const hasSkin = Object.values(p.skin).some(Boolean) || p.skinCustom.some(c => c.site && c.cond) || p.skinCare.length > 0;
+  if (hasSkin && !p.skinDone) return false;
+
+  const hasDiet = !!(p.diet.b || p.diet.l || p.diet.d || p.diet.supp || p.diet.supps.length || p.diet.flags.length);
+  if (hasDiet && !p.diet.done) return false;
+
+  const hasTurnPlan = !!(p.turnFreq || p.turnChecks.length);
+  if (hasTurnPlan && !p.turnPlanDone) return false;
+
+  if (p.mhLevel && p.mh.length === 0 && !p.mhLevelDone) return false;
+
+  const hasAdmit = !!(p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length || p.admit.custom.length || (p.admit.other && p.admit.other.trim()));
+  if (hasAdmit && !p.admit.done) return false;
+
+  return true;
 }
 
 function markBedDone(bedOrIdx) {
@@ -1263,7 +1297,7 @@ function markBedDone(bedOrIdx) {
   if (!bed) return;
   const p = getPt(bed);
   const targetState = !isBedAllDone(bed);
-  ['obs','bm','bp','fluids','bowel','dressings','turns','mh','events','reminders'].forEach(k => p[k].forEach(x => x.done = targetState));
+  ['obs','bm','bp','fluids','bowel','dressings','turns','mh','events','reminders'].forEach(k => p[k].forEach(x => { x.done = targetState; }));
   p.skinDone = targetState; p.diet.done = targetState; p.turnPlanDone = targetState; p.mhLevelDone = targetState; p.admit.done = targetState;
   saveDB(); renderSummary();
 }
@@ -1359,7 +1393,7 @@ function buildModuleSummaryForBed(b, modId) {
       const tkTxt = (typeof r.tIdx === 'number' && taskList[r.tIdx] && !r.customEdited) ? taskList[r.tIdx] : (r.txt || '');
       if (!tkTxt.trim()) return;
       const overdue = isTaskOverdue(r);
-      rows += sumRowWrap(`<strong>${esc(r.due || '--:--')}</strong> — <b>${esc(tkTxt)}</b>${overdue ? ' <span class="task-badge overdue">OVERDUE</span>' : ''}`, bIdx, 'reminders', i, !!r.done);
+      rows += sumRowWrap(`<strong>${esc(r.due || '--:--')}</strong> — <b>${esc(tkTxt)}</b>${overdue ? ` <span class="task-badge overdue">${esc(t('overdue'))}</span>` : ''}`, bIdx, 'reminders', i, !!r.done);
     });
   } else if (modId === 'admit') {
     const aParts = [];
@@ -1367,7 +1401,7 @@ function buildModuleSummaryForBed(b, modId) {
     if (p.admit.h) aParts.push(`${esc(t('height'))}: <b>${esc(p.admit.h)}cm</b>`);
     if (p.admit.wb) aParts.push(`<b>✓ ${esc(t('wristband'))}</b>`);
     Object.entries(p.admit.items).forEach(([k, lc]) => {
-      const idx = parseInt(k.replace('std_', ''));
+      const idx = parseInt(k.replace('std_', ''), 10);
       const lbl = !isNaN(idx) && admitList[idx] ? admitList[idx] : k;
       aParts.push(`<b>${esc(lbl)}</b>${lc ? ' (' + esc(trCode(lc)) + ')' : ''}`);
     });
@@ -1380,6 +1414,44 @@ function buildModuleSummaryForBed(b, modId) {
   return rows;
 }
 
+function copyHandoverToClipboard() {
+  const activeSecs = getActiveSections();
+  const lines = [];
+  const stripHtml = html => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return (tmp.textContent || tmp.innerText || '').trim();
+  };
+  alloc.forEach(b => {
+    const bedLines = [];
+    activeSecs.forEach(s => {
+      const modHtml = buildModuleSummaryForBed(b, s.id);
+      if (!modHtml) return;
+      const wrap = document.createElement('div');
+      wrap.innerHTML = modHtml;
+      wrap.querySelectorAll('button').forEach(btn => btn.remove());
+      const items = Array.from(wrap.children).map(el => stripHtml(el.innerHTML)).filter(Boolean);
+      if (items.length) {
+        bedLines.push(`  [${t(s.id)}]`);
+        items.forEach(it => bedLines.push(`  • ${it}`));
+      }
+    });
+    if (bedLines.length) {
+      lines.push(`=== ${b} ===`);
+      lines.push(...bedLines);
+      lines.push('');
+    }
+  });
+  const text = lines.join('\n').trim();
+  if (!text) {
+    alert(t('nothingLoggedMsg'));
+    return;
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => alert(t('copiedMsg'))).catch(() => {});
+  }
+}
+
 function renderSummary() {
   if (typeof sortBedArray === 'function') alloc = sortBedArray(alloc);
   const area = document.getElementById('contentArea');
@@ -1389,6 +1461,7 @@ function renderSummary() {
     <button type="button" class="tool-btn ${summaryGroup === 'mod' ? 'active' : ''}" onclick="setSumGroup('mod')">${esc(t('byMod'))}</button>
     <button type="button" class="tool-btn ${hideCompleted ? 'active' : ''}" onclick="toggleHideCompleted()">${esc(hideCompleted ? t('showAll') : t('pending'))}</button>
     <button type="button" class="tool-btn ${wakeLockObj ? 'active' : ''}" onclick="toggleWakeLock()">${esc(t('keepOn'))}</button>
+    <button type="button" class="tool-btn" onclick="copyHandoverToClipboard()">📋 ${esc(t('copyHandover'))}</button>
   </div>`;
 
   let anyVisible = false;
@@ -1428,4 +1501,4 @@ function renderSummary() {
 function setSumGroup(g) { summaryGroup = g; renderSummary(); }
 function toggleHideCompleted() { hideCompleted = !hideCompleted; renderSummary(); }
 
-window.CDP_MOD_VER = 6;
+window.CDP_MOD_VER = 7;
