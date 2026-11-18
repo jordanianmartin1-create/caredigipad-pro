@@ -37,9 +37,17 @@ const EN_DICT = {
   add: "+ Add",
   del: "Del",
   save: "+ Save New",
-  activeMods: "Active Modules (Tick to show • Tap ▲ ▼ to reorder)",
+  updActiveLay: "Update Layout",
+  activeMods: "Shift Modules & Tab Order",
+  modOrderHelp: "Tick modules to show on shift. Use Up / Down or Tap in Order to set their left-to-right tab sequence.",
+  tapInOrder: "Tap in Order",
+  doneOrdering: "Done",
+  quickReorderPrompt: "Tap your active modules below in the order you want them (1st, 2nd, 3rd...):",
+  saveLayTitle: "Save Ticked Beds as a Ward Layout",
   saveLay: "Or save as new layout (e.g. Night)",
-  toggleSettings: "Shift Hours, Units & Active Modules ▾",
+  toggleSettingsTitle: "Customise Modules, Units & Theme",
+  showEdit: "Show / Edit ▾",
+  closeEdit: "Close ▲",
   start: "Start Shift",
   startEmpty: "Select Beds to Start",
   returnShift: "Save & Return to Shift",
@@ -344,6 +352,8 @@ let showManageBed = false;
 let showQuickAddBed = false;
 let settingsOpen = false;
 let bedDeleteMode = false;
+let quickReorderActive = false;
+let quickReorderQueue = [];
 let openForms = {};
 let expandedCards = {};
 let activeFluidIdx = 0;
@@ -546,18 +556,45 @@ function nowTimeStr() {
   return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
 
+function sortModConfig() {
+  if (!Array.isArray(modConfig)) return;
+  const active = [];
+  const inactive = [];
+  const locked = [];
+  modConfig.forEach(m => {
+    const def = ALL_MODS.find(x => x.id === m.id);
+    if (!def) return;
+    if (def.pro && !isPro) locked.push(m);
+    else if (m.on) active.push(m);
+    else inactive.push(m);
+  });
+  modConfig = [...active, ...inactive, ...locked];
+}
+
 function initModConfig() {
   if (!Array.isArray(modConfig) || modConfig.length === 0) {
-    modConfig = ALL_MODS.map(m => ({ id: m.id, on: true }));
+    modConfig = ALL_MODS.map(m => ({ id: m.id, on: !m.pro || isPro }));
   } else {
-    ALL_MODS.forEach(m => { if (!modConfig.some(x => x.id === m.id)) modConfig.push({ id: m.id, on: true }); });
+    ALL_MODS.forEach(m => {
+      if (!modConfig.some(x => x.id === m.id)) {
+        modConfig.push({ id: m.id, on: !m.pro || isPro });
+      }
+    });
   }
   if (!isPro) {
     modConfig.forEach(m => {
       const def = ALL_MODS.find(x => x.id === m.id);
-      if (def) m.on = !def.pro;
+      if (def && def.pro) m.on = false;
     });
+    if (!modConfig.some(m => {
+      const def = ALL_MODS.find(x => x.id === m.id);
+      return def && !def.pro && m.on;
+    })) {
+      const firstFree = modConfig.find(m => m.id === 'obs');
+      if (firstFree) firstFree.on = true;
+    }
   }
+  sortModConfig();
 }
 
 function getActiveSections() {
@@ -646,7 +683,7 @@ function initSetup() {
   renderModList();
 
   document.getElementById('proBanner').classList.toggle('hidden', isPro);
-  document.getElementById('savedLayoutRow').classList.toggle('hidden', !isPro);
+  document.getElementById('savedLayoutRow').classList.toggle('hidden', !isPro || Object.keys(layouts).length === 0);
 
   if (alloc.length > 0 && localStorage.getItem('cdu_start')) {
     document.getElementById('setupView').classList.add('hidden');
@@ -671,16 +708,20 @@ function applyStaticTranslations() {
     lblSetup:'setup', lblSub:'sub', lblDisclaimer:'disclaimer', lblProTitle:'proTitle', lblProSub:'proSub',
     btnUnlock:'unlock', lnkGetPro:'getPro', lblInstallTitle:'installTitle', lblInstallSub:'installSub',
     btnInstallAction:'installBtn', lblSavedLay:'savedLay', delLayBtn:'del', lblAddBed:'addBed',
-    btnAddBed:'add', btnToggleSettings:'toggleSettings', lblPrefs:'prefs',
-    lblTheme:'theme', lblShiftHrs:'shiftHrs', btnDayShift:'dayShift', btnNightShift:'nightShift',
-    lblBmUnit:'bmUnit', lblTempUnit:'tempUnit', lblActiveMods:'activeMods', btnSaveLay:'save',
-    btnShareSetup:'share', btnShareMain:'share', btnEndShift:'endShift',
-    btnClearSel:'untickAll'
+    btnAddBed:'add', lblPrefs:'prefs', lblTheme:'theme', lblShiftHrs:'shiftHrs',
+    btnDayShift:'dayShift', btnNightShift:'nightShift', lblBmUnit:'bmUnit', lblTempUnit:'tempUnit',
+    lblActiveMods:'activeMods', lblModOrderHelp:'modOrderHelp',
+    lblQuickReorderPrompt:'quickReorderPrompt', btnSaveLay:'save', btnShareSetup:'share',
+    btnShareMain:'share', btnEndShift:'endShift', btnClearSel:'untickAll',
+    lblSaveLayTitle:'saveLayTitle', lblToggleSettingsTitle:'toggleSettingsTitle'
   };
   Object.entries(map).forEach(([id, k]) => {
     const el = document.getElementById(id);
     if (el) el.textContent = t(k);
   });
+  const qrBtn = document.getElementById('btnQuickReorder');
+  if (qrBtn) qrBtn.textContent = quickReorderActive ? t('doneOrdering') : t('tapInOrder');
+
   document.getElementById('proKeyInput').placeholder = t('proPlaceholder');
   document.getElementById('newLayoutName').placeholder = t('saveLay');
   document.getElementById('btnDayShift').classList.toggle('selected', curShift === 'day');
@@ -689,6 +730,15 @@ function applyStaticTranslations() {
   document.getElementById('btnBmMg').classList.toggle('selected', bmUnit === 'mg/dL');
   document.getElementById('btnTempC').classList.toggle('selected', tempUnit === '°C');
   document.getElementById('btnTempF').classList.toggle('selected', tempUnit === '°F');
+
+  const pill = document.getElementById('btnToggleSettingsPill');
+  if (pill) pill.textContent = settingsOpen ? t('closeEdit') : t('showEdit');
+
+  const sub = document.getElementById('settingsSummarySub');
+  if (sub) {
+    const activeCnt = getActiveSections().length;
+    sub.textContent = `${activeCnt} modules active • ${bmUnit} • ${tempUnit}`;
+  }
 }
 
 function setLang(l) {
@@ -725,15 +775,36 @@ function setShift(s) {
   applyStaticTranslations();
 }
 
-function setBmUnit(u) { bmUnit = u; localStorage.setItem('cdu_bm_unit', u); applyStaticTranslations(); }
-function setTempUnit(u) { tempUnit = u; localStorage.setItem('cdu_temp_unit', u); applyStaticTranslations(); }
-function toggleSettingsPanel() { settingsOpen = !settingsOpen; document.getElementById('settingsBody').classList.toggle('hidden', !settingsOpen); }
+function setBmUnit(u) {
+  bmUnit = u;
+  localStorage.setItem('cdu_bm_unit', u);
+  applyStaticTranslations();
+}
+
+function setTempUnit(u) {
+  tempUnit = u;
+  localStorage.setItem('cdu_temp_unit', u);
+  applyStaticTranslations();
+}
+
+function toggleSettingsPanel() {
+  settingsOpen = !settingsOpen;
+  document.getElementById('settingsBody').classList.toggle('hidden', !settingsOpen);
+  const pill = document.getElementById('btnToggleSettingsPill');
+  if (pill) pill.textContent = settingsOpen ? t('closeEdit') : t('showEdit');
+}
 
 function renderLayoutDropdown() {
   const sel = document.getElementById('layoutSelect');
   const delBtn = document.getElementById('delLayBtn');
-  if (!sel) return;
+  const row = document.getElementById('savedLayoutRow');
+  if (!sel || !row) return;
   const names = Object.keys(layouts);
+  if (!isPro || names.length === 0) {
+    row.classList.add('hidden');
+    return;
+  }
+  row.classList.remove('hidden');
   sel.innerHTML = `<option value="">${esc(t('noLay'))}</option>` +
     names.map(n => `<option value="${esc(n)}" ${activeLayoutName === n ? 'selected' : ''}>${esc(n)} (${Array.isArray(layouts[n]) ? layouts[n].length : 0})</option>`).join('');
   if (delBtn) delBtn.classList.toggle('hidden', !activeLayoutName || !layouts[activeLayoutName]);
@@ -744,6 +815,7 @@ function loadLayout(name) {
     activeLayoutName = '';
     localStorage.setItem('cdu_active_lay', '');
     renderLayoutDropdown();
+    renderSetupBeds();
     return;
   }
   activeLayoutName = name;
@@ -767,8 +839,19 @@ function saveLayout() {
   activeLayoutName = name;
   localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
   localStorage.setItem('cdu_active_lay', name);
-  inp.value = '';
+  if (inp) inp.value = '';
   renderLayoutDropdown();
+  renderSetupBeds();
+}
+
+function updateActiveLayoutInSetup() {
+  if (!isPro || !activeLayoutName || !layouts[activeLayoutName]) return;
+  if (alloc.length === 0) { alert(t('selectAtLeastOne')); return; }
+  layouts[activeLayoutName] = sortBedArray(alloc);
+  localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
+  renderLayoutDropdown();
+  renderSetupBeds();
+  alert(`${t('layoutSaved')}: ${activeLayoutName}`);
 }
 
 function deleteLayout() {
@@ -778,6 +861,7 @@ function deleteLayout() {
   localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
   localStorage.setItem('cdu_active_lay', '');
   renderLayoutDropdown();
+  renderSetupBeds();
 }
 
 function toggleBedDeleteMode() {
@@ -798,11 +882,29 @@ function renderSetupBeds() {
   const actionsWrap = document.getElementById('bedActionLinks');
   const clearBtn = document.getElementById('btnClearSel');
   const editWardBtn = document.getElementById('btnEditWardBeds');
+  const guideBox = document.getElementById('firstTimeGuide');
+  const saveBox = document.getElementById('saveLayoutBox');
+  const updLayBtn = document.getElementById('btnUpdActiveLay');
   if (!grid) return;
 
   wardBeds = sortBedArray(wardBeds);
   alloc = sortBedArray(alloc);
   if (wardBeds.length === 0) bedDeleteMode = false;
+
+  if (guideBox) {
+    guideBox.classList.toggle('hidden', wardBeds.length > 0);
+  }
+  if (saveBox) {
+    saveBox.classList.toggle('hidden', !isPro || wardBeds.length === 0);
+  }
+  if (updLayBtn) {
+    const hasActiveLay = isPro && activeLayoutName && Array.isArray(layouts[activeLayoutName]);
+    const isModified = hasActiveLay && alloc.length > 0 && JSON.stringify(alloc) !== JSON.stringify(sortBedArray(layouts[activeLayoutName]));
+    updLayBtn.classList.toggle('hidden', !isModified);
+    if (isModified) {
+      updLayBtn.textContent = `✓ ${t('updActiveLay')} "${activeLayoutName}" (${alloc.length})`;
+    }
+  }
 
   if (helperEl) {
     helperEl.textContent = bedDeleteMode ? t('tapToDeleteHelper') : t('bedHelper');
@@ -897,31 +999,144 @@ function updateStartBtn() {
   }
 }
 
+function commitQuickReorderQueue() {
+  if (quickReorderQueue.length > 0) {
+    const ordered = [];
+    quickReorderQueue.forEach(id => {
+      const found = modConfig.find(m => m.id === id);
+      if (found) ordered.push(found);
+    });
+    modConfig.forEach(m => {
+      if (!ordered.includes(m)) ordered.push(m);
+    });
+    modConfig = ordered;
+    sortModConfig();
+    localStorage.setItem('cdu_mods', JSON.stringify(modConfig));
+  }
+  quickReorderActive = false;
+  quickReorderQueue = [];
+  const banner = document.getElementById('quickReorderBanner');
+  const btn = document.getElementById('btnQuickReorder');
+  if (banner) banner.classList.add('hidden');
+  if (btn) {
+    btn.textContent = t('tapInOrder');
+    btn.style.background = 'var(--card)';
+    btn.style.color = 'var(--teal)';
+  }
+  renderModList();
+}
+
+function toggleQuickReorder() {
+  if (quickReorderActive) {
+    commitQuickReorderQueue();
+    return;
+  }
+  if (getActiveSections().length < 2) return;
+  quickReorderActive = true;
+  quickReorderQueue = [];
+  const banner = document.getElementById('quickReorderBanner');
+  const btn = document.getElementById('btnQuickReorder');
+  if (banner) banner.classList.remove('hidden');
+  if (btn) {
+    btn.textContent = t('doneOrdering');
+    btn.style.background = 'var(--teal)';
+    btn.style.color = '#fff';
+  }
+  renderModList();
+}
+
+function handleModRowClick(idx) {
+  if (!quickReorderActive || !modConfig[idx]) return;
+  const def = ALL_MODS.find(x => x.id === modConfig[idx].id);
+  if (!def || (def.pro && !isPro) || !modConfig[idx].on) return;
+
+  const clickedId = modConfig[idx].id;
+  const qPos = quickReorderQueue.indexOf(clickedId);
+  if (qPos > -1) {
+    quickReorderQueue.splice(qPos, 1);
+    renderModList();
+    return;
+  }
+
+  quickReorderQueue.push(clickedId);
+  const totalActive = getActiveSections().length;
+  if (quickReorderQueue.length >= totalActive) {
+    commitQuickReorderQueue();
+  } else {
+    renderModList();
+  }
+}
+
 function renderModList() {
   const wrap = document.getElementById('modList');
   if (!wrap) return;
   initModConfig();
+  const activeSecs = getActiveSections();
+
   wrap.innerHTML = modConfig.map((m, idx) => {
     const def = ALL_MODS.find(x => x.id === m.id);
     const locked = def && def.pro && !isPro;
-    return `<div class="mod-item" style="${locked ? 'opacity:0.6;' : ''}">
-      <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.88rem; color:var(--text); cursor:pointer;">
-        <input type="checkbox" ${m.on && !locked ? 'checked' : ''} ${locked ? 'disabled' : ''} onchange="toggleMod(${idx}, this.checked)">
-        <span>${esc(t(m.id))}</span>${def && def.pro ? '<span class="pro-badge">PRO</span>' : ''}
+    const activeIdx = activeSecs.findIndex(s => s.id === m.id);
+    const isActive = activeIdx > -1;
+
+    let badgeHtml = '';
+    if (locked) {
+      badgeHtml = `<span class="pro-badge">PRO</span>`;
+    } else if (quickReorderActive && isActive) {
+      const qIdx = quickReorderQueue.indexOf(m.id);
+      badgeHtml = qIdx > -1
+        ? `<span class="mod-num-badge">${qIdx + 1}</span>`
+        : `<span class="mod-num-badge unassigned">?</span>`;
+    } else if (isActive) {
+      badgeHtml = `<span class="mod-num-badge">${activeIdx + 1}</span>`;
+    } else {
+      badgeHtml = `<span class="mod-num-badge unassigned">—</span>`;
+    }
+
+    const rowClass = (quickReorderActive && isActive)
+      ? 'mod-item reorder-tap'
+      : (isActive ? 'mod-item active-mod' : 'mod-item');
+
+    let rightControlsHtml = '';
+    if (quickReorderActive && isActive) {
+      const qIdx = quickReorderQueue.indexOf(m.id);
+      rightControlsHtml = `<span style="font-size:0.75rem; font-weight:700; color:var(--teal);">${qIdx > -1 ? `#${qIdx + 1} (Tap to undo)` : `Tap for #${quickReorderQueue.length + 1}`}</span>`;
+    } else if (!quickReorderActive && isActive) {
+      rightControlsHtml = `<div style="display:flex; gap:4px; flex-shrink:0;">
+        <button type="button" class="order-btn" onclick="event.stopPropagation(); moveMod(${idx}, -1)" ${activeIdx === 0 ? 'disabled' : ''}>▲ Up</button>
+        <button type="button" class="order-btn" onclick="event.stopPropagation(); moveMod(${idx}, 1)" ${activeIdx === activeSecs.length - 1 ? 'disabled' : ''}>▼ Down</button>
+      </div>`;
+    }
+
+    return `<div class="${rowClass}" style="${locked ? 'opacity:0.6;' : ''}" ${quickReorderActive && isActive ? `onclick="handleModRowClick(${idx})"` : ''}>
+      <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.88rem; color:var(--text); cursor:${!locked ? 'pointer' : 'default'}; flex:1; min-width:0;">
+        ${!quickReorderActive ? `<input type="checkbox" ${isActive ? 'checked' : ''} ${locked ? 'disabled' : ''} onchange="toggleMod(${idx}, this.checked)">` : ''}
+        ${badgeHtml}
+        <span style="overflow:hidden; text-overflow:ellipsis;">${esc(t(m.id))}</span>
       </label>
-      <div style="display:flex; gap:4px;">
-        <button type="button" class="btn-subtle btn-sm" style="padding:2px 8px;" onclick="moveMod(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
-        <button type="button" class="btn-subtle btn-sm" style="padding:2px 8px;" onclick="moveMod(${idx}, 1)" ${idx === modConfig.length - 1 ? 'disabled' : ''}>▼</button>
-      </div>
+      ${rightControlsHtml}
     </div>`;
   }).join('');
 }
 
-function toggleMod(idx, checked) { if (modConfig[idx]) { modConfig[idx].on = checked; localStorage.setItem('cdu_mods', JSON.stringify(modConfig)); } }
+function toggleMod(idx, checked) {
+  if (!modConfig[idx]) return;
+  if (!checked && getActiveSections().length <= 1) {
+    renderModList();
+    return;
+  }
+  modConfig[idx].on = checked;
+  sortModConfig();
+  localStorage.setItem('cdu_mods', JSON.stringify(modConfig));
+  renderModList();
+  applyStaticTranslations();
+}
 
 function moveMod(idx, dir) {
+  sortModConfig();
+  const activeCount = getActiveSections().length;
   const target = idx + dir;
-  if (target < 0 || target >= modConfig.length) return;
+  if (target < 0 || target >= activeCount) return;
   const temp = modConfig[idx];
   modConfig[idx] = modConfig[target];
   modConfig[target] = temp;
@@ -932,6 +1147,7 @@ function moveMod(idx, dir) {
 function startShift() {
   if (alloc.length === 0) { alert(t('selectAtLeastOne')); return; }
   bedDeleteMode = false;
+  if (quickReorderActive) commitQuickReorderQueue();
   unlockAudioContext();
   alloc = sortBedArray(alloc);
   const curSt = Number(localStorage.getItem('cdu_start'));
@@ -953,11 +1169,14 @@ function startShift() {
 
 function editBeds() {
   bedDeleteMode = false;
+  if (quickReorderActive) commitQuickReorderQueue();
   saveDB();
   document.getElementById('mainView').classList.add('hidden');
   document.getElementById('setupView').classList.remove('hidden');
   document.getElementById('editBtn').classList.add('hidden');
+  renderLayoutDropdown();
   renderSetupBeds();
+  renderModList();
 }
 
 function clearShift() {
