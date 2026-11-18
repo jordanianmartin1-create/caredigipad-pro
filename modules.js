@@ -9,7 +9,9 @@ function computeTaskDueTs(dueStr, refMs) {
   if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return null;
   const base = refMs ? new Date(refMs) : new Date();
   const dt = new Date(base.getFullYear(), base.getMonth(), base.getDate(), parts[0], parts[1], 0, 0);
-  if (dt.getTime() < base.getTime() - 2 * 60 * 1000) dt.setDate(dt.getDate() + 1);
+  if (base.getTime() - dt.getTime() > 6 * 60 * 60 * 1000) {
+    dt.setDate(dt.getDate() + 1);
+  }
   return dt.getTime();
 }
 
@@ -120,6 +122,19 @@ function isObsFilled(o) {
   return hasVal(o.rr) || hasVal(o.sp) || hasVal(o.o2) || hasVal(o.sys) || hasVal(o.dia) || (hasVal(o.bp) && o.bp !== '-/-') || hasVal(o.hr) || hasVal(o.tm) || (o.aIdx !== null && o.aIdx !== undefined && o.aIdx !== '') || hasVal(o.pn);
 }
 
+function isBpFilled(x) {
+  if (!x) return false;
+  const hasL = (x.lSys || x.lDia) || (x.l && x.l !== '-' && x.l !== '-/-');
+  const hasS = (x.sSys || x.sDia) || (x.s && x.s !== '-' && x.s !== '-/-');
+  const hasSym = Array.isArray(x.sym) && x.sym.length > 0;
+  return !!(hasL || hasS || hasSym);
+}
+
+function isFluidRowFilled(f) {
+  if (!f) return false;
+  return (Number(f.i) || 0) > 0 || (Number(f.o) || 0) > 0 || (Number(f.wet) || 0) > 0 || !!f.src;
+}
+
 function kvPill(label, valHtml) {
   if (!label) return `<span class="sum-kv"><span class="sum-v">${valHtml}</span></span>`;
   return `<span class="sum-kv"><span class="sum-k">${esc(label)}</span><span class="sum-v">${valHtml}</span></span>`;
@@ -152,12 +167,12 @@ function modEntryCount(b, modId) {
   switch (modId) {
     case 'obs': return p.obs.filter(isObsFilled).length;
     case 'bm': return p.bm.filter(x => x.v && String(x.v).trim() !== '').length;
-    case 'bp': return p.bp.filter(x => x.lSys || x.lDia || x.sSys || x.sDia || (x.l && x.l !== '-') || (x.s && x.s !== '-')).length;
-    case 'fluid': return p.fluids.reduce((acc, f) => acc + ((f.i > 0 || f.o > 0 || f.wet > 0) ? 1 : 0), 0);
+    case 'bp': return p.bp.filter(isBpFilled).length;
+    case 'fluid': return p.fluids.reduce((acc, f) => acc + (isFluidRowFilled(f) ? 1 : 0), 0);
     case 'bowel': return p.bowel.filter(x => !!x.a).length;
-    case 'amy': return Object.values(p.skin).filter(Boolean).length + p.skinCustom.filter(c => c.site && c.cond).length + p.dressings.filter(d => d.l && d.l.trim() !== '').length;
-    case 'food': return [p.diet.b, p.diet.l, p.diet.d].filter(Boolean).length + p.diet.supps.length + (p.diet.supp ? 1 : 0);
-    case 'turn': return p.turns.filter(tr => !!tr.p).length + (p.turnFreq ? 1 : 0);
+    case 'amy': return Object.values(p.skin).filter(Boolean).length + p.skinCustom.filter(c => c.site && c.cond).length + (p.skinCare.length > 0 ? 1 : 0) + p.dressings.filter(d => d.l && d.l.trim() !== '').length;
+    case 'food': return [p.diet.b, p.diet.l, p.diet.d].filter(Boolean).length + p.diet.supps.length + (p.diet.supp && p.diet.supp.trim() ? 1 : 0) + (p.diet.flags.length > 0 ? 1 : 0);
+    case 'turn': return p.turns.filter(tr => !!tr.p).length + ((p.turnFreq || p.turnChecks.length > 0) ? 1 : 0);
     case 'mh': return p.mh.filter(m => m.m || m.r || m.rat || m.n).length + (p.mhLevel ? 1 : 0);
     case 'events': return p.events.filter(e => (e.e && e.e.trim() !== '') || typeof e.pIdx === 'number').length;
     case 'reminders': return p.reminders.filter(r => !r.done && ((r.txt && r.txt.trim() !== '') || typeof r.tIdx === 'number')).length;
@@ -169,6 +184,41 @@ function modEntryCount(b, modId) {
 function hasAnyBedData(b) {
   if (!db[b]) return false;
   return ALL_MODS.some(m => modEntryCount(b, m.id) > 0);
+}
+
+function clearExpandedForBed(b) {
+  if (!b) return;
+  Object.keys(expandedCards).forEach(k => {
+    if (k.startsWith(b + '_')) delete expandedCards[k];
+  });
+}
+
+function migrateExpandedForBed(oldBed, newBed) {
+  if (!oldBed || !newBed) return;
+  const next = {};
+  Object.keys(expandedCards).forEach(k => {
+    if (k.startsWith(oldBed + '_')) {
+      next[newBed + '_' + k.slice(oldBed.length + 1)] = expandedCards[k];
+    } else if (!k.startsWith(newBed + '_')) {
+      next[k] = expandedCards[k];
+    }
+  });
+  expandedCards = next;
+}
+
+function swapExpandedForBeds(bedA, bedB) {
+  if (!bedA || !bedB) return;
+  const next = {};
+  Object.keys(expandedCards).forEach(k => {
+    if (k.startsWith(bedA + '_')) {
+      next[bedB + '_' + k.slice(bedA.length + 1)] = expandedCards[k];
+    } else if (k.startsWith(bedB + '_')) {
+      next[bedA + '_' + k.slice(bedB.length + 1)] = expandedCards[k];
+    } else {
+      next[k] = expandedCards[k];
+    }
+  });
+  expandedCards = next;
 }
 
 function getExpIdx(sec, len) {
@@ -265,11 +315,25 @@ function toggleSummary(val) {
   showSummary = val;
   showManageBed = false;
   showQuickAddBed = false;
+  if (val && typeof pushNavState === 'function') pushNavState({ cduSummary: true });
   renderUI();
 }
 
-function toggleManageBed() { showManageBed = !showManageBed; showQuickAddBed = false; renderSection(); }
-function toggleQuickAddBed() { showQuickAddBed = !showQuickAddBed; showManageBed = false; if (showSummary) showSummary = false; renderUI(); }
+function toggleManageBed() {
+  showManageBed = !showManageBed;
+  showQuickAddBed = false;
+  if (showManageBed && typeof pushNavState === 'function') pushNavState({ cduManageBed: true });
+  renderSection();
+}
+
+function toggleQuickAddBed() {
+  showQuickAddBed = !showQuickAddBed;
+  showManageBed = false;
+  if (showSummary) showSummary = false;
+  if (showQuickAddBed && typeof pushNavState === 'function') pushNavState({ cduQuickAdd: true });
+  renderUI();
+}
+
 function quickAddBedByIdx(wIdx) { if (wardBeds[wIdx]) quickAddBedToShift(wardBeds[wIdx]); }
 
 function quickAddBedToShift(bedName) {
@@ -289,9 +353,13 @@ function renameCurrentBed() {
   const inp = document.getElementById('renameBedInput');
   const newName = (inp ? inp.value : '').trim().toUpperCase().slice(0, 4);
   if (!newName || newName === curBed) return;
-  if (alloc.includes(newName)) { alert(newName + ' ' + t('swapConfirm')); return; }
+  if (alloc.includes(newName) || hasAnyBedData(newName)) {
+    alert(`${newName}: ${t('bedOccupied')}`);
+    return;
+  }
   db[newName] = db[curBed];
   delete db[curBed];
+  migrateExpandedForBed(curBed, newName);
   const idx = alloc.indexOf(curBed);
   if (idx > -1) alloc[idx] = newName;
   const wIdx = wardBeds.indexOf(curBed);
@@ -306,23 +374,28 @@ function renameCurrentBed() {
 function transferCurrentBed() {
   const dest = (prompt(t('transferPrompt')) || '').trim().toUpperCase().slice(0, 4);
   if (!dest || dest === curBed) return;
-  if (hasAnyBedData(dest)) {
-    if (confirm(`${dest} ${t('swapConfirm')}`)) {
-      const temp = db[dest];
-      db[dest] = db[curBed];
-      db[curBed] = temp;
-    } else {
-      db[dest] = db[curBed];
-      delete db[curBed];
-      alloc = alloc.filter(b => b !== curBed);
+  const destOccupied = alloc.includes(dest) || hasAnyBedData(dest);
+  if (destOccupied) {
+    const swapMsg = `${dest} ${t('swapConfirm').replace(/\s*\([^)]*\)/g, '')}`;
+    if (!confirm(swapMsg)) return;
+    const temp = db[dest];
+    db[dest] = db[curBed];
+    db[curBed] = temp;
+    swapExpandedForBeds(curBed, dest);
+    if (!alloc.includes(dest)) {
+      const cIdx = alloc.indexOf(curBed);
+      if (cIdx > -1) alloc[cIdx] = dest;
+      else alloc.push(dest);
     }
   } else {
     db[dest] = db[curBed];
     delete db[curBed];
-    alloc = alloc.filter(b => b !== curBed);
+    migrateExpandedForBed(curBed, dest);
+    const cIdx = alloc.indexOf(curBed);
+    if (cIdx > -1) alloc[cIdx] = dest;
+    else alloc.push(dest);
   }
   if (!wardBeds.includes(dest)) wardBeds.push(dest);
-  if (!alloc.includes(dest)) alloc.push(dest);
   curBed = dest;
   showManageBed = false;
   saveDB();
@@ -332,6 +405,7 @@ function transferCurrentBed() {
 function clearCurrentBed() {
   if (!confirm(t('clearBedConfirm'))) return;
   delete db[curBed];
+  clearExpandedForBed(curBed);
   showManageBed = false;
   saveDB();
   renderUI();
@@ -340,27 +414,42 @@ function clearCurrentBed() {
 function removeCurrentBedFromShift() {
   if (!confirm(t('removeBedConfirm'))) return;
   delete db[curBed];
+  clearExpandedForBed(curBed);
   alloc = alloc.filter(b => b !== curBed);
   showManageBed = false;
   saveDB();
-  if (alloc.length === 0) { localStorage.removeItem('cdu_start'); initSetup(); }
-  else { curBed = alloc[0]; renderUI(); }
+  if (alloc.length === 0) {
+    if (typeof safeRemove === 'function') safeRemove('cdu_start');
+    else localStorage.removeItem('cdu_start');
+    initSetup();
+  } else {
+    curBed = alloc[0];
+    renderUI();
+  }
 }
 
 function updateActiveLayoutFromShift() {
-  if (!activeLayoutName) return;
+  if (!isPro || !activeLayoutName) return;
   layouts[activeLayoutName] = sortBedArray(alloc);
-  localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
+  if (typeof safeSet === 'function') safeSet('cdu_layouts', JSON.stringify(layouts));
+  else localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
   alert(`${t('layoutSaved')}: ${activeLayoutName}`);
 }
 
 async function toggleWakeLock() {
   if (!('wakeLock' in navigator)) return;
   try {
-    if (wakeLockObj) { await wakeLockObj.release(); wakeLockObj = null; }
-    else {
+    if (wakeLockObj) {
+      wakeLockWanted = false;
+      await wakeLockObj.release();
+      wakeLockObj = null;
+    } else {
+      wakeLockWanted = true;
       wakeLockObj = await navigator.wakeLock.request('screen');
-      wakeLockObj.addEventListener('release', () => { wakeLockObj = null; if (showSummary) renderSummary(); });
+      wakeLockObj.addEventListener('release', () => {
+        wakeLockObj = null;
+        if (showSummary) renderSummary();
+      });
     }
     renderSummary();
   } catch (e) {}
@@ -401,7 +490,7 @@ function renderSection() {
     topHtml += `<div class="manage-panel">
       <div style="font-weight:800; margin-bottom:8px;">${esc(t('quickAddBedTitle'))}</div>
       <div style="display:flex; gap:8px; margin-bottom:8px;">
-        <input type="text" id="quickBedInput" maxlength="4" placeholder="${esc(t('bedPh'))}" style="text-transform:uppercase; font-size:1rem;">
+        <input type="text" id="quickBedInput" maxlength="4" placeholder="${esc(t('bedPh'))}" style="text-transform:uppercase; font-size:1rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();quickAddBedToShift();}">
         <button type="button" class="btn btn-primary btn-sm" onclick="quickAddBedToShift()">${esc(t('add'))}</button>
       </div>
       ${unalloc.length > 0 ? `<div style="font-size:0.78rem; color:var(--text-sub); margin-bottom:6px;">${esc(t('savedWardBeds'))}</div>
@@ -413,7 +502,7 @@ function renderSection() {
     topHtml += `<div class="manage-panel">
       <div style="font-weight:800; margin-bottom:8px;">${esc(t('manageBed'))}: ${esc(curBed)}</div>
       <div style="display:flex; gap:8px; margin-bottom:8px;">
-        <input type="text" id="renameBedInput" maxlength="4" value="${esc(curBed)}" style="text-transform:uppercase; font-size:1rem;">
+        <input type="text" id="renameBedInput" maxlength="4" value="${esc(curBed)}" style="text-transform:uppercase; font-size:1rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();renameCurrentBed();}">
         <button type="button" class="btn btn-primary btn-sm" onclick="renameCurrentBed()">${esc(t('renameBed'))}</button>
       </div>
       <div class="manage-grid">
@@ -479,7 +568,7 @@ function renderSection() {
           <div><label>${esc(t('hrLbl'))}</label><input type="number" id="obsHr_${i}" inputmode="numeric" value="${esc(hrVal)}" oninput="updObsField(${i}, 'hr', this.value)"></div>
         </div>
         <div class="row">
-          <div><label>${esc(t('tempLbl'))} (${esc(o.u || tempUnit)})</label><input type="text" inputmode="decimal" value="${esc(tmVal)}" oninput="updObsField(${i}, 'tm', normDec(this.value))"></div>
+          <div><label>${esc(t('tempLbl'))} (${esc(o.u || tempUnit)})</label><input type="text" inputmode="decimal" value="${esc(tmVal)}" oninput="this.value=normDec(this.value); updObsField(${i}, 'tm', this.value)"></div>
           <div><label>${esc(t('painLbl'))}</label><input type="number" min="0" max="10" inputmode="numeric" value="${esc(pnVal)}" oninput="updObsField(${i}, 'pn', this.value)"></div>
         </div>
         <label>${esc(t('acvpuLbl'))}</label>
@@ -495,9 +584,9 @@ function renderSection() {
     const expIdx = getExpIdx('bm', p.bm.length);
     bodyHtml = p.bm.map((b, i) => {
       const flags = Array.isArray(b.f) ? b.f : [];
-      if (i !== expIdx && b.v) {
+      if (i !== expIdx && b.v && String(b.v).trim() !== '') {
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bm', ${i})">
-          <div>${timePill(b.t)}${kvPill(b.c ? trCode(b.c) : t('bm'), `${esc(b.v)} ${esc(b.u || bmUnit)}`)}${flags.map(f => kvPill('', esc(trCode(f)))).join('')} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
+          <div style="line-height:1.8;">${timePill(b.t)}${kvPill(b.c ? trCode(b.c) : t('bm'), `${esc(b.v)} ${esc(b.u || bmUnit)}`)}${flags.map(f => kvPill('', esc(trCode(f)))).join('')} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bm', ${i})">✕</button>
         </div>`;
       }
@@ -508,7 +597,7 @@ function renderSection() {
         </div>
         <div class="row">
           <div><label>${esc(t('time'))}</label><input type="time" value="${esc(b.t || '')}" oninput="updBmField(${i}, 't', this.value)"></div>
-          <div><label>${esc(t('bmValLbl'))} (${esc(b.u || bmUnit)})</label><input type="text" inputmode="decimal" value="${esc(b.v || '')}" oninput="updBmField(${i}, 'v', normDec(this.value))"></div>
+          <div><label>${esc(t('bmValLbl'))} (${esc(b.u || bmUnit)})</label><input type="text" inputmode="decimal" value="${esc(b.v || '')}" oninput="this.value=normDec(this.value); updBmField(${i}, 'v', this.value)"></div>
         </div>
         <div style="margin-bottom:10px;">
           <label>${esc(t('context'))}</label>
@@ -532,9 +621,11 @@ function renderSection() {
       const [lSys, lDia] = splitBpParts(x, 'lSys', 'lDia', 'l');
       const [sSys, sDia] = splitBpParts(x, 'sSys', 'sDia', 's');
       const syms = Array.isArray(x.sym) ? x.sym : [];
-      if (i !== expIdx && ((x.l && x.l !== '-') || (x.s && x.s !== '-'))) {
+      if (i !== expIdx && isBpFilled(x)) {
+        const hasL = x.l && x.l !== '-' && x.l !== '-/-';
+        const hasS = x.s && x.s !== '-' && x.s !== '-/-';
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bp', ${i})">
-          <div>${timePill(x.t)}${kvPill(t('lying'), esc(x.l))}${kvPill(t('standing'), esc(x.s))}${syms.map(s => kvPill('', esc(trCode(s)))).join('')} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
+          <div style="line-height:1.8;">${timePill(x.t)}${hasL ? kvPill(t('lying'), esc(x.l)) : ''}${hasS ? kvPill(t('standing'), esc(x.s)) : ''}${syms.map(s => kvPill('', esc(trCode(s)))).join('')} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bp', ${i})">✕</button>
         </div>`;
       }
@@ -583,12 +674,20 @@ function renderSection() {
     const actHr = p.fluids[activeFluidIdx] ? p.fluids[activeFluidIdx].t : '';
 
     bodyHtml = `<div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.82rem; font-weight:700; color:var(--text-sub); flex-wrap:wrap; gap:4px;">
-        <span id="flHdrStatus">${esc(t('time'))}: <strong style="color:var(--teal);">${esc(actHr)}</strong> (${esc(activeFluidType === 'i' ? t('flIn') : t('flOut'))})</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.82rem; font-weight:700; color:var(--text-sub); flex-wrap:wrap; gap:6px;">
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span id="flHdrStatus">${esc(t('time'))}: <strong style="color:var(--teal);">${esc(actHr)}</strong></span>
+          <button type="button" id="flModeInBtn" class="fl-mode-pill ${activeFluidType === 'i' ? 'active-in' : ''}" onclick="setFluidMode('i')">${esc(t('flIn'))}</button>
+          <button type="button" id="flModeOutBtn" class="fl-mode-pill ${activeFluidType === 'o' ? 'active-out' : ''}" onclick="setFluidMode('o')">${esc(t('flOut'))}</button>
+        </div>
         <span id="flHdrTotal"><strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b>${totI}ml</b> | ${esc(t('flOut'))} <b>${totO}ml</b> | <b>${net > 0 ? '+' + net : net}ml</b></span>
       </div>
       <div class="fluid-btn-grid" style="margin-bottom:8px;">
         ${[50, 100, 150, 200, 250, 500].map(v => `<button type="button" class="quick-fluid-btn ${activeFluidType === 'o' ? 'out-mode' : ''}" onclick="addQuickFluid(${v})">+${v}ml ${esc(activeFluidType === 'i' ? t('flIn') : t('flOut'))}</button>`).join('')}
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:8px;">
+        <input type="number" id="customFluidMl" inputmode="numeric" placeholder="${esc(t('customMlPh'))}" style="flex:1; font-size:1rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomFluid();}">
+        <button type="button" id="btnAddCustomFl" class="btn btn-primary btn-sm" style="${activeFluidType === 'o' ? 'background:var(--amber);' : ''}" onclick="addCustomFluid()">${esc(t('add'))} (${esc(activeFluidType === 'i' ? t('flIn') : t('flOut'))})</button>
       </div>
       <div class="chip-row" id="flSrcChips" style="margin-bottom:8px;">
         ${['srcPu','srcCath','srcBowel','srcVomit'].map(sc => {
@@ -598,14 +697,14 @@ function renderSection() {
         <span class="chip" onclick="addWetPad()">+1 ${esc(t('wetPad'))}</span>
       </div>
       <div style="display:flex; gap:6px; padding:4px 0; font-size:0.74rem; font-weight:700; color:var(--text-sub); border-bottom:1.5px solid var(--border);">
-        <div style="flex:0 0 50px; text-align:center;">${esc(t('time'))}</div>
+        <div style="flex:0 0 54px; text-align:center;">${esc(t('time'))}</div>
         <div style="flex:1;">${esc(t('flIn'))} (ml)</div>
         <div style="flex:1;">${esc(t('flOut'))} (ml)</div>
         <div style="flex:0 0 42px;"></div>
       </div>
       <div id="fluidRows">
         ${p.fluids.map((f, idx) => `<div class="hour-row">
-          <div id="flHr_${idx}" class="hour-badge" style="${activeFluidIdx === idx ? 'color:var(--teal);' : ''}">${esc(f.t)}</div>
+          <div id="flHr_${idx}" class="hour-badge ${activeFluidIdx === idx ? 'active-hr' : ''}" onclick="selectFluidHour(${idx})">${esc(f.t)}</div>
           <div style="flex:1; min-width:0;">
             <input id="flIn_${idx}" type="number" inputmode="numeric" class="${activeFluidIdx === idx && activeFluidType === 'i' ? 'fl-target-in' : ''}" value="${f.i || ''}" onfocus="setFluidTarget(${idx}, 'i')" oninput="updFluid(${idx}, 'i', this.value)">
           </div>
@@ -616,7 +715,7 @@ function renderSection() {
               ${f.wet ? `<span onclick="decWetPad(${idx})" style="cursor:pointer; text-decoration:underline;">${esc(t('wetPad'))} x${f.wet} (✕)</span>` : ''}
             </div>` : ''}
           </div>
-          <div style="flex:0 0 42px; text-align:right;">
+          <div style="flex:0 0 42px; text-align:end;">
             <button type="button" class="btn-subtle btn-sm" style="padding:6px 8px; font-size:0.74rem;" onclick="clrFluidRow(${idx})">✕</button>
           </div>
         </div>`).join('')}
@@ -635,7 +734,7 @@ function renderSection() {
           ? kvPill('', esc(t('bnoFull')))
           : `${kvPill(t('amt'), esc(trCode(b.a)))}${b.ty ? kvPill('', esc(trCode(b.ty))) : ''}${b.m ? kvPill('', esc(trCode(b.m))) : ''}`;
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bowel', ${i})">
-          <div>${timePill(b.t)}${sumTxt} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
+          <div style="line-height:1.8;">${timePill(b.t)}${sumTxt} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bowel', ${i})">✕</button>
         </div>`;
       }
@@ -682,6 +781,7 @@ function renderSection() {
     const extraSites = ['siteHip','siteAnkle','siteShin','siteFoot','siteArm','siteSpine','siteShoulder','siteEar','siteOther'];
     const sides = ['', 'sideL', 'sideR', 'sideBoth'];
     const drSites = getLangList('drSites');
+    const expDrIdx = getExpIdx('dressings', p.dressings.length);
 
     const skinCardHtml = `<div class="card">
       <h3><span>${esc(t('amy'))}</span><button type="button" class="btn btn-primary btn-sm" onclick="markAllSkinIntact()">✓ ${esc(t('markIntact'))}</button></h3>
@@ -726,41 +826,54 @@ function renderSection() {
       </div>
     </div>`;
 
-    const drCardsHtml = p.dressings.map((d, i) => `<div class="card entry-card">
-      <div class="entry-hdr">
-        <span class="entry-num">${esc(t('dressing'))} #${i + 1}</span>
-        <button type="button" class="del-btn" onclick="delDressing(${i})">✕</button>
-      </div>
-      <div class="chip-row">
-        ${drSites.map((ds, sIdx) => `<span class="chip ${d.l === ds ? 'active' : ''}" onclick="setDrCardSite(${i}, ${sIdx})">${esc(ds)}</span>`).join('')}
-      </div>
-      <div class="row">
-        <div><label>${esc(t('locNotes'))}</label><input type="text" id="drLoc_${i}" value="${esc(d.l || '')}" oninput="updDressingField(${i}, 'l', this.value)"></div>
-        <div>
-          <label>${esc(t('dueIn'))}</label>
-          <select onchange="updDressingField(${i}, 'f', this.value ? parseInt(this.value, 10) : 0, true)">
-            <option value="" ${!d.f ? 'selected' : ''}>—</option>
-            <option value="1" ${d.f === 1 ? 'selected' : ''}>${esc(t('day1'))}</option>
-            <option value="2" ${d.f === 2 ? 'selected' : ''}>${esc(t('day2'))}</option>
-            <option value="3" ${d.f === 3 ? 'selected' : ''}>${esc(t('day3'))}</option>
-            <option value="5" ${d.f === 5 ? 'selected' : ''}>${esc(t('day5'))}</option>
-            <option value="7" ${d.f === 7 ? 'selected' : ''}>${esc(t('day7'))}</option>
-          </select>
+    const drCardsHtml = p.dressings.map((d, i) => {
+      if (i !== expDrIdx && d.l && d.l.trim() !== '') {
+        const drSummary = [
+          kvPill(t('dressing'), esc(d.l)),
+          d.st ? kvPill('', esc(trCode(d.st))) : '',
+          d.f ? kvPill(t('due'), esc(calcDue(d.dt || todayIsoStr(), d.f))) : kvPill(t('date'), esc(formatIsoDate(d.dt || todayIsoStr())))
+        ].join('');
+        return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('dressings', ${i})">
+          <div style="line-height:1.8;">${drSummary} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
+          <button type="button" class="del-btn" onclick="event.stopPropagation(); delDressing(${i})">✕</button>
+        </div>`;
+      }
+      return `<div class="card entry-card">
+        <div class="entry-hdr">
+          <span class="entry-num" style="cursor:pointer;" onclick="setExpIdx('dressings', ${i})">${esc(t('dressing'))} #${i + 1} ▲</span>
+          <button type="button" class="del-btn" onclick="delDressing(${i})">✕</button>
         </div>
-      </div>
-      <div class="chip-row">
-        ${['drIntact','drChanged','drLeak','drLift'].map(st => `<span class="chip ${d.st === st ? 'active' : ''}" onclick="toggleDressingStatus(${i}, '${st}')">${esc(t(st))}</span>`).join('')}
-      </div>
-      <div class="row" style="margin-bottom:0; align-items:center;">
-        <div>
-          <label>${esc(t('date'))}</label>
-          <input type="date" value="${esc(d.dt || todayIsoStr())}" oninput="updDressingField(${i}, 'dt', this.value, true)">
+        <div class="chip-row">
+          ${drSites.map((ds, sIdx) => `<span class="chip ${d.l === ds ? 'active' : ''}" onclick="setDrCardSite(${i}, ${sIdx})">${esc(ds)}</span>`).join('')}
         </div>
-        <div style="font-size:0.84rem; padding-top:14px;">
-          ${d.f ? `<strong>${esc(t('due'))}:</strong> <b style="color:var(--teal);">${esc(calcDue(d.dt || todayIsoStr(), d.f))}</b>` : ''}
+        <div class="row">
+          <div><label>${esc(t('locNotes'))}</label><input type="text" id="drLoc_${i}" value="${esc(d.l || '')}" oninput="updDressingField(${i}, 'l', this.value)"></div>
+          <div>
+            <label>${esc(t('dueIn'))}</label>
+            <select onchange="updDressingField(${i}, 'f', this.value ? parseInt(this.value, 10) : 0, true)">
+              <option value="" ${!d.f ? 'selected' : ''}>—</option>
+              <option value="1" ${d.f === 1 ? 'selected' : ''}>${esc(t('day1'))}</option>
+              <option value="2" ${d.f === 2 ? 'selected' : ''}>${esc(t('day2'))}</option>
+              <option value="3" ${d.f === 3 ? 'selected' : ''}>${esc(t('day3'))}</option>
+              <option value="5" ${d.f === 5 ? 'selected' : ''}>${esc(t('day5'))}</option>
+              <option value="7" ${d.f === 7 ? 'selected' : ''}>${esc(t('day7'))}</option>
+            </select>
+          </div>
         </div>
-      </div>
-    </div>`).join('');
+        <div class="chip-row">
+          ${['drIntact','drChanged','drLeak','drLift'].map(st => `<span class="chip ${d.st === st ? 'active' : ''}" onclick="toggleDressingStatus(${i}, '${st}')">${esc(t(st))}</span>`).join('')}
+        </div>
+        <div class="row" style="margin-bottom:0; align-items:center;">
+          <div>
+            <label>${esc(t('date'))}</label>
+            <input type="date" value="${esc(d.dt || todayIsoStr())}" onchange="updDressingField(${i}, 'dt', this.value, true)">
+          </div>
+          <div style="font-size:0.84rem; padding-top:14px;">
+            ${d.f ? `<strong>${esc(t('due'))}:</strong> <b style="color:var(--teal);">${esc(calcDue(d.dt || todayIsoStr(), d.f))}</b>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
 
     bodyHtml = skinCardHtml + drCardsHtml + `<button type="button" class="btn btn-primary" style="margin-bottom:12px;" onclick="createDressingEntry()">${esc(t('add'))} ${esc(t('dressing'))}</button>`;
   }
@@ -798,6 +911,7 @@ function renderSection() {
   else if (curSec === 'turn') {
     const tfOpts = ['', 'tf2h', 'tf3h', 'tf4h', 'tfComfort', 'tfIndep'];
     const posOpts = ['back', 'left', 'right', 'chair', 'walking'];
+    const expTurnIdx = getExpIdx('turns', p.turns.length);
     const planCard = `<div class="card">
       <div style="margin-bottom:10px;">
         <label>${esc(t('turnFreqLbl'))}</label>
@@ -810,22 +924,30 @@ function renderSection() {
       </div>
     </div>`;
 
-    const listHtml = p.turns.map((tr, i) => `<div class="card entry-card">
-      <div class="entry-hdr">
-        <span class="entry-num">${esc(t('turn'))} #${i + 1}</span>
-        <button type="button" class="del-btn" onclick="delItem('turns', ${i})">✕</button>
-      </div>
-      <div class="row" style="margin-bottom:0;">
-        <div><label>${esc(t('time'))}</label><input type="time" value="${esc(tr.t || '')}" oninput="updTurnField(${i}, 't', this.value)"></div>
-        <div>
-          <label>${esc(t('posLbl'))}</label>
-          <select onchange="updTurnField(${i}, 'p', this.value)">
-            <option value="" ${!tr.p ? 'selected' : ''}>—</option>
-            ${posOpts.map(k => `<option value="${k}" ${tr.p === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
-          </select>
+    const listHtml = p.turns.map((tr, i) => {
+      if (i !== expTurnIdx && tr.p) {
+        return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('turns', ${i})">
+          <div style="line-height:1.8;">${timePill(tr.t)}${kvPill(t('posLbl'), esc(trCode(tr.p)))} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
+          <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('turns', ${i})">✕</button>
+        </div>`;
+      }
+      return `<div class="card entry-card">
+        <div class="entry-hdr">
+          <span class="entry-num" style="cursor:pointer;" onclick="setExpIdx('turns', ${i})">${esc(t('turn'))} #${i + 1} ▲</span>
+          <button type="button" class="del-btn" onclick="delItem('turns', ${i})">✕</button>
         </div>
-      </div>
-    </div>`).join('');
+        <div class="row" style="margin-bottom:0;">
+          <div><label>${esc(t('time'))}</label><input type="time" value="${esc(tr.t || '')}" oninput="updTurnField(${i}, 't', this.value)"></div>
+          <div>
+            <label>${esc(t('posLbl'))}</label>
+            <select onchange="updTurnField(${i}, 'p', this.value)">
+              <option value="" ${!tr.p ? 'selected' : ''}>—</option>
+              ${posOpts.map(k => `<option value="${k}" ${tr.p === k ? 'selected' : ''}>${esc(t(k))}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
 
     bodyHtml = planCard + listHtml + `<button type="button" class="btn btn-primary" style="margin-bottom:12px;" onclick="createTurnEntry()">${esc(t('turnNow'))}</button>`;
   }
@@ -847,7 +969,7 @@ function renderSection() {
     const listHtml = p.mh.map((m, i) => {
       if (i !== expIdx && (m.m || m.r || m.rat || m.n)) {
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('mh', ${i})">
-          <div>${timePill(m.t)}${m.m ? kvPill(t('mood'), esc(trCode(m.m))) : ''}${m.r ? kvPill('', esc(trCode(m.r))) : ''}${m.rat ? kvPill('', esc(trCode(m.rat))) : ''}${m.n ? kvPill('', esc(m.n)) : ''} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
+          <div style="line-height:1.8;">${timePill(m.t)}${m.m ? kvPill(t('mood'), esc(trCode(m.m))) : ''}${m.r ? kvPill('', esc(trCode(m.r))) : ''}${m.rat ? kvPill('', esc(trCode(m.rat))) : ''}${m.n ? kvPill('', esc(m.n)) : ''} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('mh', ${i})">✕</button>
         </div>`;
       }
@@ -896,6 +1018,7 @@ function renderSection() {
 
   else if (curSec === 'events') {
     const phrases = getLangList('phrases');
+    const expEvIdx = getExpIdx('events', p.events.length);
     const quickCard = `<div class="card">
       <label>${esc(t('events'))}</label>
       <div class="chip-row" style="margin-bottom:0;">
@@ -905,9 +1028,15 @@ function renderSection() {
 
     const listHtml = p.events.map((e, i) => {
       const noteTxt = (typeof e.pIdx === 'number' && phrases[e.pIdx] && !e.customEdited) ? phrases[e.pIdx] : (e.e || '');
+      if (i !== expEvIdx && noteTxt.trim() !== '') {
+        return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('events', ${i})">
+          <div style="line-height:1.8;">${timePill(e.t)}<span style="font-weight:700;">${esc(noteTxt)}</span>${e.o ? ' ' + kvPill(t('outcome'), esc(e.o)) : ''} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
+          <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('events', ${i})">✕</button>
+        </div>`;
+      }
       return `<div class="card entry-card">
         <div class="entry-hdr">
-          <span class="entry-num">${esc(t('events'))} #${i + 1}</span>
+          <span class="entry-num" style="cursor:pointer;" onclick="setExpIdx('events', ${i})">${esc(t('events'))} #${i + 1} ▲</span>
           <button type="button" class="del-btn" onclick="delItem('events', ${i})">✕</button>
         </div>
         <div class="row">
@@ -941,20 +1070,20 @@ function renderSection() {
       const tkTxt = (typeof r.tIdx === 'number' && taskList[r.tIdx] && !r.customEdited) ? taskList[r.tIdx] : (r.txt || '');
       const overdue = isTaskOverdue(r);
       if (i !== expIdx && tkTxt.trim()) {
-        return `<div class="card entry-card ${overdue ? 'task-alert' : ''}" style="display:flex; justify-content:space-between; align-items:center;">
+        return `<div id="taskCard_${i}" class="card entry-card ${overdue ? 'task-alert' : ''}" style="display:flex; justify-content:space-between; align-items:center;">
           <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.92rem; color:var(--text); cursor:pointer; flex:1;" onclick="event.stopPropagation()">
             <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleTaskDone(${i})">
-            <span class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? esc(t('overdue')) : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
+            <span id="taskBadge_${i}" class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? esc(t('overdue')) : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
             <span style="${r.done ? 'text-decoration:line-through; opacity:0.55;' : 'font-weight:700;'}" onclick="event.preventDefault(); setExpIdx('reminders', ${i})">${esc(tkTxt)} <span style="color:var(--teal); font-size:0.78rem;">✎</span></span>
           </label>
           <button type="button" class="del-btn" onclick="delItem('reminders', ${i})">✕</button>
         </div>`;
       }
-      return `<div class="card entry-card ${overdue ? 'task-alert' : ''}">
+      return `<div id="taskCard_${i}" class="card entry-card ${overdue ? 'task-alert' : ''}">
         <div class="entry-hdr">
           <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.9rem; color:var(--text); cursor:pointer;">
             <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleTaskDone(${i})">
-            <span class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? esc(t('overdue')) : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
+            <span id="taskBadge_${i}" class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? esc(t('overdue')) : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
           </label>
           <div style="display:flex; align-items:center; gap:4px;">
             <button type="button" class="btn-subtle btn-sm" style="padding:2px 8px; font-size:0.74rem;" onclick="setExpIdx('reminders', ${i})">▲</button>
@@ -981,8 +1110,8 @@ function renderSection() {
 
     bodyHtml = `<div class="card">
       <div class="row">
-        <div><label>${esc(t('weight'))}</label><input type="text" inputmode="decimal" value="${esc(p.admit.w)}" oninput="updAdmitField('w', normDec(this.value))"></div>
-        <div><label>${esc(t('height'))}</label><input type="text" inputmode="decimal" value="${esc(p.admit.h)}" oninput="updAdmitField('h', normDec(this.value))"></div>
+        <div><label>${esc(t('weight'))}</label><input type="text" inputmode="decimal" value="${esc(p.admit.w)}" oninput="this.value=normDec(this.value); updAdmitField('w', this.value)"></div>
+        <div><label>${esc(t('height'))}</label><input type="text" inputmode="decimal" value="${esc(p.admit.h)}" oninput="this.value=normDec(this.value); updAdmitField('h', this.value)"></div>
       </div>
       <div style="margin-bottom:12px;">
         <span class="chip ${p.admit.wb ? 'active' : ''}" onclick="updAdmitField('wb', !getPt(curBed).admit.wb); renderSection();">✓ ${esc(t('wristband'))}</span>
@@ -1021,6 +1150,10 @@ function renderSection() {
   }
 
   area.innerHTML = topHtml + bodyHtml;
+  area.querySelectorAll('textarea').forEach(ta => {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  });
 }
 
 function createObsEntry() {
@@ -1078,7 +1211,15 @@ function toggleBpSym(idx, code) {
   if (pos > -1) arr.splice(pos, 1);
   else if (code === 'noSym') p.bp[idx].sym = ['noSym'];
   else { const noPos = arr.indexOf('noSym'); if (noPos > -1) arr.splice(noPos, 1); arr.push(code); }
-  p.bp[idx].done = false; saveDB(); renderSection();
+  p.bp[idx].done = false; saveDB(); renderSection(); refreshSubNavCounts();
+}
+
+function selectFluidHour(idx) {
+  setFluidTarget(idx, activeFluidType);
+}
+
+function setFluidMode(type) {
+  setFluidTarget(activeFluidIdx, type);
 }
 
 function setFluidTarget(idx, type) {
@@ -1088,15 +1229,25 @@ function setFluidTarget(idx, type) {
     const inEl = document.getElementById('flIn_' + i), outEl = document.getElementById('flOut_' + i), hrEl = document.getElementById('flHr_' + i);
     if (inEl) inEl.classList.toggle('fl-target-in', i === idx && type === 'i');
     if (outEl) outEl.classList.toggle('fl-target-out', i === idx && type === 'o');
-    if (hrEl) hrEl.style.color = (i === idx) ? 'var(--teal)' : '';
+    if (hrEl) hrEl.classList.toggle('active-hr', i === idx);
   }
+  const modeInBtn = document.getElementById('flModeInBtn');
+  const modeOutBtn = document.getElementById('flModeOutBtn');
+  if (modeInBtn) modeInBtn.classList.toggle('active-in', type === 'i');
+  if (modeOutBtn) modeOutBtn.classList.toggle('active-out', type === 'o');
+
   document.querySelectorAll('.quick-fluid-btn').forEach(btn => {
     btn.classList.toggle('out-mode', type === 'o');
     const m = btn.textContent.match(/\+\d+ml/);
     if (m) btn.textContent = `${m[0]} ${type === 'i' ? t('flIn') : t('flOut')}`;
   });
+  const customBtn = document.getElementById('btnAddCustomFl');
+  if (customBtn) {
+    customBtn.style.background = type === 'o' ? 'var(--amber)' : '';
+    customBtn.textContent = `${t('add')} (${type === 'i' ? t('flIn') : t('flOut')})`;
+  }
   const stEl = document.getElementById('flHdrStatus'), actHr = p.fluids[idx] ? p.fluids[idx].t : '';
-  if (stEl) stEl.innerHTML = `${esc(t('time'))}: <strong style="color:var(--teal);">${esc(actHr)}</strong> (${esc(type === 'i' ? t('flIn') : t('flOut'))})`;
+  if (stEl) stEl.innerHTML = `${esc(t('time'))}: <strong style="color:var(--teal);">${esc(actHr)}</strong>`;
   const curSrc = p.fluids[idx] ? p.fluids[idx].src : '';
   document.querySelectorAll('#flSrcChips .chip[data-src]').forEach(ch => ch.classList.toggle('active-amber', ch.getAttribute('data-src') === curSrc));
 }
@@ -1111,11 +1262,63 @@ function updFluid(idx, type, val) {
   refreshSubNavCounts();
 }
 
-function addQuickFluid(vol) { const p = getPt(curBed); if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0; p.fluids[activeFluidIdx][activeFluidType] = (Number(p.fluids[activeFluidIdx][activeFluidType]) || 0) + vol; p.fluids[activeFluidIdx].done = false; saveDB(); renderUI(); }
-function setFluidSource(sc) { const p = getPt(curBed); if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0; p.fluids[activeFluidIdx].src = (p.fluids[activeFluidIdx].src === sc) ? '' : sc; activeFluidType = 'o'; saveDB(); renderUI(); }
-function addWetPad() { const p = getPt(curBed); if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0; p.fluids[activeFluidIdx].wet = (Number(p.fluids[activeFluidIdx].wet) || 0) + 1; p.fluids[activeFluidIdx].done = false; saveDB(); renderUI(); }
-function decWetPad(idx) { const p = getPt(curBed); if (!p.fluids[idx]) return; p.fluids[idx].wet = Math.max(0, (Number(p.fluids[idx].wet) || 0) - 1); saveDB(); renderUI(); }
-function clrFluidRow(idx) { const p = getPt(curBed); if (!p.fluids[idx]) return; p.fluids[idx] = { t: p.fluids[idx].t, i: 0, o: 0, src: '', wet: 0, done: false }; saveDB(); renderUI(); }
+function addQuickFluid(vol) {
+  const p = getPt(curBed);
+  if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0;
+  p.fluids[activeFluidIdx][activeFluidType] = (Number(p.fluids[activeFluidIdx][activeFluidType]) || 0) + vol;
+  p.fluids[activeFluidIdx].done = false;
+  saveDB();
+  renderUI();
+}
+
+function addCustomFluid() {
+  const inp = document.getElementById('customFluidMl');
+  const vol = Math.max(0, parseInt(inp ? inp.value : '', 10) || 0);
+  if (!vol) return;
+  const p = getPt(curBed);
+  if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0;
+  p.fluids[activeFluidIdx][activeFluidType] = (Number(p.fluids[activeFluidIdx][activeFluidType]) || 0) + vol;
+  p.fluids[activeFluidIdx].done = false;
+  if (inp) inp.value = '';
+  saveDB();
+  renderUI();
+}
+
+function setFluidSource(sc) {
+  const p = getPt(curBed);
+  if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0;
+  p.fluids[activeFluidIdx].src = (p.fluids[activeFluidIdx].src === sc) ? '' : sc;
+  p.fluids[activeFluidIdx].done = false;
+  activeFluidType = 'o';
+  saveDB();
+  renderUI();
+}
+
+function addWetPad() {
+  const p = getPt(curBed);
+  if (!p.fluids[activeFluidIdx]) activeFluidIdx = 0;
+  p.fluids[activeFluidIdx].wet = (Number(p.fluids[activeFluidIdx].wet) || 0) + 1;
+  p.fluids[activeFluidIdx].done = false;
+  saveDB();
+  renderUI();
+}
+
+function decWetPad(idx) {
+  const p = getPt(curBed);
+  if (!p.fluids[idx]) return;
+  p.fluids[idx].wet = Math.max(0, (Number(p.fluids[idx].wet) || 0) - 1);
+  p.fluids[idx].done = false;
+  saveDB();
+  renderUI();
+}
+
+function clrFluidRow(idx) {
+  const p = getPt(curBed);
+  if (!p.fluids[idx]) return;
+  p.fluids[idx] = { t: p.fluids[idx].t, i: 0, o: 0, src: '', wet: 0, done: false };
+  saveDB();
+  renderUI();
+}
 
 function createBowelEntry() {
   const p = getPt(curBed);
@@ -1140,24 +1343,42 @@ function markAllSkinIntact() {
 }
 function createCustomSkin() { const p = getPt(curBed); p.skinCustom.push({ site: '', side: '', cond: '' }); p.skinDone = false; saveDB(); renderUI(); }
 function updCustomSkinField(idx, k, val) { const p = getPt(curBed); if (!p.skinCustom[idx]) return; p.skinCustom[idx][k] = val; p.skinDone = false; saveDB(); refreshSubNavCounts(); }
-function delCustomSkin(idx) { getPt(curBed).skinCustom.splice(idx, 1); saveDB(); renderUI(); }
+function delCustomSkin(idx) { const p = getPt(curBed); p.skinCustom.splice(idx, 1); p.skinDone = false; saveDB(); renderUI(); }
 function toggleSkinCare(ck) { const p = getPt(curBed), pos = p.skinCare.indexOf(ck); if (pos > -1) p.skinCare.splice(pos, 1); else p.skinCare.push(ck); p.skinDone = false; saveDB(); renderUI(); }
 
-function createDressingEntry() { getPt(curBed).dressings.push({ l: '', dt: todayIsoStr(), f: 0, st: '', done: false }); saveDB(); renderUI(); }
+function createDressingEntry() {
+  const p = getPt(curBed);
+  p.dressings.push({ l: '', dt: todayIsoStr(), f: 0, st: '', done: false });
+  expandedCards[curBed + '_dressings'] = p.dressings.length - 1;
+  saveDB(); renderUI();
+}
 function setDrCardSite(idx, siteIdx) { const p = getPt(curBed), drSites = getLangList('drSites'); if (!p.dressings[idx] || !drSites[siteIdx]) return; p.dressings[idx].l = (p.dressings[idx].l === drSites[siteIdx]) ? '' : drSites[siteIdx]; p.dressings[idx].done = false; saveDB(); renderUI(); }
 function updDressingField(idx, k, val, rerender) { const p = getPt(curBed); if (!p.dressings[idx]) return; p.dressings[idx][k] = val; p.dressings[idx].done = false; saveDB(); refreshSubNavCounts(); if (rerender) renderSection(); }
 function toggleDressingStatus(idx, stCode) { const p = getPt(curBed); if (!p.dressings[idx]) return; p.dressings[idx].st = (p.dressings[idx].st === stCode) ? '' : stCode; p.dressings[idx].done = false; saveDB(); renderSection(); }
-function delDressing(idx) { if (!confirm(t('delConfirm'))) return; getPt(curBed).dressings.splice(idx, 1); saveDB(); renderUI(); }
+function delDressing(idx) {
+  if (!confirm(t('delConfirm'))) return;
+  const p = getPt(curBed);
+  p.dressings.splice(idx, 1);
+  const key = curBed + '_dressings';
+  if (expandedCards[key] === idx) expandedCards[key] = -1;
+  else if (expandedCards[key] > idx) expandedCards[key]--;
+  saveDB(); renderUI();
+}
 
 function setMeal(mealKey, val) { const p = getPt(curBed); p.diet[mealKey] = (p.diet[mealKey] === val) ? '' : val; p.diet.done = false; saveDB(); renderUI(); }
 function quickLogSupp(statusCode) { const p = getPt(curBed); p.diet.supps.push({ t: nowTimeStr(), v: statusCode }); p.diet.done = false; saveDB(); renderUI(); }
 function updSuppText(val) { const p = getPt(curBed); p.diet.supp = val; p.diet.done = false; saveDB(); refreshSubNavCounts(); }
 function addCustomSupp() { const inp = document.getElementById('suppInput'), val = (inp ? inp.value : '').trim(); if (!val) return; const p = getPt(curBed); p.diet.supps.push({ t: nowTimeStr(), v: val }); p.diet.supp = ''; p.diet.done = false; saveDB(); renderUI(); }
-function delSupp(idx) { getPt(curBed).diet.supps.splice(idx, 1); saveDB(); renderUI(); }
+function delSupp(idx) { const p = getPt(curBed); p.diet.supps.splice(idx, 1); p.diet.done = false; saveDB(); renderUI(); }
 function toggleDietFlag(fl) { const p = getPt(curBed), idx = p.diet.flags.indexOf(fl); if (idx > -1) p.diet.flags.splice(idx, 1); else p.diet.flags.push(fl); p.diet.done = false; saveDB(); renderUI(); }
 
 function setTurnFreq(val) { const p = getPt(curBed); p.turnFreq = val; p.turnPlanDone = false; saveDB(); renderUI(); }
-function createTurnEntry() { getPt(curBed).turns.push({ t: nowTimeStr(), p: '', done: false }); saveDB(); renderUI(); }
+function createTurnEntry() {
+  const p = getPt(curBed);
+  p.turns.push({ t: nowTimeStr(), p: '', done: false });
+  expandedCards[curBed + '_turns'] = p.turns.length - 1;
+  saveDB(); renderUI();
+}
 function updTurnField(idx, k, val) { const p = getPt(curBed); if (!p.turns[idx]) return; p.turns[idx][k] = val; p.turns[idx].done = false; saveDB(); refreshSubNavCounts(); }
 function toggleTurnCheck(ck) { const p = getPt(curBed), idx = p.turnChecks.indexOf(ck); if (idx > -1) p.turnChecks.splice(idx, 1); else p.turnChecks.push(ck); p.turnPlanDone = false; saveDB(); renderUI(); }
 
@@ -1170,8 +1391,18 @@ function createMhEntry() {
 }
 function updMhField(idx, k, val) { const p = getPt(curBed); if (!p.mh[idx]) return; p.mh[idx][k] = val; p.mh[idx].done = false; saveDB(); refreshSubNavCounts(); }
 
-function addQuickPhrase(pIdx) { const phrases = getLangList('phrases'); getPt(curBed).events.push({ t: nowTimeStr(), pIdx, e: phrases[pIdx] || '', o: '', done: false }); saveDB(); renderUI(); }
-function createEventEntry() { getPt(curBed).events.push({ t: nowTimeStr(), e: '', o: '', done: false }); saveDB(); renderUI(); }
+function addQuickPhrase(pIdx) {
+  const p = getPt(curBed), phrases = getLangList('phrases');
+  p.events.push({ t: nowTimeStr(), pIdx, e: phrases[pIdx] || '', o: '', done: false });
+  expandedCards[curBed + '_events'] = p.events.length - 1;
+  saveDB(); renderUI();
+}
+function createEventEntry() {
+  const p = getPt(curBed);
+  p.events.push({ t: nowTimeStr(), e: '', o: '', done: false });
+  expandedCards[curBed + '_events'] = p.events.length - 1;
+  saveDB(); renderUI();
+}
 function updEventField(idx, k, val) { const p = getPt(curBed); if (!p.events[idx]) return; p.events[idx][k] = val; if (k === 'e') p.events[idx].customEdited = true; p.events[idx].done = false; saveDB(); refreshSubNavCounts(); }
 
 function quickAddTaskPreset(tIdx) {
@@ -1197,9 +1428,19 @@ function setTaskOffset(idx, mins) {
 }
 function updTaskDue(idx, dueStr) {
   const p = getPt(curBed); if (!p.reminders[idx]) return;
+  const r = p.reminders[idx];
   const nowMs = Date.now();
-  p.reminders[idx].due = dueStr; p.reminders[idx].createdTs = nowMs; p.reminders[idx].dueTs = computeTaskDueTs(dueStr, nowMs); p.reminders[idx].alerted = false;
-  saveDB(); refreshSubNavCounts();
+  r.due = dueStr; r.createdTs = nowMs; r.dueTs = computeTaskDueTs(dueStr, nowMs); r.alerted = false;
+  saveDB();
+  const overdue = isTaskOverdue(r);
+  const cardEl = document.getElementById('taskCard_' + idx);
+  const badgeEl = document.getElementById('taskBadge_' + idx);
+  if (cardEl) cardEl.classList.toggle('task-alert', overdue);
+  if (badgeEl) {
+    badgeEl.classList.toggle('overdue', overdue);
+    badgeEl.textContent = r.done ? t('done') : (overdue ? t('overdue') : `${t('due')} ${r.due || '--:--'}`);
+  }
+  refreshSubNavCounts();
 }
 function updTaskText(idx, val) { const p = getPt(curBed); if (!p.reminders[idx]) return; p.reminders[idx].txt = val; p.reminders[idx].customEdited = true; saveDB(); refreshSubNavCounts(); }
 function toggleTaskDone(idx) { const p = getPt(curBed); if (!p.reminders[idx]) return; p.reminders[idx].done = !p.reminders[idx].done; saveDB(); renderUI(); }
@@ -1239,7 +1480,14 @@ function delAdmitCustomItem(cIdx) {
 function delItem(sec, idx) {
   if (!confirm(t('delConfirm'))) return;
   const p = getPt(curBed);
-  if (Array.isArray(p[sec])) { p[sec].splice(idx, 1); saveDB(); renderUI(); }
+  if (Array.isArray(p[sec])) {
+    p[sec].splice(idx, 1);
+    const key = curBed + '_' + sec;
+    if (expandedCards[key] === idx) expandedCards[key] = -1;
+    else if (expandedCards[key] > idx) expandedCards[key]--;
+    saveDB();
+    renderUI();
+  }
 }
 
 function jumpToBedMod(bIdx, modId) {
@@ -1281,30 +1529,66 @@ function isBedAllDone(b) {
   const p = getPt(b);
   if (p.obs.filter(isObsFilled).some(x => !x.done)) return false;
   if (p.bm.filter(x => x.v && String(x.v).trim() !== '').some(x => !x.done)) return false;
-  if (p.bp.filter(x => (x.l && x.l !== '-' && x.l !== '-/-') || (x.s && x.s !== '-' && x.s !== '-/-') || (x.sym && x.sym.length)).some(x => !x.done)) return false;
-  if (p.fluids.filter(f => (Number(f.i) || 0) > 0 || (Number(f.o) || 0) > 0 || (Number(f.wet) || 0) > 0).some(f => !f.done)) return false;
+  if (p.bp.filter(isBpFilled).some(x => !x.done)) return false;
+  if (p.fluids.filter(isFluidRowFilled).some(f => !f.done)) return false;
   if (p.bowel.filter(x => !!x.a).some(x => !x.done)) return false;
   if (p.dressings.filter(d => d.l && d.l.trim() !== '').some(d => !d.done)) return false;
   if (p.turns.filter(tr => !!tr.p).some(tr => !tr.done)) return false;
-  if (p.mh.filter(m => m.m || m.r || m.rat || m.n).some(m => !m.done)) return false;
+  const filledMh = p.mh.filter(m => m.m || m.r || m.rat || m.n);
+  if (filledMh.some(m => !m.done)) return false;
   if (p.events.filter(e => (e.e && e.e.trim() !== '') || typeof e.pIdx === 'number').some(e => !e.done)) return false;
   if (p.reminders.filter(r => (r.txt && r.txt.trim() !== '') || typeof r.tIdx === 'number').some(r => !r.done)) return false;
 
   const hasSkin = Object.values(p.skin).some(Boolean) || p.skinCustom.some(c => c.site && c.cond) || p.skinCare.length > 0;
   if (hasSkin && !p.skinDone) return false;
 
-  const hasDiet = !!(p.diet.b || p.diet.l || p.diet.d || p.diet.supp || p.diet.supps.length || p.diet.flags.length);
+  const hasDiet = !!(p.diet.b || p.diet.l || p.diet.d || (p.diet.supp && p.diet.supp.trim()) || p.diet.supps.length || p.diet.flags.length);
   if (hasDiet && !p.diet.done) return false;
 
   const hasTurnPlan = !!(p.turnFreq || p.turnChecks.length);
   if (hasTurnPlan && !p.turnPlanDone) return false;
 
-  if (p.mhLevel && p.mh.length === 0 && !p.mhLevelDone) return false;
+  if (p.mhLevel && filledMh.length === 0 && !p.mhLevelDone) return false;
 
   const hasAdmit = !!(p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length || p.admit.custom.length || (p.admit.other && p.admit.other.trim()));
   if (hasAdmit && !p.admit.done) return false;
 
   return true;
+}
+
+function countPendingForBedMod(b, modId) {
+  const p = getPt(b);
+  switch (modId) {
+    case 'obs': return p.obs.filter(o => isObsFilled(o) && !o.done).length;
+    case 'bm': return p.bm.filter(x => x.v && String(x.v).trim() !== '' && !x.done).length;
+    case 'bp': return p.bp.filter(x => isBpFilled(x) && !x.done).length;
+    case 'fluid': return p.fluids.filter(f => isFluidRowFilled(f) && !f.done).length;
+    case 'bowel': return p.bowel.filter(x => !!x.a && !x.done).length;
+    case 'amy': {
+      const hasSkin = Object.values(p.skin).some(Boolean) || p.skinCustom.some(c => c.site && c.cond) || p.skinCare.length > 0;
+      return (hasSkin && !p.skinDone ? 1 : 0) + p.dressings.filter(d => d.l && d.l.trim() !== '' && !d.done).length;
+    }
+    case 'food': {
+      const hasDiet = !!(p.diet.b || p.diet.l || p.diet.d || (p.diet.supp && p.diet.supp.trim()) || p.diet.supps.length || p.diet.flags.length);
+      return (hasDiet && !p.diet.done) ? 1 : 0;
+    }
+    case 'turn': {
+      const hasPlan = !!(p.turnFreq || p.turnChecks.length);
+      return (hasPlan && !p.turnPlanDone ? 1 : 0) + p.turns.filter(tr => !!tr.p && !tr.done).length;
+    }
+    case 'mh': {
+      const filledMh = p.mh.filter(m => m.m || m.r || m.rat || m.n);
+      if (filledMh.length > 0) return filledMh.filter(m => !m.done).length;
+      return (p.mhLevel && !p.mhLevelDone) ? 1 : 0;
+    }
+    case 'events': return p.events.filter(e => ((e.e && e.e.trim() !== '') || typeof e.pIdx === 'number') && !e.done).length;
+    case 'reminders': return p.reminders.filter(r => ((r.txt && r.txt.trim() !== '') || typeof r.tIdx === 'number') && !r.done).length;
+    case 'admit': {
+      const hasAdmit = !!(p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length || p.admit.custom.length || (p.admit.other && p.admit.other.trim()));
+      return (hasAdmit && !p.admit.done) ? 1 : 0;
+    }
+    default: return 0;
+  }
 }
 
 function markBedDone(bedOrIdx) {
@@ -1334,8 +1618,8 @@ function buildModuleSummaryForBed(b, modId) {
     });
   } else if (modId === 'bp') {
     p.bp.forEach((x, i) => {
+      if (!isBpFilled(x)) return;
       const hasL = x.l && x.l !== '-' && x.l !== '-/-', hasS = x.s && x.s !== '-' && x.s !== '-/-';
-      if (!hasL && !hasS && (!x.sym || !x.sym.length)) return;
       const bpParts = [];
       if (hasL) bpParts.push(kvPill(t('lying'), esc(x.l)));
       if (hasS) bpParts.push(kvPill(t('standing'), esc(x.s)));
@@ -1347,7 +1631,7 @@ function buildModuleSummaryForBed(b, modId) {
     p.fluids.forEach((f, i) => {
       const fi = Number(f.i) || 0, fo = Number(f.o) || 0, fw = Number(f.wet) || 0;
       totI += fi; totO += fo;
-      if (fi > 0 || fo > 0 || fw > 0) {
+      if (isFluidRowFilled(f)) {
         hasFluidActivity = true;
         const segs = [];
         if (fi > 0) segs.push(kvPill(t('flIn'), `${fi}ml`));
@@ -1389,7 +1673,7 @@ function buildModuleSummaryForBed(b, modId) {
     if (p.diet.b) dParts.push(kvPill(t('b'), esc(trCode(p.diet.b))));
     if (p.diet.l) dParts.push(kvPill(t('l'), esc(trCode(p.diet.l))));
     if (p.diet.d) dParts.push(kvPill(t('d'), esc(trCode(p.diet.d))));
-    if (p.diet.supp) dParts.push(kvPill(t('supp'), esc(p.diet.supp)));
+    if (p.diet.supp && p.diet.supp.trim()) dParts.push(kvPill(t('supp'), esc(p.diet.supp.trim())));
     p.diet.supps.forEach(s => dParts.push(`${timePill(s.t)}${kvPill(t('supp'), esc(trCode(s.v)))}`));
     p.diet.flags.forEach(fl => dParts.push(kvPill('', esc(trCode(fl)))));
     if (dParts.length > 0) rows += sumRowWrap(dParts.join(''), bIdx, 'diet', 0, !!p.diet.done);
@@ -1402,7 +1686,8 @@ function buildModuleSummaryForBed(b, modId) {
     }
     p.turns.forEach((tr, i) => { if (tr.p) rows += sumRowWrap(`${timePill(tr.t)}${kvPill(t('posLbl'), esc(trCode(tr.p)))}`, bIdx, 'turns', i, !!tr.done); });
   } else if (modId === 'mh') {
-    if (p.mhLevel && p.mh.length === 0) {
+    const hasFilledMh = p.mh.some(m => m.m || m.r || m.rat || m.n);
+    if (p.mhLevel && !hasFilledMh) {
       rows += sumRowWrap(kvPill(t('obsLevel'), esc(trCode(p.mhLevel))), bIdx, 'mhLevel', 0, !!p.mhLevelDone);
     }
     p.mh.forEach((m, i) => {
@@ -1452,10 +1737,20 @@ function renderSummary() {
   if (typeof sortBedArray === 'function') alloc = sortBedArray(alloc);
   const area = document.getElementById('contentArea');
   const activeSecs = getActiveSections();
+  let pendingTotal = 0;
+  alloc.forEach(b => {
+    activeSecs.forEach(s => {
+      pendingTotal += countPendingForBedMod(b, s.id);
+    });
+  });
+  const pendingLbl = hideCompleted
+    ? t('showAll')
+    : `${t('pending')}${pendingTotal > 0 ? ' (' + pendingTotal + ')' : ''}`;
+
   let html = `<div class="summary-toolbar">
     <button type="button" class="tool-btn ${summaryGroup === 'bed' ? 'active' : ''}" onclick="setSumGroup('bed')">${esc(t('byBed'))}</button>
     <button type="button" class="tool-btn ${summaryGroup === 'mod' ? 'active' : ''}" onclick="setSumGroup('mod')">${esc(t('byMod'))}</button>
-    <button type="button" class="tool-btn ${hideCompleted ? 'active' : ''}" onclick="toggleHideCompleted()">${esc(hideCompleted ? t('showAll') : t('pending'))}</button>
+    <button type="button" class="tool-btn ${hideCompleted ? 'active' : ''}" onclick="toggleHideCompleted()">${esc(pendingLbl)}</button>
     <button type="button" class="tool-btn ${wakeLockObj ? 'active' : ''}" onclick="toggleWakeLock()">${esc(t('keepOn'))}</button>
   </div>`;
 
@@ -1496,4 +1791,4 @@ function renderSummary() {
 function setSumGroup(g) { summaryGroup = g; renderSummary(); }
 function toggleHideCompleted() { hideCompleted = !hideCompleted; renderSummary(); }
 
-window.CDP_MOD_VER = 9;
+window.CDP_MOD_VER = 10;
