@@ -6,12 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Care Digipad">
-<meta name="theme-color" content="#0f172a">
+<meta id="metaThemeColor" name="theme-color" content="#0f172a">
 <title>Care Digipad</title>
-<link rel="manifest" href="manifest.json?v=11">
-<link rel="icon" type="image/png" href="icon.png?v=11">
-<link rel="apple-touch-icon" href="icon.png?v=11">
-<link rel="stylesheet" href="style.css?v=11">
+<link rel="manifest" href="manifest.json?v=12">
+<link rel="icon" type="image/png" href="icon.png?v=12">
+<link rel="apple-touch-icon" href="icon.png?v=12">
+<link rel="stylesheet" href="style.css?v=12">
 </head>
 <body data-theme="day" data-color="teal">
 
@@ -234,6 +234,7 @@
     <div id="bedTabs" class="tab-strip"></div>
     <div id="subNav" class="tab-strip" style="padding-top:0;"></div>
   </div>
+  <div id="overdueBanner" class="overdue-banner hidden"></div>
   <div id="contentArea" class="container"></div>
   <div class="container" style="padding-top:0;">
     <button type="button" id="btnShareMain" class="btn btn-subtle" style="margin-bottom:10px;" onclick="shareApp()">Share Care Digipad with a Colleague</button>
@@ -241,13 +242,13 @@
   </div>
 </div>
 
-<script src="lang.js?v=11" onerror="window.CDU_LANGS = {}"></script>
-<script src="core.js?v=11"></script>
-<script src="modules.js?v=11"></script>
+<script src="lang.js?v=12" onerror="window.CDU_LANGS = {}"></script>
+<script src="core.js?v=12"></script>
+<script src="modules.js?v=12"></script>
 <script>
 window.addEventListener('load', function() {
-  if (window.CDP_MOD_VER !== 11 && !sessionStorage.getItem('cdp_v11_reload')) {
-    sessionStorage.setItem('cdp_v11_reload', '1');
+  if (window.CDP_MOD_VER !== 12 && !sessionStorage.getItem('cdp_v12_reload')) {
+    sessionStorage.setItem('cdp_v12_reload', '1');
     window.location.reload();
   }
 });
