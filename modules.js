@@ -157,7 +157,7 @@ function formatObsLine(o) {
   if (o.bp && o.bp !== '-' && o.bp !== '-/-') parts.push(kvPill('BP', esc(o.bp)));
   if (o.hr && o.hr !== '-') parts.push(kvPill('HR', esc(o.hr)));
   if (typeof o.aIdx === 'number' && acvpuList[o.aIdx]) parts.push(kvPill('ACVPU', esc(acvpuList[o.aIdx])));
-  if (o.tm && o.tm !== '-') parts.push(kvPill('Temp', `${esc(o.tm)}${esc(o.u || tempUnit)}`));
+  if (o.tm && o.tm !== '-') parts.push(kvPill(t('tempLbl'), `${esc(o.tm)}${esc(o.u || tempUnit)}`));
   if (o.pn !== '' && o.pn !== undefined && o.pn !== null && o.pn !== '-') parts.push(kvPill(t('pain'), `${esc(o.pn)}/10`));
   return parts.join('');
 }
@@ -224,12 +224,19 @@ function swapExpandedForBeds(bedA, bedB) {
 function getExpIdx(sec, len) {
   if (len === 0) return -1;
   const key = curBed + '_' + sec;
-  if (expandedCards[key] === undefined) return len - 1;
+  if (expandedCards[key] === undefined) {
+    expandedCards[key] = len - 1;
+  }
   return expandedCards[key];
 }
 
 function setExpIdx(sec, idx) {
   const key = curBed + '_' + sec;
+  if (expandedCards[key] === undefined) {
+    const p = getPt(curBed);
+    const len = p[sec] ? p[sec].length : (sec === 'dressings' ? p.dressings.length : 0);
+    expandedCards[key] = len - 1;
+  }
   expandedCards[key] = (expandedCards[key] === idx) ? -1 : idx;
   renderSection();
 }
@@ -267,6 +274,17 @@ function renderUI() {
   }).join('');
 
   renderSection();
+
+  setTimeout(() => {
+    const actBed = bedTabs.querySelector('.active-bed');
+    if (actBed && typeof actBed.scrollIntoView === 'function') {
+      actBed.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+    const actSub = subNav.querySelector('.active-sec');
+    if (actSub && typeof actSub.scrollIntoView === 'function') {
+      actSub.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, 10);
 }
 
 function refreshSubNavCounts() {
@@ -307,6 +325,9 @@ function selectSec(s) {
   saveDB();
   showSummary = false;
   curSec = s;
+  if (s === 'fluid') {
+    activeFluidIdx = typeof getCurrentShiftHourIdx === 'function' ? getCurrentShiftHourIdx() : 0;
+  }
   renderUI();
 }
 
@@ -380,12 +401,18 @@ function transferCurrentBed() {
     if (!confirm(swapMsg)) return;
     const temp = db[dest];
     db[dest] = db[curBed];
-    db[curBed] = temp;
+    if (temp !== undefined) {
+      db[curBed] = temp;
+    } else {
+      delete db[curBed];
+    }
     swapExpandedForBeds(curBed, dest);
     if (!alloc.includes(dest)) {
       const cIdx = alloc.indexOf(curBed);
       if (cIdx > -1) alloc[cIdx] = dest;
       else alloc.push(dest);
+    } else {
+      alloc = alloc.filter(b => b !== curBed);
     }
   } else {
     db[dest] = db[curBed];
@@ -1268,7 +1295,8 @@ function addQuickFluid(vol) {
   p.fluids[activeFluidIdx][activeFluidType] = (Number(p.fluids[activeFluidIdx][activeFluidType]) || 0) + vol;
   p.fluids[activeFluidIdx].done = false;
   saveDB();
-  renderUI();
+  renderSection();
+  refreshSubNavCounts();
 }
 
 function addCustomFluid() {
@@ -1281,7 +1309,8 @@ function addCustomFluid() {
   p.fluids[activeFluidIdx].done = false;
   if (inp) inp.value = '';
   saveDB();
-  renderUI();
+  renderSection();
+  refreshSubNavCounts();
 }
 
 function setFluidSource(sc) {
@@ -1291,7 +1320,8 @@ function setFluidSource(sc) {
   p.fluids[activeFluidIdx].done = false;
   activeFluidType = 'o';
   saveDB();
-  renderUI();
+  renderSection();
+  refreshSubNavCounts();
 }
 
 function addWetPad() {
@@ -1300,7 +1330,8 @@ function addWetPad() {
   p.fluids[activeFluidIdx].wet = (Number(p.fluids[activeFluidIdx].wet) || 0) + 1;
   p.fluids[activeFluidIdx].done = false;
   saveDB();
-  renderUI();
+  renderSection();
+  refreshSubNavCounts();
 }
 
 function decWetPad(idx) {
@@ -1309,15 +1340,18 @@ function decWetPad(idx) {
   p.fluids[idx].wet = Math.max(0, (Number(p.fluids[idx].wet) || 0) - 1);
   p.fluids[idx].done = false;
   saveDB();
-  renderUI();
+  renderSection();
+  refreshSubNavCounts();
 }
 
 function clrFluidRow(idx) {
+  if (!confirm(t('delConfirm'))) return;
   const p = getPt(curBed);
   if (!p.fluids[idx]) return;
   p.fluids[idx] = { t: p.fluids[idx].t, i: 0, o: 0, src: '', wet: 0, done: false };
   saveDB();
-  renderUI();
+  renderSection();
+  refreshSubNavCounts();
 }
 
 function createBowelEntry() {
@@ -1527,32 +1561,39 @@ function toggleSumDone(bedOrIdx, sec, idx) {
 
 function isBedAllDone(b) {
   const p = getPt(b);
-  if (p.obs.filter(isObsFilled).some(x => !x.done)) return false;
-  if (p.bm.filter(x => x.v && String(x.v).trim() !== '').some(x => !x.done)) return false;
-  if (p.bp.filter(isBpFilled).some(x => !x.done)) return false;
-  if (p.fluids.filter(isFluidRowFilled).some(f => !f.done)) return false;
-  if (p.bowel.filter(x => !!x.a).some(x => !x.done)) return false;
-  if (p.dressings.filter(d => d.l && d.l.trim() !== '').some(d => !d.done)) return false;
-  if (p.turns.filter(tr => !!tr.p).some(tr => !tr.done)) return false;
-  const filledMh = p.mh.filter(m => m.m || m.r || m.rat || m.n);
-  if (filledMh.some(m => !m.done)) return false;
-  if (p.events.filter(e => (e.e && e.e.trim() !== '') || typeof e.pIdx === 'number').some(e => !e.done)) return false;
-  if (p.reminders.filter(r => (r.txt && r.txt.trim() !== '') || typeof r.tIdx === 'number').some(r => !r.done)) return false;
-
-  const hasSkin = Object.values(p.skin).some(Boolean) || p.skinCustom.some(c => c.site && c.cond) || p.skinCare.length > 0;
-  if (hasSkin && !p.skinDone) return false;
-
-  const hasDiet = !!(p.diet.b || p.diet.l || p.diet.d || (p.diet.supp && p.diet.supp.trim()) || p.diet.supps.length || p.diet.flags.length);
-  if (hasDiet && !p.diet.done) return false;
-
-  const hasTurnPlan = !!(p.turnFreq || p.turnChecks.length);
-  if (hasTurnPlan && !p.turnPlanDone) return false;
-
-  if (p.mhLevel && filledMh.length === 0 && !p.mhLevelDone) return false;
-
-  const hasAdmit = !!(p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length || p.admit.custom.length || (p.admit.other && p.admit.other.trim()));
-  if (hasAdmit && !p.admit.done) return false;
-
+  const activeSecs = getActiveSections();
+  for (const s of activeSecs) {
+    const modId = s.id;
+    if (modId === 'obs' && p.obs.filter(isObsFilled).some(x => !x.done)) return false;
+    if (modId === 'bm' && p.bm.filter(x => x.v && String(x.v).trim() !== '').some(x => !x.done)) return false;
+    if (modId === 'bp' && p.bp.filter(isBpFilled).some(x => !x.done)) return false;
+    if (modId === 'fluid' && p.fluids.filter(isFluidRowFilled).some(f => !f.done)) return false;
+    if (modId === 'bowel' && p.bowel.filter(x => !!x.a).some(x => !x.done)) return false;
+    if (modId === 'amy') {
+      const hasSkin = Object.values(p.skin).some(Boolean) || p.skinCustom.some(c => c.site && c.cond) || p.skinCare.length > 0;
+      if (hasSkin && !p.skinDone) return false;
+      if (p.dressings.filter(d => d.l && d.l.trim() !== '').some(d => !d.done)) return false;
+    }
+    if (modId === 'food') {
+      const hasDiet = !!(p.diet.b || p.diet.l || p.diet.d || (p.diet.supp && p.diet.supp.trim()) || p.diet.supps.length || p.diet.flags.length);
+      if (hasDiet && !p.diet.done) return false;
+    }
+    if (modId === 'turn') {
+      const hasTurnPlan = !!(p.turnFreq || p.turnChecks.length);
+      if (hasTurnPlan && !p.turnPlanDone) return false;
+      if (p.turns.filter(tr => !!tr.p).some(tr => !tr.done)) return false;
+    }
+    if (modId === 'mh') {
+      const filledMh = p.mh.filter(m => m.m || m.r || m.rat || m.n);
+      if (filledMh.some(m => !m.done)) return false;
+      if (p.mhLevel && filledMh.length === 0 && !p.mhLevelDone) return false;
+    }
+    if (modId === 'events' && p.events.filter(e => (e.e && e.e.trim() !== '') || typeof e.pIdx === 'number').some(e => !e.done)) return false;
+    if (modId === 'admit') {
+      const hasAdmit = !!(p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length || p.admit.custom.length || (p.admit.other && p.admit.other.trim()));
+      if (hasAdmit && !p.admit.done) return false;
+    }
+  }
   return true;
 }
 
@@ -1596,7 +1637,7 @@ function markBedDone(bedOrIdx) {
   if (!bed) return;
   const p = getPt(bed);
   const targetState = !isBedAllDone(bed);
-  ['obs','bm','bp','fluids','bowel','dressings','turns','mh','events','reminders'].forEach(k => p[k].forEach(x => { x.done = targetState; }));
+  ['obs','bm','bp','fluids','bowel','dressings','turns','mh','events'].forEach(k => p[k].forEach(x => { x.done = targetState; }));
   p.skinDone = targetState; p.diet.done = targetState; p.turnPlanDone = targetState; p.mhLevelDone = targetState; p.admit.done = targetState;
   saveDB(); renderSummary();
 }
@@ -1664,7 +1705,7 @@ function buildModuleSummaryForBed(b, modId) {
       const drPills = [
         kvPill(t('dressing'), esc(d.l)),
         d.st ? kvPill('', esc(trCode(d.st))) : '',
-        d.f ? kvPill(t('due'), esc(calcDue(d.dt, d.f))) : kvPill(t('date'), esc(formatIsoDate(d.dt)))
+        d.f ? kvPill(t('due'), esc(calcDue(d.dt || todayIsoStr(), d.f))) : kvPill(t('date'), esc(formatIsoDate(d.dt || todayIsoStr())))
       ].join('');
       rows += sumRowWrap(drPills, bIdx, 'dressings', i, !!d.done);
     });
@@ -1791,4 +1832,4 @@ function renderSummary() {
 function setSumGroup(g) { summaryGroup = g; renderSummary(); }
 function toggleHideCompleted() { hideCompleted = !hideCompleted; renderSummary(); }
 
-window.CDP_MOD_VER = 10;
+window.CDP_MOD_VER = 11;
