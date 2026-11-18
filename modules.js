@@ -3,6 +3,20 @@ function normDec(val) {
   return String(val).replace(/,/g, '.');
 }
 
+function getEventText(e, phrases) {
+  if (!e) return '';
+  const list = phrases || getLangList('phrases');
+  if (typeof e.pIdx === 'number' && !e.customEdited && list[e.pIdx]) return list[e.pIdx];
+  return e.e || '';
+}
+
+function getTaskText(r, taskList) {
+  if (!r) return '';
+  const list = taskList || getLangList('tasks');
+  if (typeof r.tIdx === 'number' && !r.customEdited && list[r.tIdx]) return list[r.tIdx];
+  return r.txt || '';
+}
+
 function computeTaskDueTs(dueStr, refMs) {
   if (!dueStr) return null;
   const parts = dueStr.split(':').map(Number);
@@ -16,7 +30,7 @@ function computeTaskDueTs(dueStr, refMs) {
 }
 
 function isTaskOverdue(r) {
-  if (!r || r.done || !r.due) return false;
+  if (!r || r.done || !r.due || !getTaskText(r).trim()) return false;
   if (!r.createdTs) r.createdTs = Date.now();
   if (!r.dueTs) r.dueTs = computeTaskDueTs(r.due, r.createdTs);
   return r.dueTs ? Date.now() >= r.dueTs : false;
@@ -45,26 +59,75 @@ function playAlarmBeep() {
   } catch (e) {}
 }
 
+function renderOverdueBanner() {
+  const el = document.getElementById('overdueBanner');
+  if (!el) return;
+  if (!isPro || !safeGetRaw('cdu_start')) {
+    el.classList.add('hidden');
+    el.innerHTML = '';
+    return;
+  }
+  const overdueBeds = [];
+  alloc.forEach((b, bIdx) => {
+    if (hasOverdueTask(b) && !(b === curBed && !showSummary && curSec === 'reminders')) {
+      overdueBeds.push({ b, bIdx });
+    }
+  });
+  if (overdueBeds.length === 0) {
+    el.classList.add('hidden');
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `<div class="overdue-banner-inner">
+    <span>${esc(t('overdueTasks'))}:</span>
+    ${overdueBeds.map(x => `<button type="button" class="overdue-pill" onclick="jumpToBedMod(${x.bIdx}, 'reminders')">${esc(x.b)} →</button>`).join('')}
+  </div>`;
+  el.classList.remove('hidden');
+}
+
+function checkOverdueTasks(triggerSound = true) {
+  if (checkShiftExpiry()) return;
+  if (!isPro) {
+    renderOverdueBanner();
+    return;
+  }
+  let newlyTriggered = false;
+  alloc.forEach(b => {
+    getPt(b).reminders.forEach(r => {
+      if (!r.done && !r.alerted && isTaskOverdue(r) && triggerSound) {
+        r.alerted = true;
+        newlyTriggered = true;
+      }
+    });
+  });
+  if (newlyTriggered) {
+    saveDB();
+    playAlarmBeep();
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  }
+  renderOverdueBanner();
+  refreshSubNavCounts();
+  if (showSummary && newlyTriggered) {
+    renderSummary();
+  } else if (!showSummary && curSec === 'reminders' && curBed) {
+    const p = getPt(curBed);
+    p.reminders.forEach((r, idx) => {
+      const overdue = isTaskOverdue(r);
+      const cardEl = document.getElementById('taskCard_' + idx);
+      const badgeEl = document.getElementById('taskBadge_' + idx);
+      if (cardEl) cardEl.classList.toggle('task-alert', overdue);
+      if (badgeEl) {
+        badgeEl.classList.toggle('overdue', overdue);
+        badgeEl.textContent = r.done ? t('done') : (overdue ? t('overdue') : `${t('due')} ${r.due || '--:--'}`);
+      }
+    });
+  }
+}
+
 function startAlertTimer() {
   if (alertTimerId) clearInterval(alertTimerId);
   alertTimerId = setInterval(() => {
-    if (checkShiftExpiry()) return;
-    if (!isPro) return;
-    let triggered = false;
-    alloc.forEach(b => {
-      getPt(b).reminders.forEach(r => {
-        if (!r.done && !r.alerted && isTaskOverdue(r)) {
-          r.alerted = true;
-          triggered = true;
-        }
-      });
-    });
-    if (triggered) {
-      saveDB();
-      playAlarmBeep();
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-      renderUI();
-    }
+    checkOverdueTasks(true);
   }, 20000);
 }
 
@@ -141,24 +204,24 @@ function kvPill(label, valHtml) {
 }
 
 function timePill(tStr) {
-  return `<span class="sum-time">${esc(tStr || '--:--')}</span>`;
+  return `<span class="sum-time ltr-num">${esc(tStr || '--:--')}</span>`;
 }
 
 function formatObsLine(o) {
   const acvpuList = getLangList('acvpu');
   const parts = [];
-  if (o.rr && o.rr !== '-') parts.push(kvPill('RR', esc(o.rr)));
+  if (o.rr && o.rr !== '-') parts.push(kvPill(t('rrShort'), `<span class="ltr-num">${esc(o.rr)}</span>`));
   if (o.sp && o.sp !== '-') {
     const o2Txt = (o.o2 && o.o2 !== '-') ? ` (${esc(trCode(o.o2))})` : '';
-    parts.push(kvPill('SpO2', `${esc(o.sp)}%${o2Txt}`));
+    parts.push(kvPill(t('spo2Short'), `<span class="ltr-num">${esc(o.sp)}%</span>${o2Txt}`));
   } else if (o.o2 && o.o2 !== '-') {
-    parts.push(kvPill('O2', esc(trCode(o.o2))));
+    parts.push(kvPill(t('o2Short'), esc(trCode(o.o2))));
   }
-  if (o.bp && o.bp !== '-' && o.bp !== '-/-') parts.push(kvPill('BP', esc(o.bp)));
-  if (o.hr && o.hr !== '-') parts.push(kvPill('HR', esc(o.hr)));
-  if (typeof o.aIdx === 'number' && acvpuList[o.aIdx]) parts.push(kvPill('ACVPU', esc(acvpuList[o.aIdx])));
-  if (o.tm && o.tm !== '-') parts.push(kvPill(t('tempLbl'), `${esc(o.tm)}${esc(o.u || tempUnit)}`));
-  if (o.pn !== '' && o.pn !== undefined && o.pn !== null && o.pn !== '-') parts.push(kvPill(t('pain'), `${esc(o.pn)}/10`));
+  if (o.bp && o.bp !== '-' && o.bp !== '-/-') parts.push(kvPill(t('bpShort'), `<span class="ltr-num">${esc(o.bp)}</span>`));
+  if (o.hr && o.hr !== '-') parts.push(kvPill(t('pulseShort'), `<span class="ltr-num">${esc(o.hr)}</span>`));
+  if (typeof o.aIdx === 'number' && acvpuList[o.aIdx]) parts.push(kvPill(t('acvpuShort'), esc(acvpuList[o.aIdx])));
+  if (o.tm && o.tm !== '-') parts.push(kvPill(t('tempLbl'), `<span class="ltr-num">${esc(o.tm)}${esc(o.u || tempUnit)}</span>`));
+  if (o.pn !== '' && o.pn !== undefined && o.pn !== null && o.pn !== '-') parts.push(kvPill(t('pain'), `<span class="ltr-num">${esc(o.pn)}/10</span>`));
   return parts.join('');
 }
 
@@ -174,8 +237,14 @@ function modEntryCount(b, modId) {
     case 'food': return [p.diet.b, p.diet.l, p.diet.d].filter(Boolean).length + p.diet.supps.length + (p.diet.supp && p.diet.supp.trim() ? 1 : 0) + (p.diet.flags.length > 0 ? 1 : 0);
     case 'turn': return p.turns.filter(tr => !!tr.p).length + ((p.turnFreq || p.turnChecks.length > 0) ? 1 : 0);
     case 'mh': return p.mh.filter(m => m.m || m.r || m.rat || m.n).length + (p.mhLevel ? 1 : 0);
-    case 'events': return p.events.filter(e => (e.e && e.e.trim() !== '') || typeof e.pIdx === 'number').length;
-    case 'reminders': return p.reminders.filter(r => !r.done && ((r.txt && r.txt.trim() !== '') || typeof r.tIdx === 'number')).length;
+    case 'events': {
+      const phrases = getLangList('phrases');
+      return p.events.filter(e => getEventText(e, phrases).trim() !== '').length;
+    }
+    case 'reminders': {
+      const taskList = getLangList('tasks');
+      return p.reminders.filter(r => !r.done && getTaskText(r, taskList).trim() !== '').length;
+    }
     case 'admit': return (p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length > 0 || p.admit.custom.length > 0 || (p.admit.other && p.admit.other.trim() !== '')) ? 1 : 0;
     default: return 0;
   }
@@ -259,6 +328,8 @@ function renderUI() {
 
   if (showSummary) {
     subNav.classList.add('hidden');
+    if (typeof syncNavHeight === 'function') syncNavHeight();
+    renderOverdueBanner();
     renderSummary();
     return;
   }
@@ -273,6 +344,8 @@ function renderUI() {
     return `<button type="button" class="tab-btn ${curSec === s.id ? 'active-sec' : ''}" onclick="selectSec('${s.id}')">${esc(t(s.id))}${badge}${alertDot}</button>`;
   }).join('');
 
+  if (typeof syncNavHeight === 'function') syncNavHeight();
+  renderOverdueBanner();
   renderSection();
 
   setTimeout(() => {
@@ -290,14 +363,6 @@ function renderUI() {
 function refreshSubNavCounts() {
   const subNav = document.getElementById('subNav');
   const bedTabs = document.getElementById('bedTabs');
-  if (!subNav || showSummary) return;
-  const activeSecs = getActiveSections();
-  subNav.innerHTML = activeSecs.map(s => {
-    const cnt = modEntryCount(curBed, s.id);
-    const badge = cnt > 0 ? `<span class="mod-count">${cnt}</span>` : '';
-    const alertDot = (s.id === 'reminders' && hasOverdueTask(curBed)) ? `<span class="alert-dot"></span>` : '';
-    return `<button type="button" class="tab-btn ${curSec === s.id ? 'active-sec' : ''}" onclick="selectSec('${s.id}')">${esc(t(s.id))}${badge}${alertDot}</button>`;
-  }).join('');
   if (bedTabs) {
     let bedHtml = `<button type="button" class="tab-btn ${showSummary ? 'active-summary' : ''}" onclick="toggleSummary(true)">${esc(t('summary'))}</button>`;
     alloc.forEach((b, bIdx) => {
@@ -308,6 +373,14 @@ function refreshSubNavCounts() {
     bedHtml += `<button type="button" class="tab-btn-add" onclick="toggleQuickAddBed()">+</button>`;
     bedTabs.innerHTML = bedHtml;
   }
+  if (!subNav || showSummary) return;
+  const activeSecs = getActiveSections();
+  subNav.innerHTML = activeSecs.map(s => {
+    const cnt = modEntryCount(curBed, s.id);
+    const badge = cnt > 0 ? `<span class="mod-count">${cnt}</span>` : '';
+    const alertDot = (s.id === 'reminders' && hasOverdueTask(curBed)) ? `<span class="alert-dot"></span>` : '';
+    return `<button type="button" class="tab-btn ${curSec === s.id ? 'active-sec' : ''}" onclick="selectSec('${s.id}')">${esc(t(s.id))}${badge}${alertDot}</button>`;
+  }).join('');
 }
 
 function selectBedIdx(bIdx) {
@@ -397,7 +470,7 @@ function transferCurrentBed() {
   if (!dest || dest === curBed) return;
   const destOccupied = alloc.includes(dest) || hasAnyBedData(dest);
   if (destOccupied) {
-    const swapMsg = `${dest} ${t('swapConfirm').replace(/\s*\([^)]*\)/g, '')}`;
+    const swapMsg = `${dest} ${t('swapConfirm')}`;
     if (!confirm(swapMsg)) return;
     const temp = db[dest];
     db[dest] = db[curBed];
@@ -411,8 +484,6 @@ function transferCurrentBed() {
       const cIdx = alloc.indexOf(curBed);
       if (cIdx > -1) alloc[cIdx] = dest;
       else alloc.push(dest);
-    } else {
-      alloc = alloc.filter(b => b !== curBed);
     }
   } else {
     db[dest] = db[curBed];
@@ -613,7 +684,7 @@ function renderSection() {
       const flags = Array.isArray(b.f) ? b.f : [];
       if (i !== expIdx && b.v && String(b.v).trim() !== '') {
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bm', ${i})">
-          <div style="line-height:1.8;">${timePill(b.t)}${kvPill(b.c ? trCode(b.c) : t('bm'), `${esc(b.v)} ${esc(b.u || bmUnit)}`)}${flags.map(f => kvPill('', esc(trCode(f)))).join('')} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
+          <div style="line-height:1.8;">${timePill(b.t)}${kvPill(b.c ? trCode(b.c) : t('bm'), `<span class="ltr-num">${esc(b.v)} ${esc(b.u || bmUnit)}</span>`)}${flags.map(f => kvPill('', esc(trCode(f)))).join('')} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bm', ${i})">✕</button>
         </div>`;
       }
@@ -652,7 +723,7 @@ function renderSection() {
         const hasL = x.l && x.l !== '-' && x.l !== '-/-';
         const hasS = x.s && x.s !== '-' && x.s !== '-/-';
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bp', ${i})">
-          <div style="line-height:1.8;">${timePill(x.t)}${hasL ? kvPill(t('lying'), esc(x.l)) : ''}${hasS ? kvPill(t('standing'), esc(x.s)) : ''}${syms.map(s => kvPill('', esc(trCode(s)))).join('')} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
+          <div style="line-height:1.8;">${timePill(x.t)}${hasL ? kvPill(t('lying'), `<span class="ltr-num">${esc(x.l)}</span>`) : ''}${hasS ? kvPill(t('standing'), `<span class="ltr-num">${esc(x.s)}</span>`) : ''}${syms.map(s => kvPill('', esc(trCode(s)))).join('')} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bp', ${i})">✕</button>
         </div>`;
       }
@@ -700,29 +771,31 @@ function renderSection() {
     const net = totI - totO;
     const actHr = p.fluids[activeFluidIdx] ? p.fluids[activeFluidIdx].t : '';
 
-    bodyHtml = `<div class="card">
+    bodyHtml = `<div id="fluidStickyCard" class="card fluid-sticky-card ${activeFluidType === 'o' ? 'out-active' : ''}">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.82rem; font-weight:700; color:var(--text-sub); flex-wrap:wrap; gap:6px;">
         <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-          <span id="flHdrStatus">${esc(t('time'))}: <strong style="color:var(--teal);">${esc(actHr)}</strong></span>
+          <span id="flHdrStatus">${esc(t('time'))}: <strong class="ltr-num" style="color:var(--teal);">${esc(actHr)}</strong></span>
           <button type="button" id="flModeInBtn" class="fl-mode-pill ${activeFluidType === 'i' ? 'active-in' : ''}" onclick="setFluidMode('i')">${esc(t('flIn'))}</button>
           <button type="button" id="flModeOutBtn" class="fl-mode-pill ${activeFluidType === 'o' ? 'active-out' : ''}" onclick="setFluidMode('o')">${esc(t('flOut'))}</button>
         </div>
-        <span id="flHdrTotal"><strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b>${totI}ml</b> | ${esc(t('flOut'))} <b>${totO}ml</b> | <b>${net > 0 ? '+' + net : net}ml</b></span>
+        <span id="flHdrTotal"><strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b class="ltr-num">${totI}ml</b> | ${esc(t('flOut'))} <b class="ltr-num">${totO}ml</b> | <b class="ltr-num">${net > 0 ? '+' + net : net}ml</b></span>
       </div>
       <div class="fluid-btn-grid" style="margin-bottom:8px;">
-        ${[50, 100, 150, 200, 250, 500].map(v => `<button type="button" class="quick-fluid-btn ${activeFluidType === 'o' ? 'out-mode' : ''}" onclick="addQuickFluid(${v})">+${v}ml ${esc(activeFluidType === 'i' ? t('flIn') : t('flOut'))}</button>`).join('')}
+        ${[50, 100, 150, 200, 250, 500].map(v => `<button type="button" data-vol="${v}" class="quick-fluid-btn ${activeFluidType === 'o' ? 'out-mode' : ''}" onclick="addQuickFluid(${v})"><span class="ltr-num">+${v}ml</span> ${esc(activeFluidType === 'i' ? t('flIn') : t('flOut'))}</button>`).join('')}
       </div>
       <div style="display:flex; gap:6px; margin-bottom:8px;">
         <input type="number" id="customFluidMl" inputmode="numeric" placeholder="${esc(t('customMlPh'))}" style="flex:1; font-size:1rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomFluid();}">
         <button type="button" id="btnAddCustomFl" class="btn btn-primary btn-sm" style="${activeFluidType === 'o' ? 'background:var(--amber);' : ''}" onclick="addCustomFluid()">${esc(t('add'))} (${esc(activeFluidType === 'i' ? t('flIn') : t('flOut'))})</button>
       </div>
-      <div class="chip-row" id="flSrcChips" style="margin-bottom:8px;">
+      <div class="chip-row" id="flSrcChips" style="margin-bottom:0;">
         ${['srcPu','srcCath','srcBowel','srcVomit'].map(sc => {
           const curSrc = p.fluids[activeFluidIdx] ? p.fluids[activeFluidIdx].src : '';
           return `<span class="chip ${curSrc === sc ? 'active-amber' : ''}" data-src="${sc}" onclick="setFluidSource('${sc}')">${esc(t(sc))}</span>`;
         }).join('')}
-        <span class="chip" onclick="addWetPad()">+1 ${esc(t('wetPad'))}</span>
+        <span class="chip" onclick="addWetPad()"><span class="ltr-num">+1</span>&nbsp;${esc(t('wetPad'))}</span>
       </div>
+    </div>
+    <div class="card">
       <div style="display:flex; gap:6px; padding:4px 0; font-size:0.74rem; font-weight:700; color:var(--text-sub); border-bottom:1.5px solid var(--border);">
         <div style="flex:0 0 54px; text-align:center;">${esc(t('time'))}</div>
         <div style="flex:1;">${esc(t('flIn'))} (ml)</div>
@@ -731,7 +804,7 @@ function renderSection() {
       </div>
       <div id="fluidRows">
         ${p.fluids.map((f, idx) => `<div class="hour-row">
-          <div id="flHr_${idx}" class="hour-badge ${activeFluidIdx === idx ? 'active-hr' : ''}" onclick="selectFluidHour(${idx})">${esc(f.t)}</div>
+          <div id="flHr_${idx}" class="hour-badge ltr-num ${activeFluidIdx === idx ? 'active-hr' : ''}" onclick="selectFluidHour(${idx})">${esc(f.t)}</div>
           <div style="flex:1; min-width:0;">
             <input id="flIn_${idx}" type="number" inputmode="numeric" class="${activeFluidIdx === idx && activeFluidType === 'i' ? 'fl-target-in' : ''}" value="${f.i || ''}" onfocus="setFluidTarget(${idx}, 'i')" oninput="updFluid(${idx}, 'i', this.value)">
           </div>
@@ -739,7 +812,7 @@ function renderSection() {
             <input id="flOut_${idx}" type="number" inputmode="numeric" class="${activeFluidIdx === idx && activeFluidType === 'o' ? 'fl-target-out' : ''}" value="${f.o || ''}" onfocus="setFluidTarget(${idx}, 'o')" oninput="updFluid(${idx}, 'o', this.value)">
             ${(f.src || f.wet) ? `<div style="font-size:0.7rem; color:var(--amber); font-weight:700; margin-top:2px; display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
               ${f.src ? `<span>${esc(trCode(f.src))}</span>` : ''}
-              ${f.wet ? `<span onclick="decWetPad(${idx})" style="cursor:pointer; text-decoration:underline;">${esc(t('wetPad'))} x${f.wet} (✕)</span>` : ''}
+              ${f.wet ? `<span onclick="decWetPad(${idx})" style="cursor:pointer; text-decoration:underline;">${esc(t('wetPad'))} <span class="ltr-num">x${f.wet}</span> (✕)</span>` : ''}
             </div>` : ''}
           </div>
           <div style="flex:0 0 42px; text-align:end;">
@@ -1054,7 +1127,7 @@ function renderSection() {
     </div>`;
 
     const listHtml = p.events.map((e, i) => {
-      const noteTxt = (typeof e.pIdx === 'number' && phrases[e.pIdx] && !e.customEdited) ? phrases[e.pIdx] : (e.e || '');
+      const noteTxt = getEventText(e, phrases);
       if (i !== expEvIdx && noteTxt.trim() !== '') {
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('events', ${i})">
           <div style="line-height:1.8;">${timePill(e.t)}<span style="font-weight:700;">${esc(noteTxt)}</span>${e.o ? ' ' + kvPill(t('outcome'), esc(e.o)) : ''} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
@@ -1086,6 +1159,13 @@ function renderSection() {
   else if (curSec === 'reminders') {
     const taskList = getLangList('tasks');
     const expIdx = getExpIdx('reminders', p.reminders.length);
+    const offsets = [
+      [15, `+15${t('minShort')}`],
+      [30, `+30${t('minShort')}`],
+      [60, `+1${t('hrShort')}`],
+      [120, `+2${t('hrShort')}`],
+      [240, `+4${t('hrShort')}`]
+    ];
     const quickCard = `<div class="card">
       <label>${esc(t('reminders'))}</label>
       <div class="chip-row" style="margin-bottom:0;">
@@ -1094,7 +1174,7 @@ function renderSection() {
     </div>`;
 
     const listHtml = p.reminders.map((r, i) => {
-      const tkTxt = (typeof r.tIdx === 'number' && taskList[r.tIdx] && !r.customEdited) ? taskList[r.tIdx] : (r.txt || '');
+      const tkTxt = getTaskText(r, taskList);
       const overdue = isTaskOverdue(r);
       if (i !== expIdx && tkTxt.trim()) {
         return `<div id="taskCard_${i}" class="card entry-card ${overdue ? 'task-alert' : ''}" style="display:flex; justify-content:space-between; align-items:center;">
@@ -1118,10 +1198,10 @@ function renderSection() {
           </div>
         </div>
         <div class="chip-row" style="margin-bottom:8px;">
-          ${[[15,'+15m'],[30,'+30m'],[60,'+1h'],[120,'+2h'],[240,'+4h']].map(([mins, lbl]) => `<span class="chip" onclick="setTaskOffset(${i}, ${mins})">${lbl}</span>`).join('')}
+          ${offsets.map(([mins, lbl]) => `<span class="chip" onclick="setTaskOffset(${i}, ${mins})"><span class="ltr-num">${esc(lbl)}</span></span>`).join('')}
         </div>
         <div class="row" style="margin-bottom:0;">
-          <div style="flex:0 0 115px;"><label>${esc(t('dueTime'))}</label><input type="time" value="${esc(r.due || '')}" oninput="updTaskDue(${i}, this.value)"></div>
+          <div style="flex:0 0 134px;"><label>${esc(t('dueTime'))}</label><input type="time" value="${esc(r.due || '')}" oninput="updTaskDue(${i}, this.value)"></div>
           <div><label>${esc(t('reminders'))}</label><input type="text" value="${esc(tkTxt)}" oninput="updTaskText(${i}, this.value)"></div>
         </div>
       </div>`;
@@ -1258,6 +1338,8 @@ function setFluidTarget(idx, type) {
     if (outEl) outEl.classList.toggle('fl-target-out', i === idx && type === 'o');
     if (hrEl) hrEl.classList.toggle('active-hr', i === idx);
   }
+  const stickyCard = document.getElementById('fluidStickyCard');
+  if (stickyCard) stickyCard.classList.toggle('out-active', type === 'o');
   const modeInBtn = document.getElementById('flModeInBtn');
   const modeOutBtn = document.getElementById('flModeOutBtn');
   if (modeInBtn) modeInBtn.classList.toggle('active-in', type === 'i');
@@ -1265,8 +1347,8 @@ function setFluidTarget(idx, type) {
 
   document.querySelectorAll('.quick-fluid-btn').forEach(btn => {
     btn.classList.toggle('out-mode', type === 'o');
-    const m = btn.textContent.match(/\+\d+ml/);
-    if (m) btn.textContent = `${m[0]} ${type === 'i' ? t('flIn') : t('flOut')}`;
+    const vol = btn.getAttribute('data-vol');
+    if (vol) btn.innerHTML = `<span class="ltr-num">+${vol}ml</span> ${esc(type === 'i' ? t('flIn') : t('flOut'))}`;
   });
   const customBtn = document.getElementById('btnAddCustomFl');
   if (customBtn) {
@@ -1274,7 +1356,7 @@ function setFluidTarget(idx, type) {
     customBtn.textContent = `${t('add')} (${type === 'i' ? t('flIn') : t('flOut')})`;
   }
   const stEl = document.getElementById('flHdrStatus'), actHr = p.fluids[idx] ? p.fluids[idx].t : '';
-  if (stEl) stEl.innerHTML = `${esc(t('time'))}: <strong style="color:var(--teal);">${esc(actHr)}</strong>`;
+  if (stEl) stEl.innerHTML = `${esc(t('time'))}: <strong class="ltr-num" style="color:var(--teal);">${esc(actHr)}</strong>`;
   const curSrc = p.fluids[idx] ? p.fluids[idx].src : '';
   document.querySelectorAll('#flSrcChips .chip[data-src]').forEach(ch => ch.classList.toggle('active-amber', ch.getAttribute('data-src') === curSrc));
 }
@@ -1285,7 +1367,7 @@ function updFluid(idx, type, val) {
   let totI = 0, totO = 0;
   p.fluids.forEach(f => { totI += (Number(f.i) || 0); totO += (Number(f.o) || 0); });
   const net = totI - totO, totEl = document.getElementById('flHdrTotal');
-  if (totEl) totEl.innerHTML = `<strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b>${totI}ml</b> | ${esc(t('flOut'))} <b>${totO}ml</b> | <b>${net > 0 ? '+' + net : net}ml</b>`;
+  if (totEl) totEl.innerHTML = `<strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b class="ltr-num">${totI}ml</b> | ${esc(t('flOut'))} <b class="ltr-num">${totO}ml</b> | <b class="ltr-num">${net > 0 ? '+' + net : net}ml</b>`;
   refreshSubNavCounts();
 }
 
@@ -1377,7 +1459,12 @@ function markAllSkinIntact() {
 }
 function createCustomSkin() { const p = getPt(curBed); p.skinCustom.push({ site: '', side: '', cond: '' }); p.skinDone = false; saveDB(); renderUI(); }
 function updCustomSkinField(idx, k, val) { const p = getPt(curBed); if (!p.skinCustom[idx]) return; p.skinCustom[idx][k] = val; p.skinDone = false; saveDB(); refreshSubNavCounts(); }
-function delCustomSkin(idx) { const p = getPt(curBed); p.skinCustom.splice(idx, 1); p.skinDone = false; saveDB(); renderUI(); }
+function delCustomSkin(idx) {
+  if (!confirm(t('delConfirm'))) return;
+  const p = getPt(curBed);
+  p.skinCustom.splice(idx, 1);
+  p.skinDone = false; saveDB(); renderUI();
+}
 function toggleSkinCare(ck) { const p = getPt(curBed), pos = p.skinCare.indexOf(ck); if (pos > -1) p.skinCare.splice(pos, 1); else p.skinCare.push(ck); p.skinDone = false; saveDB(); renderUI(); }
 
 function createDressingEntry() {
@@ -1403,7 +1490,12 @@ function setMeal(mealKey, val) { const p = getPt(curBed); p.diet[mealKey] = (p.d
 function quickLogSupp(statusCode) { const p = getPt(curBed); p.diet.supps.push({ t: nowTimeStr(), v: statusCode }); p.diet.done = false; saveDB(); renderUI(); }
 function updSuppText(val) { const p = getPt(curBed); p.diet.supp = val; p.diet.done = false; saveDB(); refreshSubNavCounts(); }
 function addCustomSupp() { const inp = document.getElementById('suppInput'), val = (inp ? inp.value : '').trim(); if (!val) return; const p = getPt(curBed); p.diet.supps.push({ t: nowTimeStr(), v: val }); p.diet.supp = ''; p.diet.done = false; saveDB(); renderUI(); }
-function delSupp(idx) { const p = getPt(curBed); p.diet.supps.splice(idx, 1); p.diet.done = false; saveDB(); renderUI(); }
+function delSupp(idx) {
+  if (!confirm(t('delConfirm'))) return;
+  const p = getPt(curBed);
+  p.diet.supps.splice(idx, 1);
+  p.diet.done = false; saveDB(); renderUI();
+}
 function toggleDietFlag(fl) { const p = getPt(curBed), idx = p.diet.flags.indexOf(fl); if (idx > -1) p.diet.flags.splice(idx, 1); else p.diet.flags.push(fl); p.diet.done = false; saveDB(); renderUI(); }
 
 function setTurnFreq(val) { const p = getPt(curBed); p.turnFreq = val; p.turnPlanDone = false; saveDB(); renderUI(); }
@@ -1474,10 +1566,31 @@ function updTaskDue(idx, dueStr) {
     badgeEl.classList.toggle('overdue', overdue);
     badgeEl.textContent = r.done ? t('done') : (overdue ? t('overdue') : `${t('due')} ${r.due || '--:--'}`);
   }
+  renderOverdueBanner();
   refreshSubNavCounts();
 }
-function updTaskText(idx, val) { const p = getPt(curBed); if (!p.reminders[idx]) return; p.reminders[idx].txt = val; p.reminders[idx].customEdited = true; saveDB(); refreshSubNavCounts(); }
-function toggleTaskDone(idx) { const p = getPt(curBed); if (!p.reminders[idx]) return; p.reminders[idx].done = !p.reminders[idx].done; saveDB(); renderUI(); }
+function updTaskText(idx, val) {
+  const p = getPt(curBed); if (!p.reminders[idx]) return;
+  const r = p.reminders[idx];
+  r.txt = val;
+  r.customEdited = true;
+  saveDB();
+  const overdue = isTaskOverdue(r);
+  const cardEl = document.getElementById('taskCard_' + idx);
+  const badgeEl = document.getElementById('taskBadge_' + idx);
+  if (cardEl) cardEl.classList.toggle('task-alert', overdue);
+  if (badgeEl) {
+    badgeEl.classList.toggle('overdue', overdue);
+    badgeEl.textContent = r.done ? t('done') : (overdue ? t('overdue') : `${t('due')} ${r.due || '--:--'}`);
+  }
+  renderOverdueBanner();
+  refreshSubNavCounts();
+}
+function toggleTaskDone(idx) {
+  const p = getPt(curBed); if (!p.reminders[idx]) return;
+  p.reminders[idx].done = !p.reminders[idx].done;
+  saveDB(); renderUI();
+}
 
 function updAdmitField(k, val) { const p = getPt(curBed); p.admit[k] = val; p.admit.done = false; saveDB(); refreshSubNavCounts(); }
 function toggleAdmitStdItem(idx) {
@@ -1506,6 +1619,7 @@ function setAdmitCustomLoc(cIdx, lc) {
   p.admit.done = false; saveDB(); renderSection();
 }
 function delAdmitCustomItem(cIdx) {
+  if (!confirm(t('delConfirm'))) return;
   const p = getPt(curBed);
   p.admit.custom.splice(cIdx, 1);
   p.admit.done = false; saveDB(); renderUI();
@@ -1531,10 +1645,7 @@ function jumpToBedMod(bIdx, modId) {
 
 function doneBtnHtml(bIdx, sec, idx, isDone) {
   const lbl = isDone ? esc(t('done')) : esc(t('markDone'));
-  const style = isDone
-    ? 'background:var(--green); color:#fff; border:1px solid var(--green); padding:4px 10px; border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer; flex-shrink:0;'
-    : 'background:transparent; color:var(--text-sub); border:1px solid var(--input-border); padding:4px 10px; border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer; flex-shrink:0;';
-  return `<button type="button" style="${style}" onclick="toggleSumDone(${bIdx}, '${sec}', ${idx})">${lbl}</button>`;
+  return `<button type="button" class="sum-done-btn ${isDone ? 'is-done' : ''}" onclick="toggleSumDone(${bIdx}, '${sec}', ${idx})">${lbl}</button>`;
 }
 
 function sumRowWrap(leftHtml, bIdx, sec, idx, isDone) {
@@ -1556,45 +1667,22 @@ function toggleSumDone(bedOrIdx, sec, idx) {
   else if (sec === 'mhLevel') p.mhLevelDone = !p.mhLevelDone;
   else if (sec === 'admit') p.admit.done = !p.admit.done;
   else if (Array.isArray(p[sec]) && p[sec][idx]) p[sec][idx].done = !p[sec][idx].done;
-  saveDB(); renderSummary();
+  saveDB();
+  renderOverdueBanner();
+  refreshSubNavCounts();
+  renderSummary();
 }
 
 function isBedAllDone(b) {
-  const p = getPt(b);
   const activeSecs = getActiveSections();
   for (const s of activeSecs) {
-    const modId = s.id;
-    if (modId === 'obs' && p.obs.filter(isObsFilled).some(x => !x.done)) return false;
-    if (modId === 'bm' && p.bm.filter(x => x.v && String(x.v).trim() !== '').some(x => !x.done)) return false;
-    if (modId === 'bp' && p.bp.filter(isBpFilled).some(x => !x.done)) return false;
-    if (modId === 'fluid' && p.fluids.filter(isFluidRowFilled).some(f => !f.done)) return false;
-    if (modId === 'bowel' && p.bowel.filter(x => !!x.a).some(x => !x.done)) return false;
-    if (modId === 'amy') {
-      const hasSkin = Object.values(p.skin).some(Boolean) || p.skinCustom.some(c => c.site && c.cond) || p.skinCare.length > 0;
-      if (hasSkin && !p.skinDone) return false;
-      if (p.dressings.filter(d => d.l && d.l.trim() !== '').some(d => !d.done)) return false;
-    }
-    if (modId === 'food') {
-      const hasDiet = !!(p.diet.b || p.diet.l || p.diet.d || (p.diet.supp && p.diet.supp.trim()) || p.diet.supps.length || p.diet.flags.length);
-      if (hasDiet && !p.diet.done) return false;
-    }
-    if (modId === 'turn') {
-      const hasTurnPlan = !!(p.turnFreq || p.turnChecks.length);
-      if (hasTurnPlan && !p.turnPlanDone) return false;
-      if (p.turns.filter(tr => !!tr.p).some(tr => !tr.done)) return false;
-    }
-    if (modId === 'mh') {
-      const filledMh = p.mh.filter(m => m.m || m.r || m.rat || m.n);
-      if (filledMh.some(m => !m.done)) return false;
-      if (p.mhLevel && filledMh.length === 0 && !p.mhLevelDone) return false;
-    }
-    if (modId === 'events' && p.events.filter(e => (e.e && e.e.trim() !== '') || typeof e.pIdx === 'number').some(e => !e.done)) return false;
-    if (modId === 'admit') {
-      const hasAdmit = !!(p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length || p.admit.custom.length || (p.admit.other && p.admit.other.trim()));
-      if (hasAdmit && !p.admit.done) return false;
-    }
+    if (countPendingForBedMod(b, s.id) > 0) return false;
   }
   return true;
+}
+
+function isModAllDone(modId) {
+  return alloc.every(b => countPendingForBedMod(b, modId) === 0);
 }
 
 function countPendingForBedMod(b, modId) {
@@ -1622,8 +1710,14 @@ function countPendingForBedMod(b, modId) {
       if (filledMh.length > 0) return filledMh.filter(m => !m.done).length;
       return (p.mhLevel && !p.mhLevelDone) ? 1 : 0;
     }
-    case 'events': return p.events.filter(e => ((e.e && e.e.trim() !== '') || typeof e.pIdx === 'number') && !e.done).length;
-    case 'reminders': return p.reminders.filter(r => ((r.txt && r.txt.trim() !== '') || typeof r.tIdx === 'number') && !r.done).length;
+    case 'events': {
+      const phrases = getLangList('phrases');
+      return p.events.filter(e => getEventText(e, phrases).trim() !== '' && !e.done).length;
+    }
+    case 'reminders': {
+      const taskList = getLangList('tasks');
+      return p.reminders.filter(r => getTaskText(r, taskList).trim() !== '' && !r.done).length;
+    }
     case 'admit': {
       const hasAdmit = !!(p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length || p.admit.custom.length || (p.admit.other && p.admit.other.trim()));
       return (hasAdmit && !p.admit.done) ? 1 : 0;
@@ -1632,14 +1726,58 @@ function countPendingForBedMod(b, modId) {
   }
 }
 
+function setModDoneForBed(p, modId, targetState) {
+  if (modId === 'obs') p.obs.forEach(x => { if (isObsFilled(x)) x.done = targetState; });
+  else if (modId === 'bm') p.bm.forEach(x => { if (x.v && String(x.v).trim() !== '') x.done = targetState; });
+  else if (modId === 'bp') p.bp.forEach(x => { if (isBpFilled(x)) x.done = targetState; });
+  else if (modId === 'fluid') p.fluids.forEach(f => { if (isFluidRowFilled(f)) f.done = targetState; });
+  else if (modId === 'bowel') p.bowel.forEach(x => { if (x.a) x.done = targetState; });
+  else if (modId === 'amy') {
+    p.skinDone = targetState;
+    p.dressings.forEach(d => { if (d.l && d.l.trim() !== '') d.done = targetState; });
+  }
+  else if (modId === 'food') p.diet.done = targetState;
+  else if (modId === 'turn') {
+    p.turnPlanDone = targetState;
+    p.turns.forEach(tr => { if (tr.p) tr.done = targetState; });
+  }
+  else if (modId === 'mh') {
+    p.mhLevelDone = targetState;
+    p.mh.forEach(m => { if (m.m || m.r || m.rat || m.n) m.done = targetState; });
+  }
+  else if (modId === 'events') {
+    const phrases = getLangList('phrases');
+    p.events.forEach(e => { if (getEventText(e, phrases).trim() !== '') e.done = targetState; });
+  }
+  else if (modId === 'reminders') {
+    const taskList = getLangList('tasks');
+    p.reminders.forEach(r => { if (getTaskText(r, taskList).trim() !== '') r.done = targetState; });
+  }
+  else if (modId === 'admit') p.admit.done = targetState;
+}
+
 function markBedDone(bedOrIdx) {
   const bed = typeof bedOrIdx === 'number' ? alloc[bedOrIdx] : bedOrIdx;
   if (!bed) return;
   const p = getPt(bed);
   const targetState = !isBedAllDone(bed);
-  ['obs','bm','bp','fluids','bowel','dressings','turns','mh','events'].forEach(k => p[k].forEach(x => { x.done = targetState; }));
-  p.skinDone = targetState; p.diet.done = targetState; p.turnPlanDone = targetState; p.mhLevelDone = targetState; p.admit.done = targetState;
-  saveDB(); renderSummary();
+  const activeSecs = getActiveSections();
+  activeSecs.forEach(s => setModDoneForBed(p, s.id, targetState));
+  saveDB();
+  renderOverdueBanner();
+  refreshSubNavCounts();
+  renderSummary();
+}
+
+function markModDone(modId) {
+  const targetState = !isModAllDone(modId);
+  alloc.forEach(b => {
+    setModDoneForBed(getPt(b), modId, targetState);
+  });
+  saveDB();
+  renderOverdueBanner();
+  refreshSubNavCounts();
+  renderSummary();
 }
 
 function buildModuleSummaryForBed(b, modId) {
@@ -1655,15 +1793,15 @@ function buildModuleSummaryForBed(b, modId) {
     p.bm.forEach((x, i) => {
       if (!x.v || String(x.v).trim() === '') return;
       const flagsHtml = (x.f && x.f.length) ? x.f.map(f => kvPill('', esc(trCode(f)))).join('') : '';
-      rows += sumRowWrap(`${timePill(x.t)}${kvPill(x.c ? trCode(x.c) : t('bm'), `${esc(x.v)} ${esc(x.u || bmUnit)}`)}${flagsHtml}`, bIdx, 'bm', i, !!x.done);
+      rows += sumRowWrap(`${timePill(x.t)}${kvPill(x.c ? trCode(x.c) : t('bm'), `<span class="ltr-num">${esc(x.v)} ${esc(x.u || bmUnit)}</span>`)}${flagsHtml}`, bIdx, 'bm', i, !!x.done);
     });
   } else if (modId === 'bp') {
     p.bp.forEach((x, i) => {
       if (!isBpFilled(x)) return;
       const hasL = x.l && x.l !== '-' && x.l !== '-/-', hasS = x.s && x.s !== '-' && x.s !== '-/-';
       const bpParts = [];
-      if (hasL) bpParts.push(kvPill(t('lying'), esc(x.l)));
-      if (hasS) bpParts.push(kvPill(t('standing'), esc(x.s)));
+      if (hasL) bpParts.push(kvPill(t('lying'), `<span class="ltr-num">${esc(x.l)}</span>`));
+      if (hasS) bpParts.push(kvPill(t('standing'), `<span class="ltr-num">${esc(x.s)}</span>`));
       if (x.sym && x.sym.length) x.sym.forEach(s => bpParts.push(kvPill('', esc(trCode(s)))));
       rows += sumRowWrap(`${timePill(x.t)}${bpParts.join('')}`, bIdx, 'bp', i, !!x.done);
     });
@@ -1675,16 +1813,16 @@ function buildModuleSummaryForBed(b, modId) {
       if (isFluidRowFilled(f)) {
         hasFluidActivity = true;
         const segs = [];
-        if (fi > 0) segs.push(kvPill(t('flIn'), `${fi}ml`));
-        if (fo > 0) segs.push(kvPill(t('flOut'), `${fo}ml${f.src ? ' (' + esc(trCode(f.src)) + ')' : ''}`));
+        if (fi > 0) segs.push(kvPill(t('flIn'), `<span class="ltr-num">${fi}ml</span>`));
+        if (fo > 0) segs.push(kvPill(t('flOut'), `<span class="ltr-num">${fo}ml</span>${f.src ? ' (' + esc(trCode(f.src)) + ')' : ''}`));
         else if (f.src) segs.push(kvPill(t('flOut'), esc(trCode(f.src))));
-        if (fw > 0) segs.push(kvPill(t('wetPad'), `x${fw}`));
+        if (fw > 0) segs.push(kvPill(t('wetPad'), `<span class="ltr-num">x${fw}</span>`));
         rows += sumRowWrap(`${timePill(f.t)}${segs.join('')}`, bIdx, 'fluids', i, !!f.done);
       }
     });
     if (rows || (hasFluidActivity && !hideCompleted)) {
       const net = totI - totO;
-      rows += `<div style="padding-top:8px;">${kvPill(t('flIn'), `${totI}ml`)}${kvPill(t('flOut'), `${totO}ml`)}${kvPill(t('flNet'), `${net > 0 ? '+' + net : net}ml`)}</div>`;
+      rows += `<div style="padding-top:8px;">${kvPill(t('flIn'), `<span class="ltr-num">${totI}ml</span>`)}${kvPill(t('flOut'), `<span class="ltr-num">${totO}ml</span>`)}${kvPill(t('flNet'), `<span class="ltr-num">${net > 0 ? '+' + net : net}ml</span>`)}</div>`;
     }
   } else if (modId === 'bowel') {
     p.bowel.forEach((x, i) => {
@@ -1745,20 +1883,20 @@ function buildModuleSummaryForBed(b, modId) {
     });
   } else if (modId === 'events') {
     p.events.forEach((e, i) => {
-      const noteTxt = (typeof e.pIdx === 'number' && phrases[e.pIdx] && !e.customEdited) ? phrases[e.pIdx] : (e.e || '');
+      const noteTxt = getEventText(e, phrases);
       if (noteTxt.trim()) rows += sumRowWrap(`${timePill(e.t)}<span style="font-weight:700;">${esc(noteTxt)}</span>${e.o ? ' ' + kvPill(t('outcome'), esc(e.o)) : ''}`, bIdx, 'events', i, !!e.done);
     });
   } else if (modId === 'reminders') {
     p.reminders.forEach((r, i) => {
-      const tkTxt = (typeof r.tIdx === 'number' && taskList[r.tIdx] && !r.customEdited) ? taskList[r.tIdx] : (r.txt || '');
+      const tkTxt = getTaskText(r, taskList);
       if (!tkTxt.trim()) return;
       const overdue = isTaskOverdue(r);
       rows += sumRowWrap(`${timePill(r.due)}${kvPill(t('reminders'), esc(tkTxt))}${overdue ? ` <span class="task-badge overdue">${esc(t('overdue'))}</span>` : ''}`, bIdx, 'reminders', i, !!r.done);
     });
   } else if (modId === 'admit') {
     const aParts = [];
-    if (p.admit.w) aParts.push(kvPill(t('weight'), `${esc(p.admit.w)}kg`));
-    if (p.admit.h) aParts.push(kvPill(t('height'), `${esc(p.admit.h)}cm`));
+    if (p.admit.w) aParts.push(kvPill(t('weight'), `<span class="ltr-num">${esc(p.admit.w)}kg</span>`));
+    if (p.admit.h) aParts.push(kvPill(t('height'), `<span class="ltr-num">${esc(p.admit.h)}cm</span>`));
     if (p.admit.wb) aParts.push(kvPill('', `✓ ${esc(t('wristband'))}`));
     Object.entries(p.admit.items).forEach(([k, lc]) => {
       const idx = parseInt(k.replace('std_', ''), 10);
@@ -1806,7 +1944,7 @@ function renderSummary() {
       if (bedContent) {
         anyVisible = true;
         const allDone = isBedAllDone(b);
-        html += `<div class="card"><h3><span>${esc(b)}</span><button type="button" class="btn-subtle btn-sm" style="background:var(--header-bg); color:#fff; border:none;" onclick="markBedDone(${bIdx})">${esc(allDone ? t('undoBed') : t('markBed'))}</button></h3>${bedContent}</div>`;
+        html += `<div class="card"><h3><span>${esc(b)}</span><button type="button" class="sum-batch-btn" onclick="markBedDone(${bIdx})">${esc(allDone ? t('undoBed') : t('markBed'))}</button></h3>${bedContent}</div>`;
       }
     });
   } else {
@@ -1818,7 +1956,8 @@ function renderSummary() {
       });
       if (modContent) {
         anyVisible = true;
-        html += `<div class="card"><h3><span>${esc(t(s.id))}</span></h3>${modContent}</div>`;
+        const allModDone = isModAllDone(s.id);
+        html += `<div class="card"><h3><span>${esc(t(s.id))}</span><button type="button" class="sum-batch-btn" onclick="markModDone('${s.id}')">${esc(allModDone ? t('undoAll') : t('markAllDone'))}</button></h3>${modContent}</div>`;
       }
     });
   }
@@ -1832,4 +1971,4 @@ function renderSummary() {
 function setSumGroup(g) { summaryGroup = g; renderSummary(); }
 function toggleHideCompleted() { hideCompleted = !hideCompleted; renderSummary(); }
 
-window.CDP_MOD_VER = 11;
+window.CDP_MOD_VER = 12;
