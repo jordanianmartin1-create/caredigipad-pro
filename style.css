@@ -52,6 +52,7 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
+  --nav-bottom: calc(144px + var(--safe-top));
 }
 
 [data-theme="night"] {
@@ -85,8 +86,6 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   padding-bottom: calc(40px + var(--safe-bottom));
-  padding-left: var(--safe-left);
-  padding-right: var(--safe-right);
   overflow-x: hidden;
   width: 100%;
 }
@@ -109,6 +108,9 @@ label,
 .hour-badge,
 .tool-btn,
 .sum-mod-hdr,
+.sum-done-btn,
+.sum-batch-btn,
+.overdue-pill,
 .settings-card-hdr,
 .order-btn {
   touch-action: manipulation;
@@ -125,10 +127,16 @@ textarea::placeholder {
   display: none !important;
 }
 
+.ltr-num {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+}
+
 header {
   background: var(--header-bg);
   color: #fff;
-  padding: calc(10px + var(--safe-top)) 14px 10px 14px;
+  padding: calc(10px + var(--safe-top)) calc(14px + var(--safe-right)) 10px calc(14px + var(--safe-left));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -136,7 +144,7 @@ header {
   position: sticky;
   top: 0;
   z-index: 200;
-  min-height: calc(52px + var(--safe-top));
+  min-height: calc(56px + var(--safe-top));
 }
 
 .hdr-left {
@@ -160,13 +168,17 @@ header {
   background: rgba(255, 255, 255, 0.16);
   color: #fff;
   border: none;
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 0.78rem;
+  padding: 6px 12px;
+  min-height: 36px;
+  border-radius: 7px;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hdr-right {
@@ -224,7 +236,7 @@ input:checked + .slider:before {
 .container {
   max-width: 600px;
   margin: 0 auto;
-  padding: 12px;
+  padding: 12px calc(12px + var(--safe-right)) 12px calc(12px + var(--safe-left));
   width: 100%;
 }
 
@@ -237,6 +249,20 @@ input:checked + .slider:before {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   width: 100%;
   overflow: hidden;
+}
+
+.fluid-sticky-card {
+  position: sticky;
+  top: var(--nav-bottom);
+  z-index: 120;
+  padding: 10px 12px;
+  border: 1.5px solid var(--teal);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: visible;
+}
+
+.fluid-sticky-card.out-active {
+  border-color: var(--amber);
 }
 
 .install-card {
@@ -297,7 +323,8 @@ input:checked + .slider:before {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 10px;
+  min-height: 42px;
+  padding: 10px;
   border-radius: 8px;
   border: 2px solid var(--input-border);
   background: var(--bg);
@@ -393,9 +420,10 @@ input:checked + .slider:before {
   background: var(--card);
   color: var(--text);
   border: 1.5px solid var(--input-border);
-  border-radius: 6px;
-  padding: 4px 9px;
-  font-size: 0.74rem;
+  border-radius: 7px;
+  min-height: 36px;
+  padding: 6px 11px;
+  font-size: 0.76rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -409,7 +437,7 @@ input:checked + .slider:before {
 .sel-count-badge {
   font-size: 0.74rem;
   font-weight: 800;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 12px;
   background: var(--teal-light);
   color: var(--teal);
@@ -428,6 +456,7 @@ input:checked + .slider:before {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  min-height: 44px;
   padding: 10px 6px;
   border-radius: 8px;
   border: 2px solid var(--input-border);
@@ -518,12 +547,15 @@ input:checked + .slider:before {
   background: var(--teal-light);
   color: var(--teal);
   border: 1.5px solid var(--teal);
-  padding: 6px 11px;
+  min-height: 36px;
+  padding: 6px 12px;
   border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 800;
   flex-shrink: 0;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
 }
 
 .mod-sec-hdr {
@@ -573,9 +605,9 @@ input:checked + .slider:before {
   color: var(--text);
   border: 1.5px solid var(--input-border);
   border-radius: 6px;
-  width: 36px;
-  height: 32px;
-  font-size: 0.82rem;
+  width: 38px;
+  height: 36px;
+  font-size: 0.84rem;
   font-weight: 800;
   cursor: pointer;
   display: inline-flex;
@@ -621,10 +653,44 @@ input:checked + .slider:before {
   color: var(--teal);
   background: var(--teal-light);
   border: 1px solid var(--teal);
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 6px;
   margin-bottom: 6px;
   cursor: pointer;
+}
+
+.sum-done-btn {
+  background: transparent;
+  color: var(--text-sub);
+  border: 1.5px solid var(--input-border);
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.sum-done-btn.is-done {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+
+.sum-batch-btn {
+  background: var(--header-bg);
+  color: #fff;
+  border: none;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .sum-time {
@@ -684,11 +750,42 @@ input:checked + .slider:before {
   border-color: var(--red);
 }
 
+.overdue-banner {
+  background: var(--red-light);
+  border-bottom: 1.5px solid var(--red);
+  padding: 8px calc(12px + var(--safe-right)) 8px calc(12px + var(--safe-left));
+}
+
+.overdue-banner-inner {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--red);
+}
+
+.overdue-pill {
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  min-height: 32px;
+  padding: 4px 11px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 h1, h2, h3 {
   margin: 0 0 8px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 
 label {
@@ -780,6 +877,7 @@ textarea {
   align-items: center;
   gap: 6px;
   width: 100%;
+  direction: ltr;
 }
 
 .bp-pair input {
@@ -799,7 +897,8 @@ textarea {
   justify-content: center;
   align-items: center;
   width: 100%;
-  padding: 11px 14px;
+  min-height: 42px;
+  padding: 10px 14px;
   border-radius: 8px;
   font-weight: 700;
   font-size: 0.95rem;
@@ -831,6 +930,7 @@ textarea {
 
 .btn-sm {
   width: auto;
+  min-height: 36px;
   padding: 6px 12px;
   font-size: 0.82rem;
 }
@@ -841,17 +941,25 @@ textarea {
   color: var(--text-sub);
   font-weight: 800;
   cursor: pointer;
-  padding: 4px 8px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
 .sticky-nav {
   position: sticky;
-  top: calc(52px + var(--safe-top));
+  top: calc(56px + var(--safe-top));
   z-index: 150;
   background: var(--card);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
 }
 
 .tab-strip {
@@ -869,6 +977,7 @@ textarea {
 
 .tab-btn {
   flex: 0 0 auto;
+  min-height: 36px;
   padding: 7px 14px;
   border-radius: 20px;
   border: 1.5px solid var(--input-border);
@@ -902,15 +1011,18 @@ textarea {
 
 .tab-btn-add {
   flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   border: 1.5px dashed var(--teal);
   background: var(--teal-light);
   color: var(--teal);
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mod-count {
@@ -975,7 +1087,8 @@ textarea {
 }
 
 .chip {
-  padding: 6px 10px;
+  min-height: 34px;
+  padding: 6px 11px;
   border-radius: 16px;
   border: 1.5px solid var(--input-border);
   background: var(--bg);
@@ -983,6 +1096,8 @@ textarea {
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
 }
 
 .chip.active {
@@ -1006,6 +1121,7 @@ textarea {
 .mini-btn {
   flex: 1;
   min-width: 65px;
+  min-height: 36px;
   padding: 7px 8px;
   border-radius: 6px;
   border: 1.5px solid var(--input-border);
@@ -1030,13 +1146,14 @@ textarea {
 }
 
 .quick-fluid-btn {
-  padding: 8px 4px;
+  min-height: 36px;
+  padding: 7px 4px;
   border-radius: 6px;
   border: 1.5px solid var(--teal);
   background: var(--teal-light);
   color: var(--teal);
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   cursor: pointer;
 }
 
@@ -1047,6 +1164,7 @@ textarea {
 }
 
 .fl-mode-pill {
+  min-height: 32px;
   padding: 4px 10px;
   border-radius: 12px;
   border: 1.5px solid var(--input-border);
@@ -1089,11 +1207,15 @@ textarea {
 
 .hour-badge {
   flex: 0 0 54px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 800;
   font-size: 0.82rem;
   color: var(--text-sub);
   text-align: center;
-  padding: 7px 4px;
+  padding: 6px 4px;
   border-radius: 6px;
   border: 1.5px solid var(--border);
   background: var(--bg);
@@ -1115,6 +1237,7 @@ textarea {
 }
 
 .diet-btn {
+  min-height: 38px;
   padding: 8px 4px;
   border-radius: 6px;
   border: 1.5px solid var(--input-border);
@@ -1140,7 +1263,8 @@ textarea {
 
 .tool-btn {
   flex: 1 1 auto;
-  padding: 8px 6px;
+  min-height: 38px;
+  padding: 8px 8px;
   border-radius: 8px;
   border: 1.5px solid var(--input-border);
   background: var(--card);
