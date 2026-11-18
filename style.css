@@ -105,6 +105,8 @@ label,
 .toolbar-mini-btn,
 .diet-btn,
 .quick-fluid-btn,
+.fl-mode-pill,
+.hour-badge,
 .tool-btn,
 .sum-mod-hdr,
 .settings-card-hdr,
@@ -126,7 +128,7 @@ textarea::placeholder {
 header {
   background: var(--header-bg);
   color: #fff;
-  padding: calc(10px + var(--safe-top)) calc(14px + var(--safe-right)) 10px calc(14px + var(--safe-left));
+  padding: calc(10px + var(--safe-top)) 14px 10px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -635,7 +637,9 @@ input:checked + .slider:before {
   border: 1px solid var(--border);
   padding: 2px 8px;
   border-radius: 6px;
-  margin: 2px 4px 2px 0;
+  margin-block: 2px;
+  margin-inline-start: 0;
+  margin-inline-end: 4px;
   white-space: nowrap;
   vertical-align: middle;
 }
@@ -728,6 +732,16 @@ select {
 
 [dir="rtl"] select {
   background-position: left 8px center;
+}
+
+.lang-select {
+  width: auto;
+  min-width: 142px;
+  padding-block: 6px;
+  padding-inline-start: 10px;
+  padding-inline-end: 28px;
+  font-weight: 700;
+  font-size: 1rem;
 }
 
 textarea {
@@ -1021,6 +1035,29 @@ textarea {
   color: var(--amber);
 }
 
+.fl-mode-pill {
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1.5px solid var(--input-border);
+  background: var(--bg);
+  color: var(--text-sub);
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fl-mode-pill.active-in {
+  border-color: var(--teal);
+  background: var(--teal-light);
+  color: var(--teal);
+}
+
+.fl-mode-pill.active-out {
+  border-color: var(--amber);
+  background: var(--amber-light);
+  color: var(--amber);
+}
+
 .fl-target-in {
   border: 2px solid var(--teal) !important;
   background: var(--teal-light) !important;
@@ -1040,11 +1077,23 @@ textarea {
 }
 
 .hour-badge {
-  flex: 0 0 50px;
+  flex: 0 0 54px;
   font-weight: 800;
   font-size: 0.82rem;
   color: var(--text-sub);
   text-align: center;
+  padding: 7px 4px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  user-select: none;
+}
+
+.hour-badge.active-hr {
+  color: var(--teal);
+  border-color: var(--teal);
+  background: var(--teal-light);
 }
 
 .diet-grid {
