@@ -281,6 +281,11 @@ const EN_DICT = {
   locPt: "With Patient",
   locSafe: "In Ward Safe",
   locHome: "Sent Home",
+  customMlPh: "Custom ml",
+  bedOccupied: "Bed is already in use.",
+  linkCopied: "Link copied to clipboard",
+  keyInvalid: "Invalid or already activated licence key.",
+  keyOffline: "Connect to the internet briefly to verify your licence key.",
   acvpu: ["A (Alert)", "C (New Confusion)", "V (Voice)", "P (Pain)", "U (Unresponsive)"],
   phrases: ["Personal care given", "Washed & dressed", "Pressure areas intact", "Mobilised to chair", "Escalated to RN", "Family updated"],
   tasks: ["Bloods", "ECG", "Repeat Vitals", "Blood Glucose (BM)", "Bladder Scan", "Cannula Check"],
@@ -291,39 +296,40 @@ const EN_DICT = {
 const _EXTRA_KEYS = [
   'bedPh','selectedLbl','untickAll','removeBedsBtn','tapToDeleteHelper','saveLayTitle',
   'tapInOrder','quickReorderPrompt','toggleSettingsTitle','modsActiveLbl','showEdit','closeEdit',
-  'installTitle','installSub','installBtn','iosGuide1','iosGuide2'
+  'installTitle','installSub','installBtn','iosGuide1','iosGuide2',
+  'customMlPh','bedOccupied','linkCopied','keyInvalid','keyOffline'
 ];
 
 const _UI_EXTRA = {
-  es: "ej. B1, SR2|seleccionadas|Desmarcar Todo|Eliminar Camas|Toque una cama abajo para eliminarla de su lista:|Guardar Camas Marcadas como Diseño|Ordenar al Tocar|Toque sus módulos activos en el orden deseado (1º, 2º, 3º...):|Módulos, Unidades y Tema|módulos activos|Mostrar / Editar ▾|Cerrar ▲|Instalar App para Uso sin Conexión|Añada Care Digipad a su pantalla de inicio para acceso rápido.|Instalar|1. Toque el botón Compartir en Safari.|2. Toque Añadir a pantalla de inicio.",
-  fr: "ex. B1, SR2|sélectionnés|Tout Décocher|Supprimer Lits|Touchez un lit ci-dessous pour le supprimer de votre liste :|Enregistrer les Lits Cochés comme Plan|Trier au Toucher|Touchez vos modules actifs dans l'ordre souhaité (1er, 2e, 3e...) :|Modules, Unités et Thème|modules actifs|Afficher / Modifier ▾|Fermer ▲|Installer l'App Hors Ligne|Ajoutez Care Digipad à votre écran d'accueil.|Installer|1. Touchez le bouton Partager dans Safari.|2. Touchez Sur l'écran d'accueil.",
-  de: "z.B. B1, SR2|ausgewählt|Alle Abwählen|Betten Entfernen|Tippen Sie unten auf ein Bett, um es aus der Liste zu löschen:|Ausgewählte Betten als Layout Speichern|Per Tippen Sortieren|Tippen Sie Ihre aktiven Module in der gewünschten Reihenfolge an (1., 2., 3....):|Module, Einheiten & Farbschema|Module aktiv|Anzeigen / Bearb. ▾|Schließen ▲|App für Offline-Nutzung Installieren|Care Digipad zum Startbildschirm hinzufügen.|Installieren|1. Tippen Sie in Safari auf Teilen.|2. Tippen Sie auf Zum Home-Bildschirm.",
-  pt: "ex. B1, SR2|selecionadas|Desmarcar Tudo|Remover Camas|Toque numa cama abaixo para a eliminar da lista:|Guardar Camas Selecionadas como Layout|Ordenar ao Tocar|Toque nos módulos ativos na ordem desejada (1º, 2º, 3º...):|Módulos, Unidades e Tema|módulos ativos|Mostrar / Editar ▾|Fechar ▲|Instalar App para Uso Offline|Adicione o Care Digipad ao ecrã principal.|Instalar|1. Toque no botão Partilhar no Safari.|2. Toque em Adicionar ao Ecrã Principal.",
-  it: "es. B1, SR2|selezionati|Deseleziona Tutto|Rimuovi Letti|Tocca un letto qui sotto per eliminarlo dalla lista:|Salva Letti Selezionati come Reparto|Ordina Toccando|Tocca i moduli attivi nell'ordine desiderato (1º, 2º, 3º...):|Moduli, Unità e Tema|moduli attivi|Mostra / Modifica ▾|Chiudi ▲|Installa App per Uso Offline|Aggiungi Care Digipad alla schermata Home.|Installa|1. Tocca Condividi in Safari.|2. Tocca Aggiungi alla schermata Home.",
-  nl: "bijv. B1, SR2|geselecteerd|Alles Deselecteren|Bedden Verwijderen|Tik hieronder op een bed om het uit uw lijst te verwijderen:|Geselecteerde Bedden Opslaan als Indeling|Tik op Volgorde|Tik uw actieve modules aan in de gewenste volgorde (1e, 2e, 3e...):|Modules, Eenheden & Thema|modules actief|Tonen / Wijzigen ▾|Sluiten ▲|App Installeren voor Offline Gebruik|Voeg Care Digipad toe aan uw beginscherm.|Installeren|1. Tik op Deel in Safari.|2. Tik op Zet op beginscherm.",
-  sv: "t.ex. B1, SR2|valda|Avmarkera Alla|Ta Bort Sängar|Tryck på en säng nedan för att ta bort den från listan:|Spara Valda Sängar som Layout|Tryck i Ordning|Tryck på dina aktiva moduler i den ordning du vill ha dem (1:a, 2:a, 3:e...):|Moduler, Enheter & Tema|aktiva moduler|Visa / Ändra ▾|Stäng ▲|Installera App för Offlinebruk|Lägg till Care Digipad på hemskärmen.|Installera|1. Tryck på Dela i Safari.|2. Tryck på Lägg till på hemskärmen.",
-  pl: "np. B1, SR2|wybrano|Odznacz Wszystko|Usuń Łóżka|Dotknij łóżka poniżej, aby usunąć je z listy:|Zapisz Zaznaczone Łóżka jako Układ|Kolejność Dotykiem|Dotknij aktywnych modułów w wybranej kolejności (1., 2., 3....):|Moduły, Jednostki i Motyw|aktywnych modułów|Pokaż / Edytuj ▾|Zamknij ▲|Zainstaluj Aplikację Offline|Dodaj Care Digipad do ekranu głównego.|Zainstaluj|1. Dotknij Udostępnij w Safari.|2. Dotknij Dodaj do ekranu początkowego.",
-  ro: "ex. B1, SR2|selectate|Deselectează Tot|Elimină Paturi|Atingeți un pat mai jos pentru a-l șterge din listă:|Salvează Paturile Bifate ca Aspect|Ordonează prin Atingere|Atingeți modulele active în ordinea dorită (1, 2, 3...):|Module, Unități și Temă|module active|Arată / Editează ▾|Închide ▲|Instalează Aplicația Offline|Adăugați Care Digipad pe ecranul principal.|Instalează|1. Atingeți Partajare în Safari.|2. Atingeți Adăugați la ecranul principal.",
-  uk: "напр. B1, SR2|обрано|Зняти Позначки|Видалити Ліжка|Натисніть на ліжко нижче, щоб видалити його зі списку:|Зберегти Обрані Ліжка як Схему|Порядок Дотиком|Торкайтеся активних модулів у потрібному порядку (1-й, 2-й, 3-й...):|Модулі, Одиниці та Тема|активних модулів|Показати / Редаг. ▾|Закрити ▲|Встановити Додаток Офлайн|Додайте Care Digipad на головний екран.|Встановити|1. Натисніть Поділитися в Safari.|2. Натисніть На початковий екран.",
-  ru: "напр. B1, SR2|выбрано|Снять Выделение|Удалить Койки|Нажмите на койку ниже, чтобы удалить её из списка:|Сохранить Выбранные Койки как Схему|Порядок Нажатием|Нажимайте активные модули в нужном порядке (1-й, 2-й, 3-й...):|Модули, Единицы и Тема|активных модулей|Показать / Изм. ▾|Закрыть ▲|Установить Приложение Офлайн|Добавьте Care Digipad на главный экран.|Установить|1. Нажмите Поделиться в Safari.|2. Нажмите На экран «Домой».",
-  el: "π.χ. B1, SR2|επιλεγμένες|Αποεπιλογή Όλων|Αφαίρεση Κλινών|Πατήστε μια κλίνη παρακάτω για διαγραφή από τη λίστα:|Αποθήκευση Επιλεγμένων Κλινών ως Διάταξη|Σειρά με Πάτημα|Πατήστε τις ενεργές ενότητες με τη σειρά που θέλετε (1η, 2η, 3η...):|Ενότητες, Μονάδες & Θέμα|ενεργές ενότητες|Εμφάνιση / Επεξ. ▾|Κλείσιμο ▲|Εγκατάσταση Εφαρμογής Offline|Προσθέστε το Care Digipad στην αρχική οθόνη.|Εγκατάσταση|1. Πατήστε Κοινοποίηση στο Safari.|2. Πατήστε Προσθήκη στην οθόνη Αφετηρίας.",
-  hi: "जैसे B1, SR2|चयनित|सभी अचयनित करें|बेड हटाएं|सूची से हटाने के लिए नीचे किसी भी बेड पर टैप करें:|चयनित बेड को वार्ड लेआउट के रूप में सहेजें|क्रम में टैप करें|अपने सक्रिय मॉड्यूल को जिस क्रम में चाहते हैं उस क्रम में टैप करें (1, 2, 3...):|मॉड्यूल, इकाइयां और थीम|सक्रिय मॉड्यूल|दिखाएं / बदलें ▾|बंद करें ▲|ऑफ़लाइन उपयोग के लिए ऐप इंस्टॉल करें|Care Digipad को अपनी होम स्क्रीन पर जोड़ें।|इंस्टॉल करें|1. Safari में Share बटन पर टैप करें।|2. Add to Home Screen पर टैप करें।",
-  bn: "যেমন B1, SR2|নির্বাচিত|সব আনটিক করুন|বেড মুছুন|তালিকা থেকে মুছে ফেলতে নিচের যেকোনো বেডে ট্যাপ করুন:|নির্বাচিত বেডগুলো লেআউট হিসেবে সেভ করুন|ক্রমানুসারে ট্যাপ|আপনার সক্রিয় মডিউলগুলো পছন্দের ক্রমানুসারে ট্যাপ করুন (১ম, ২য়, ৩য়...):|মডিউল, একক ও থিম|সক্রিয় মডিউল|দেখান / এডিট ▾|বন্ধ করুন ▲|অফলাইন ব্যবহারের জন্য অ্যাপ ইনস্টল করুন|হোম স্ক্রিনে Care Digipad যোগ করুন।|ইনস্টল|1. Safari-তে Share বাটনে ট্যাপ করুন।|2. Add to Home Screen-এ ট্যাপ করুন।",
-  pa: "ਜਿਵੇਂ B1, SR2|ਚੁਣੇ ਗਏ|ਸਭ ਅਣਟਿੱਕ ਕਰੋ|ਬੈੱਡ ਹਟਾਓ|ਸੂਚੀ ਵਿੱਚੋਂ ਮਿਟਾਉਣ ਲਈ ਹੇਠਾਂ ਕਿਸੇ ਵੀ ਬੈੱਡ ਤੇ ਟੈਪ ਕਰੋ:|ਚੁਣੇ ਗਏ ਬੈੱਡਾਂ ਨੂੰ ਲੇਆਉਟ ਵਜੋਂ ਸੇਵ ਕਰੋ|ਕ੍ਰਮ ਵਿੱਚ ਟੈਪ ਕਰੋ|ਆਪਣੇ ਸਰਗਰਮ ਮੋਡੀਊਲਾਂ ਨੂੰ ਮਨਪਸੰਦ ਕ੍ਰਮ ਵਿੱਚ ਟੈਪ ਕਰੋ (1, 2, 3...):|ਮੋਡੀਊਲ, ਇਕਾਈਆਂ ਅਤੇ ਥੀਮ|ਸਰਗਰਮ ਮੋਡੀਊਲ|ਦਿਖਾਓ / ਬਦਲੋ ▾|ਬੰਦ ਕਰੋ ▲|ਆਫ਼ਲਾਈਨ ਵਰਤੋਂ ਲਈ ਐਪ ਇੰਸਟਾਲ ਕਰੋ|Care Digipad ਨੂੰ ਹੋਮ ਸਕ੍ਰੀਨ ਤੇ ਜੋੜੋ।|ਇੰਸਟਾਲ|1. Safari ਵਿੱਚ Share ਬਟਨ ਤੇ ਟੈਪ ਕਰੋ।|2. Add to Home Screen ਤੇ ਟੈਪ ਕਰੋ।",
-  ur: "مثلاً B1, SR2|منتخب|سب غیر منتخب کریں|بیڈز ہٹائیں|فہرست سے حذف کرنے کے لیے نیچے کسی بھی بیڈ پر ٹیپ کریں:|منتخب بیڈز کو لے آؤٹ کے طور پر محفوظ کریں|ترتیب سے ٹیپ کریں|اپنے فعال ماڈیولز کو مطلوبہ ترتیب میں ٹیپ کریں (1، 2، 3...):|ماڈیولز، اکائیاں اور تھیم|فعال ماڈیولز|دکھائیں / ترمیم ▾|بند کریں ▲|آف لائن استعمال کے لیے ایپ انسٹال کریں|Care Digipad کو ہوم اسکرین پر شامل کریں۔|انسٹال|1. سفاری میں Share بٹن پر ٹیپ کریں۔|2. Add to Home Screen پر ٹیپ کریں۔",
-  ta: "எ.கா. B1, SR2|தேர்ந்தெடுக்கப்பட்டவை|அனைத்தையும் நீக்கு|படுக்கைகளை அகற்று|பட்டியலிலிருந்து நீக்க கீழே உள்ள படுக்கையைத் தட்டவும்:|தேர்ந்தெடுத்த படுக்கைகளை அமைப்பாகச் சேமி|வரிசையாகத் தட்டவும்|செயலில் உள்ள பகுதிகளை விரும்பிய வரிசையில் தட்டவும் (1, 2, 3...):|பகுதிகள், அலகுகள் & தீம்|செயலில் உள்ள பகுதிகள்|காட்டு / திருத்து ▾|மூடு ▲|ஆஃப்லைன் பயன்பாட்டிற்கு செயலியை நிறுவுக|முகப்புத் திரையில் Care Digipad-ஐச் சேர்க்கவும்.|நிறுவு|1. Safari-ல் Share பொத்தானைத் தட்டவும்.|2. Add to Home Screen என்பதைத் தட்டவும்.",
-  ml: "ഉദാ. B1, SR2|തിരഞ്ഞെടുത്തു|എല്ലാം ഒഴിവാക്കുക|ബെഡുകൾ നീക്കുക|ലിസ്റ്റിൽ നിന്ന് നീക്കാൻ താഴെയുള്ള ബെഡിൽ ടാപ്പ് ചെയ്യുക:|തിരഞ്ഞെടുത്ത ബെഡുകൾ ലേഔട്ട് ആയി സേവ് ചെയ്യുക|ക്രമത്തിൽ ടാപ്പ് ചെയ്യുക|സജീവ മൊഡ്യൂളുകൾ നിങ്ങൾക്കാവശ്യമുള്ള ക്രമത്തിൽ ടാപ്പ് ചെയ്യുക (1, 2, 3...):|മൊഡ്യൂളുകൾ, യൂണിറ്റുകൾ & തീം|സജീവ മൊഡ്യൂളുകൾ|കാണിക്കുക / മാറ്റുക ▾|അടയ്ക്കുക ▲|ഓഫ്‌ലൈൻ ഉപയോഗത്തിനായി ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുക|ഹോം സ്ക്രീനിലേക്ക് Care Digipad ചേർക്കുക.|ഇൻസ്റ്റാൾ|1. Safari-ൽ Share ബട്ടൺ ടാപ്പ് ചെയ്യുക.|2. Add to Home Screen ടാപ്പ് ചെയ്യുക.",
-  zh: "例如 B1, SR2|已选择|全部取消|移除床位|点击下方任意床位将其从列表中删除：|将勾选的床位保存为病区布局|按顺序点击|请按您需要的顺序依次点击下方启用的模块 (第1、第2、第3...)：|自定义模块、单位与主题|个模块已启用|显示 / 编辑 ▾|收起 ▲|安装离线版应用|将 Care Digipad 添加到主屏幕以便随时使用。|安装|1. 点击 Safari 底部的“共享”按钮。|2. 向下滚动并点击“添加到主屏幕”。",
-  "zh-tw": "例如 B1, SR2|已選擇|全部取消|移除床位|點選下方任意床位將其從清單中刪除：|將勾選的床位儲存為病房配置|依序點選|請依您需要的順序點選下方啟用的模組 (第1、第2、第3...)：|自訂模組、單位與主題|個模組已啟用|顯示 / 編輯 ▾|收起 ▲|安裝離線版應用程式|將 Care Digipad 加入主畫面以便隨時使用。|安裝|1. 點選 Safari 底部的「分享」按鈕。|2. 向下捲動並點選「加入主畫面」。",
-  ja: "例: B1, SR2|選択中|すべて解除|ベッド削除|リストから削除するベッドをタップしてください：|選択したベッドをレイアウトとして保存|順番にタップ|表示したい順番に有効モジュールをタップしてください (1番目、2番目、3番目...)：|モジュール・単位・テーマ設定|モジュール有効|表示 / 編集 ▾|閉じる ▲|オフライン用アプリをインストール|ホーム画面にCare Digipadを追加します。|追加|1. Safariの共有ボタンをタップします。|2.「ホーム画面に追加」をタップします。",
-  ko: "예: B1, SR2|선택됨|모두 해제|병상 삭제|목록에서 삭제할 병상을 아래에서 탭하세요:|선택한 병상을 레이아웃으로 저장|순서대로 탭|원하는 순서대로 활성 모듈을 탭하세요 (1번째, 2번째, 3번째...):|모듈, 단위 및 테마 설정|개 모듈 활성|보기 / 편집 ▾|닫기 ▲|오프라인 사용을 위해 앱 설치|홈 화면에 Care Digipad를 추가하세요.|설치|1. Safari 하단의 공유 버튼을 탭하세요.|2. '홈 화면에 추가'를 탭하세요.",
-  tl: "hal. B1, SR2|napili|Alisin Lahat ng Tsek|Alisin ang Kama|I-tap ang kama sa ibaba upang burahin sa listahan:|I-save ang mga Napiling Kama bilang Layout|I-tap ayon sa Ayos|I-tap ang mga aktibong module ayon sa pagkakasunod na gusto mo (1st, 2nd, 3rd...):|Mga Module, Yunit at Tema|aktibong module|Ipakita / I-edit ▾|Isara ▲|I-install ang App para sa Offline|Idagdag ang Care Digipad sa iyong home screen.|I-install|1. I-tap ang Share button sa Safari.|2. I-tap ang Add to Home Screen.",
-  id: "mis. B1, SR2|dipilih|Hapus Semua Centang|Hapus Bed|Ketuk bed di bawah untuk menghapusnya dari daftar:|Simpan Bed Terpilih sebagai Denah|Ketuk Berurutan|Ketuk modul aktif sesuai urutan yang Anda inginkan (1, 2, 3...):|Modul, Satuan & Tema|modul aktif|Tampilkan / Edit ▾|Tutup ▲|Instal Aplikasi untuk Penggunaan Offline|Tambahkan Care Digipad ke layar utama Anda.|Instal|1. Ketuk tombol Bagikan di Safari.|2. Ketuk Tambahkan ke Layar Utama.",
-  vi: "VD: B1, SR2|đã chọn|Bỏ Chọn Tất Cả|Xóa Giường|Chạm vào giường bên dưới để xóa khỏi danh sách:|Lưu Các Giường Đã Chọn Làm Sơ Đồ|Chạm Theo Thứ Tự|Chạm vào các phân hệ đang bật theo thứ tự bạn muốn (1, 2, 3...):|Phân Hệ, Đơn Vị & Giao Diện|phân hệ đang bật|Hiện / Sửa ▾|Đóng ▲|Cài Đặt Ứng Dụng Ngoại Tuyến|Thêm Care Digipad vào màn hình chính.|Cài đặt|1. Chạm nút Chia sẻ trong Safari.|2. Chạm Thêm vào MH chính.",
-  ar: "مثال: B1, SR2|محددة|إلغاء تحديد الكل|حذف أسرة|اضغط على أي سرير أدناه لحذفه من قائمتك:|حفظ الأسرة المحددة كتخطيط جناح|الترتيب باللمس|اضغط على الوحدات النشطة بالترتيب الذي تريده (1، 2، 3...):|الوحدات، القياسات والسمة|وحدات نشطة|عرض / تعديل ▾|إغلاق ▲|تثبيت التطبيق للعمل بدون إنترنت|أضف Care Digipad إلى شاشتك الرئيسية.|تثبيت|1. اضغط على زر المشاركة في Safari.|2. اضغط على إضافة إلى الشاشة الرئيسية.",
-  tr: "örn. B1, SR2|seçildi|Tümünü Kaldır|Yatakları Sil|Listenizden silmek istediğiniz yatağa dokunun:|Seçili Yatakları Düzen Olarak Kaydet|Sırayla Dokun|Aktif modüllerinize istediğiniz sırayla dokunun (1., 2., 3....):|Modüller, Birimler ve Tema|aktif modül|Göster / Düzenle ▾|Kapat ▲|Çevrimdışı Kullanım İçin Uygulamayı Yükle|Care Digipad'i ana ekranınıza ekleyin.|Yükle|1. Safari'de Paylaş düğmesine dokunun.|2. Ana Ekrana Ekle'ye dokunun.",
-  fa: "مثلاً B1, SR2|انتخاب‌شده|لغو انتخاب همه|حذف تخت‌ها|برای حذف تخت از فهرست روی آن بزنید:|ذخیره تخت‌های انتخاب‌شده به عنوان چیدمان|ترتیب با لمس|ماژول‌های فعال را به ترتیبی که می‌خواهید لمس کنید (۱، ۲، ۳...):|ماژول‌ها، واحدها و پوسته|ماژول فعال|نمایش / ویرایش ▾|بستن ▲|نصب برنامه برای استفاده آفلاین|Care Digipad را به صفحه اصلی خود اضافه کنید.|نصب|1. در Safari روی دکمه Share بزنید.|2. روی Add to Home Screen بزنید.",
-  sw: "mf. B1, SR2|zimechaguliwa|Ondoa Alama Zote|Futa Vitanda|Gusa kitanda hapa chini kukifuta kwenye orodha:|Hifadhi Vitanda Vilivyochaguliwa kama Mpangilio|Gusa kwa Mpangilio|Gusa moduli zako zinazotumika kwa mpangilio unaotaka (1, 2, 3...):|Moduli, Vipimo na Mandhari|moduli актив|Onyesha / Hariri ▾|Funga ▲|Sakinisha Programu kwa Matumizi Bila Mtandao|Ongeza Care Digipad kwenye skrini yako ya nyumbani.|Sakinisha|1. Gusa kitufe cha Share kwenye Safari.|2. Gusa Add to Home Screen."
+  es: "ej. B1, SR2|seleccionadas|Desmarcar Todo|Eliminar Camas|Toque una cama abajo para eliminarla de su lista:|Guardar Camas Marcadas como Diseño|Ordenar al Tocar|Toque sus módulos activos en el orden deseado (1º, 2º, 3º...):|Módulos, Unidades y Tema|módulos activos|Mostrar / Editar ▾|Cerrar ▲|Instalar App para Uso sin Conexión|Añada Care Digipad a su pantalla de inicio para acceso rápido.|Instalar|1. Toque el botón Compartir en Safari.|2. Toque Añadir a pantalla de inicio.|ml personalizado|La cama ya está en uso.|Enlace copiado al portapapeles|Clave de licencia no válida o ya activada.|Conéctese a internet un segundo para verificar su clave.",
+  fr: "ex. B1, SR2|sélectionnés|Tout Décocher|Supprimer Lits|Touchez un lit ci-dessous pour le supprimer de votre liste :|Enregistrer les Lits Cochés comme Plan|Trier au Toucher|Touchez vos modules actifs dans l'ordre souhaité (1er, 2e, 3e...) :|Modules, Unités et Thème|modules actifs|Afficher / Modifier ▾|Fermer ▲|Installer l'App Hors Ligne|Ajoutez Care Digipad à votre écran d'accueil.|Installer|1. Touchez le bouton Partager dans Safari.|2. Touchez Sur l'écran d'accueil.|ml personnalisé|Ce lit est déjà utilisé.|Lien copié dans le presse-papiers|Clé de licence invalide ou déjà activée.|Connectez-vous brièvement à internet pour vérifier votre clé.",
+  de: "z.B. B1, SR2|ausgewählt|Alle Abwählen|Betten Entfernen|Tippen Sie unten auf ein Bett, um es aus der Liste zu löschen:|Ausgewählte Betten als Layout Speichern|Per Tippen Sortieren|Tippen Sie Ihre aktiven Module in der gewünschten Reihenfolge an (1., 2., 3....):|Module, Einheiten & Farbschema|Module aktiv|Anzeigen / Bearb. ▾|Schließen ▲|App für Offline-Nutzung Installieren|Care Digipad zum Startbildschirm hinzufügen.|Installieren|1. Tippen Sie in Safari auf Teilen.|2. Tippen Sie auf Zum Home-Bildschirm.|Eigene ml|Bett ist bereits belegt.|Link in die Zwischenablage kopiert|Ungültiger oder bereits aktivierter Lizenzschlüssel.|Kurz mit dem Internet verbinden, um den Schlüssel zu prüfen.",
+  pt: "ex. B1, SR2|selecionadas|Desmarcar Tudo|Remover Camas|Toque numa cama abaixo para a eliminar da lista:|Guardar Camas Selecionadas como Layout|Ordenar ao Tocar|Toque nos módulos ativos na ordem desejada (1º, 2º, 3º...):|Módulos, Unidades e Tema|módulos ativos|Mostrar / Editar ▾|Fechar ▲|Instalar App para Uso Offline|Adicione o Care Digipad ao ecrã principal.|Instalar|1. Toque no botão Partilhar no Safari.|2. Toque em Adicionar ao Ecrã Principal.|ml personalizado|Esta cama já está em uso.|Ligação copiada para a área de transferência|Chave de licença inválida ou já ativada.|Ligue-se brevemente à internet para verificar a sua chave.",
+  it: "es. B1, SR2|selezionati|Deseleziona Tutto|Rimuovi Letti|Tocca un letto qui sotto per eliminarlo dalla lista:|Salva Letti Selezionati come Reparto|Ordina Toccando|Tocca i moduli attivi nell'ordine desiderato (1º, 2º, 3º...):|Moduli, Unità e Tema|moduli attivi|Mostra / Modifica ▾|Chiudi ▲|Installa App per Uso Offline|Aggiungi Care Digipad alla schermata Home.|Installa|1. Tocca Condividi in Safari.|2. Tocca Aggiungi alla schermata Home.|ml personalizzati|Il letto è già in uso.|Link copiato negli appunti|Chiave di licenza non valida o già attivata.|Connettiti brevemente a internet per verificare la chiave.",
+  nl: "bijv. B1, SR2|geselecteerd|Alles Deselecteren|Bedden Verwijderen|Tik hieronder op een bed om het uit uw lijst te verwijderen:|Geselecteerde Bedden Opslaan als Indeling|Tik op Volgorde|Tik uw actieve modules aan in de gewenste volgorde (1e, 2e, 3e...):|Modules, Eenheden & Thema|modules actief|Tonen / Wijzigen ▾|Sluiten ▲|App Installeren voor Offline Gebruik|Voeg Care Digipad toe aan uw beginscherm.|Installeren|1. Tik op Deel in Safari.|2. Tik op Zet op beginscherm.|Aangepaste ml|Bed is al in gebruik.|Link gekopieerd naar klembord|Ongeldige of reeds geactiveerde licentiesleutel.|Verbind kort met internet om uw sleutel te verifiëren.",
+  sv: "t.ex. B1, SR2|valda|Avmarkera Alla|Ta Bort Sängar|Tryck på en säng nedan för att ta bort den från listan:|Spara Valda Sängar som Layout|Tryck i Ordning|Tryck på dina aktiva moduler i den ordning du vill ha dem (1:a, 2:a, 3:e...):|Moduler, Enheter & Tema|aktiva moduler|Visa / Ändra ▾|Stäng ▲|Installera App för Offlinebruk|Lägg till Care Digipad på hemskärmen.|Installera|1. Tryck på Dela i Safari.|2. Tryck på Lägg till på hemskärmen.|Ange ml|Sängen används redan.|Länk kopierad till urklipp|Ogiltig eller redan aktiverad licensnyckel.|Anslut kort till internet för att verifiera din licensnyckel.",
+  pl: "np. B1, SR2|wybrano|Odznacz Wszystko|Usuń Łóżka|Dotknij łóżka poniżej, aby usunąć je z listy:|Zapisz Zaznaczone Łóżka jako Układ|Kolejność Dotykiem|Dotknij aktywnych modułów w wybranej kolejności (1., 2., 3....):|Moduły, Jednostki i Motyw|aktywnych modułów|Pokaż / Edytuj ▾|Zamknij ▲|Zainstaluj Aplikację Offline|Dodaj Care Digipad do ekranu głównego.|Zainstaluj|1. Dotknij Udostępnij w Safari.|2. Dotknij Dodaj do ekranu początkowego.|Własne ml|Łóżko jest już zajęte.|Link skopiowany do schowka|Nieprawidłowy lub już aktywowany klucz licencyjny.|Połącz się na chwilę z internetem, aby zweryfikować klucz.",
+  ro: "ex. B1, SR2|selectate|Deselectează Tot|Elimină Paturi|Atingeți un pat mai jos pentru a-l șterge din listă:|Salvează Paturile Bifate ca Aspect|Ordonează prin Atingere|Atingeți modulele active în ordinea dorită (1, 2, 3...):|Module, Unități și Temă|module active|Arată / Editează ▾|Închide ▲|Instalează Aplicația Offline|Adăugați Care Digipad pe ecranul principal.|Instalează|1. Atingeți Partajare în Safari.|2. Atingeți Adăugați la ecranul principal.|ml personalizat|Patul este deja utilizat.|Link copiat în clipboard|Cheie de licență nevalidă sau deja activată.|Conectați-vă scurt la internet pentru a verifica cheia.",
+  uk: "напр. B1, SR2|обрано|Зняти Позначки|Видалити Ліжка|Натисніть на ліжко нижче, щоб видалити його зі списку:|Зберегти Обрані Ліжка як Схему|Порядок Дотиком|Торкайтеся активних модулів у потрібному порядку (1-й, 2-й, 3-й...):|Модулі, Одиниці та Тема|активних модулів|Показати / Редаг. ▾|Закрити ▲|Встановити Додаток Офлайн|Додайте Care Digipad на головний екран.|Встановити|1. Натисніть Поділитися в Safari.|2. Натисніть На початковий екран.|Власні мл|Ліжко вже використовується.|Посилання скопійовано|Недійсний або вже активований ключ ліцензії.|Підключіться до інтернету на секунду для перевірки ключа.",
+  ru: "напр. B1, SR2|выбрано|Снять Выделение|Удалить Койки|Нажмите на койку ниже, чтобы удалить её из списка:|Сохранить Выбранные Койки как Схему|Порядок Нажатием|Нажимайте активные модули в нужном порядке (1-й, 2-й, 3-й...):|Модули, Единицы и Тема|активных модулей|Показать / Изм. ▾|Закрыть ▲|Установить Приложение Офлайн|Добавьте Care Digipad на главный экран.|Установить|1. Нажмите Поделиться в Safari.|2. Нажмите На экран «Домой».|Свои мл|Койка уже занята.|Ссылка скопирована в буфер обмена|Недействительный или уже активированный ключ лицензии.|Подключитесь к интернету на секунду для проверки ключа.",
+  el: "π.χ. B1, SR2|επιλεγμένες|Αποεπιλογή Όλων|Αφαίρεση Κλινών|Πατήστε μια κλίνη παρακάτω για διαγραφή από τη λίστα:|Αποθήκευση Επιλεγμένων Κλινών ως Διάταξη|Σειρά με Πάτημα|Πατήστε τις ενεργές ενότητες με τη σειρά που θέλετε (1η, 2η, 3η...):|Ενότητες, Μονάδες & Θέμα|ενεργές ενότητες|Εμφάνιση / Επεξ. ▾|Κλείσιμο ▲|Εγκατάσταση Εφαρμογής Offline|Προσθέστε το Care Digipad στην αρχική οθόνη.|Εγκατάσταση|1. Πατήστε Κοινοποίηση στο Safari.|2. Πατήστε Προσθήκη στην οθόνη Αφετηρίας.|Προσαρμοσμένα ml|Η κλίνη χρησιμοποιείται ήδη.|Ο σύνδεσμος αντιγράφηκε|Μη έγκυρος ή ήδη ενεργοποιημένος κωδικός άδειας.|Συνδεθείτε για λίγο στο διαδίκτυο για επαλήθευση του κωδικού.",
+  hi: "जैसे B1, SR2|चयनित|सभी अचयनित करें|बेड हटाएं|सूची से हटाने के लिए नीचे किसी भी बेड पर टैप करें:|चयनित बेड को वार्ड लेआउट के रूप में सहेजें|क्रम में टैप करें|अपने सक्रिय मॉड्यूल को जिस क्रम में चाहते हैं उस क्रम में टैप करें (1, 2, 3...):|मॉड्यूल, इकाइयां और थीम|सक्रिय मॉड्यूल|दिखाएं / बदलें ▾|बंद करें ▲|ऑफ़लाइन उपयोग के लिए ऐप इंस्टॉल करें|Care Digipad को अपनी होम स्क्रीन पर जोड़ें।|इंस्टॉल करें|1. Safari में Share बटन पर टैप करें।|2. Add to Home Screen पर टैप करें।|कस्टम ml|यह बेड पहले से उपयोग में है।|लिंक क्लिपबोर्ड पर कॉपी हो गया|अमान्य या पहले से सक्रिय लाइसेंस कुंजी।|अपनी लाइसेंस कुंजी सत्यापित करने के लिए इंटरनेट से जुड़ें।",
+  bn: "যেমন B1, SR2|নির্বাচিত|সব আনটিক করুন|বেড মুছুন|তালিকা থেকে মুছে ফেলতে নিচের যেকোনো বেডে ট্যাপ করুন:|নির্বাচিত বেডগুলো লেআউট হিসেবে সেভ করুন|ক্রমানুসারে ট্যাপ|আপনার সক্রিয় মডিউলগুলো পছন্দের ক্রমানুসারে ট্যাপ করুন (১ম, ২য়, ৩য়...):|মডিউল, একক ও থিম|সক্রিয় মডিউল|দেখান / এডিট ▾|বন্ধ করুন ▲|অফলাইন ব্যবহারের জন্য অ্যাপ ইনস্টল করুন|হোম স্ক্রিনে Care Digipad যোগ করুন।|ইনস্টল|1. Safari-তে Share বাটনে ট্যাপ করুন।|2. Add to Home Screen-এ ট্যাপ করুন।|কাস্টম ml|এই বেডটি ইতিমধ্যে ব্যবহৃত হচ্ছে।|লিঙ্ক ক্লিপবোর্ডে কপি হয়েছে|অবৈধ বা ইতিমধ্যে ব্যবহৃত লাইসেন্স কী।|আপনার লাইসেন্স কী যাচাই করতে ইন্টারনেটে সংযুক্ত হন।",
+  pa: "ਜਿਵੇਂ B1, SR2|ਚੁਣੇ ਗਏ|ਸਭ ਅਣਟਿੱਕ ਕਰੋ|ਬੈੱਡ ਹਟਾਓ|ਸੂਚੀ ਵਿੱਚੋਂ ਮਿਟਾਉਣ ਲਈ ਹੇਠਾਂ ਕਿਸੇ ਵੀ ਬੈੱਡ ਤੇ ਟੈਪ ਕਰੋ:|ਚੁਣੇ ਗਏ ਬੈੱਡਾਂ ਨੂੰ ਲੇਆਉਟ ਵਜੋਂ ਸੇਵ ਕਰੋ|ਕ੍ਰਮ ਵਿੱਚ ਟੈਪ ਕਰੋ|ਆਪਣੇ ਸਰਗਰਮ ਮੋਡੀਊਲਾਂ ਨੂੰ ਮਨਪਸੰਦ ਕ੍ਰਮ ਵਿੱਚ ਟੈਪ ਕਰੋ (1, 2, 3...):|ਮੋਡੀਊਲ, ਇਕਾਈਆਂ ਅਤੇ ਥੀਮ|ਸਰਗਰਮ ਮੋਡੀਊਲ|ਦਿਖਾਓ / ਬਦਲੋ ▾|ਬੰਦ ਕਰੋ ▲|ਆਫ਼ਲਾਈਨ ਵਰਤੋਂ ਲਈ ਐਪ ਇੰਸਟਾਲ ਕਰੋ|Care Digipad ਨੂੰ ਹੋਮ ਸਕ੍ਰੀਨ ਤੇ ਜੋੜੋ।|ਇੰਸਟਾਲ|1. Safari ਵਿੱਚ Share ਬਟਨ ਤੇ ਟੈਪ ਕਰੋ।|2. Add to Home Screen ਤੇ ਟੈਪ ਕਰੋ।|ਕਸਟਮ ml|ਇਹ ਬੈੱਡ ਪਹਿਲਾਂ ਹੀ ਵਰਤੋਂ ਵਿੱਚ ਹੈ।|ਲਿੰਕ ਕਾਪੀ ਹੋ ਗਿਆ ਹੈ|ਗਲਤ ਜਾਂ ਪਹਿਲਾਂ ਤੋਂ ਵਰਤਿਆ ਲਾਈਸੈਂਸ ਕੀ।|ਲਾਈਸੈਂਸ ਕੀ ਦੀ ਪੁਸ਼ਟੀ ਕਰਨ ਲਈ ਇੰਟਰਨੈੱਟ ਨਾਲ ਜੁੜੋ।",
+  ur: "مثلاً B1, SR2|منتخب|سب غیر منتخب کریں|بیڈز ہٹائیں|فہرست سے حذف کرنے کے لیے نیچے کسی بھی بیڈ پر ٹیپ کریں:|منتخب بیڈز کو لے آؤٹ کے طور پر محفوظ کریں|ترتیب سے ٹیپ کریں|اپنے فعال ماڈیولز کو مطلوبہ ترتیب میں ٹیپ کریں (1، 2، 3...):|ماڈیولز، اکائیاں اور تھیم|فعال ماڈیولز|دکھائیں / ترمیم ▾|بند کریں ▲|آف لائن استعمال کے لیے ایپ انسٹال کریں|Care Digipad کو ہوم اسکرین پر شامل کریں۔|انسٹال|1. سفاری میں Share بٹن پر ٹیپ کریں۔|2. Add to Home Screen پر ٹیپ کریں۔|مخصوص ml|یہ بیڈ پہلے سے زیر استعمال ہے۔|لنک کلپ بورڈ پر کاپی ہو گیا|غلط یا پہلے سے فعال لائسنس کی۔|اپنی لائسنس کی کی تصدیق کے لیے انٹرنیٹ سے جڑیں۔",
+  ta: "எ.கா. B1, SR2|தேர்ந்தெடுக்கப்பட்டவை|அனைத்தையும் நீக்கு|படுக்கைகளை அகற்று|பட்டியலிலிருந்து நீக்க கீழே உள்ள படுக்கையைத் தட்டவும்:|தேர்ந்தெடுத்த படுக்கைகளை அமைப்பாகச் சேமி|வரிசையாகத் தட்டவும்|செயலில் உள்ள பகுதிகளை விரும்பிய வரிசையில் தட்டவும் (1, 2, 3...):|பகுதிகள், அலகுகள் & தீம்|செயலில் உள்ள பகுதிகள்|காட்டு / திருத்து ▾|மூடு ▲|ஆஃப்லைன் பயன்பாட்டிற்கு செயலியை நிறுவுக|முகப்புத் திரையில் Care Digipad-ஐச் சேர்க்கவும்.|நிறுவு|1. Safari-ல் Share பொத்தானைத் தட்டவும்.|2. Add to Home Screen என்பதைத் தட்டவும்.|தனிப்பயன் ml|இந்தப் படுக்கை ஏற்கனவே பயன்பாட்டில் உள்ளது.|இணைப்பு நகலெடுக்கப்பட்டது|தவறான அல்லது ஏற்கனவே பயன்படுத்தப்பட்ட உரிமக் குறியீடு.|உரிமக் குறியீட்டைச் சரிபார்க்க இணையத்துடன் இணைக்கவும்.",
+  ml: "ഉദാ. B1, SR2|തിരഞ്ഞെടുത്തു|എല്ലാം ഒഴിവാക്കുക|ബെഡുകൾ നീക്കുക|ലിസ്റ്റിൽ നിന്ന് നീക്കാൻ താഴെയുള്ള ബെഡിൽ ടാപ്പ് ചെയ്യുക:|തിരഞ്ഞെടുത്ത ബെഡുകൾ ലേഔട്ട് ആയി സേവ് ചെയ്യുക|ക്രമത്തിൽ ടാപ്പ് ചെയ്യുക|സജീവ മൊഡ്യൂളുകൾ നിങ്ങൾക്കാവശ്യമുള്ള ക്രമത്തിൽ ടാപ്പ് ചെയ്യുക (1, 2, 3...):|മൊഡ്യൂളുകൾ, യൂണിറ്റുകൾ & തീം|സജീവ മൊഡ്യൂളുകൾ|കാണിക്കുക / മാറ്റുക ▾|അടയ്ക്കുക ▲|ഓഫ്‌ലൈൻ ഉപയോഗത്തിനായി ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുക|ഹോം സ്ക്രീനിലേക്ക് Care Digipad ചേർക്കുക.|ഇൻസ്റ്റാൾ|1. Safari-ൽ Share ബട്ടൺ ടാപ്പ് ചെയ്യുക.|2. Add to Home Screen ടാപ്പ് ചെയ്യുക.|കസ്റ്റം ml|ഈ ബെഡ് നിലവിൽ ഉപയോഗത്തിലാണ്.|ലിങ്ക് ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി|അസാധുവായ അല്ലെങ്കിൽ ഇതിനകം ഉപയോഗിച്ച ലൈസൻസ് കീ.|ലൈസൻസ് കീ പരിശോധിക്കാൻ ഇന്റർനെറ്റുമായി ബന്ധിപ്പിക്കുക.",
+  zh: "例如 B1, SR2|已选择|全部取消|移除床位|点击下方任意床位将其从列表中删除：|将勾选的床位保存为病区布局|按顺序点击|请按您需要的顺序依次点击下方启用的模块 (第1、第2、第3...)：|自定义模块、单位与主题|个模块已启用|显示 / 编辑 ▾|收起 ▲|安装离线版应用|将 Care Digipad 添加到主屏幕以便随时使用。|安装|1. 点击 Safari 底部的“共享”按钮。|2. 向下滚动并点击“添加到主屏幕”。|自定义 ml|该床位已在使用中。|链接已复制到剪贴板|许可证密钥无效或已被激活。|请短暂连接网络以验证您的许可证密钥。",
+  "zh-tw": "例如 B1, SR2|已選擇|全部取消|移除床位|點選下方任意床位將其從清單中刪除：|將勾選的床位儲存為病房配置|依序點選|請依您需要的順序點選下方啟用的模組 (第1、第2、第3...)：|自訂模組、單位與主題|個模組已啟用|顯示 / 編輯 ▾|收起 ▲|安裝離線版應用程式|將 Care Digipad 加入主畫面以便隨時使用。|安裝|1. 點選 Safari 底部的「分享」按鈕。|2. 向下捲動並點選「加入主畫面」。|自訂 ml|該床位已在使用中。|連結已複製到剪貼簿|授權金鑰無效或已被啟用。|請短暫連線網路以驗證您的授權金鑰。",
+  ja: "例: B1, SR2|選択中|すべて解除|ベッド削除|リストから削除するベッドをタップしてください：|選択したベッドをレイアウトとして保存|順番にタップ|表示したい順番に有効モジュールをタップしてください (1番目、2番目、3番目...)：|モジュール・単位・テーマ設定|モジュール有効|表示 / 編集 ▾|閉じる ▲|オフライン用アプリをインストール|ホーム画面にCare Digipadを追加します。|追加|1. Safariの共有ボタンをタップします。|2.「ホーム画面に追加」をタップします。|カスタム ml|このベッドは既に使用中です。|リンクをコピーしました|無効または既に使用されているライセンスキーです。|キーを確認するため一時的にインターネットに接続してください。",
+  ko: "예: B1, SR2|선택됨|모두 해제|병상 삭제|목록에서 삭제할 병상을 아래에서 탭하세요:|선택한 병상을 레이아웃으로 저장|순서대로 탭|원하는 순서대로 활성 모듈을 탭하세요 (1번째, 2번째, 3번째...):|모듈, 단위 및 테마 설정|개 모듈 활성|보기 / 편집 ▾|닫기 ▲|오프라인 사용을 위해 앱 설치|홈 화면에 Care Digipad를 추가하세요.|설치|1. Safari 하단의 공유 버튼을 탭하세요.|2. '홈 화면에 추가'를 탭하세요.|직접 입력 (ml)|이미 사용 중인 병상입니다.|링크가 클립보드에 복사되었습니다|유효하지 않거나 이미 활성화된 라이선스 키입니다.|라이선스 키 확인을 위해 잠시 인터넷에 연결해 주세요.",
+  tl: "hal. B1, SR2|napili|Alisin Lahat ng Tsek|Alisin ang Kama|I-tap ang kama sa ibaba upang burahin sa listahan:|I-save ang mga Napiling Kama bilang Layout|I-tap ayon sa Ayos|I-tap ang mga aktibong module ayon sa pagkakasunod na gusto mo (1st, 2nd, 3rd...):|Mga Module, Yunit at Tema|aktibong module|Ipakita / I-edit ▾|Isara ▲|I-install ang App para sa Offline|Idagdag ang Care Digipad sa iyong home screen.|I-install|1. I-tap ang Share button sa Safari.|2. I-tap ang Add to Home Screen.|Custom ml|Ginagamit na ang kamang ito.|Nakopya ang link sa clipboard|Hindi wasto o nagamit na ang licence key.|Kumonekta saglit sa internet upang i-verify ang iyong licence key.",
+  id: "mis. B1, SR2|dipilih|Hapus Semua Centang|Hapus Bed|Ketuk bed di bawah untuk menghapusnya dari daftar:|Simpan Bed Terpilih sebagai Denah|Ketuk Berurutan|Ketuk modul aktif sesuai urutan yang Anda inginkan (1, 2, 3...):|Modul, Satuan & Tema|modul aktif|Tampilkan / Edit ▾|Tutup ▲|Instal Aplikasi untuk Penggunaan Offline|Tambahkan Care Digipad ke layar utama Anda.|Instal|1. Ketuk tombol Bagikan di Safari.|2. Ketuk Tambahkan ke Layar Utama.|ml kustom|Bed ini sudah digunakan.|Tautan disalin ke papan klip|Kunci lisensi tidak valid atau sudah diaktifkan.|Hubungkan sebentar ke internet untuk memverifikasi kunci lisensi.",
+  vi: "VD: B1, SR2|đã chọn|Bỏ Chọn Tất Cả|Xóa Giường|Chạm vào giường bên dưới để xóa khỏi danh sách:|Lưu Các Giường Đã Chọn Làm Sơ Đồ|Chạm Theo Thứ Tự|Chạm vào các phân hệ đang bật theo thứ tự bạn muốn (1, 2, 3...):|Phân Hệ, Đơn Vị & Giao Diện|phân hệ đang bật|Hiện / Sửa ▾|Đóng ▲|Cài Đặt Ứng Dụng Ngoại Tuyến|Thêm Care Digipad vào màn hình chính.|Cài đặt|1. Chạm nút Chia sẻ trong Safari.|2. Chạm Thêm vào MH chính.|Nhập ml|Giường này đang được sử dụng.|Đã sao chép liên kết|Mã bản quyền không hợp lệ hoặc đã được kích hoạt.|Vui lòng kết nối mạng trong giây lát để xác thực mã bản quyền.",
+  ar: "مثال: B1, SR2|محددة|إلغاء تحديد الكل|حذف أسرة|اضغط على أي سرير أدناه لحذفه من قائمتك:|حفظ الأسرة المحددة كتخطيط جناح|الترتيب باللمس|اضغط على الوحدات النشطة بالترتيب الذي تريده (1، 2، 3...):|الوحدات، القياسات والسمة|وحدات نشطة|عرض / تعديل ▾|إغلاق ▲|تثبيت التطبيق للعمل بدون إنترنت|أضف Care Digipad إلى شاشتك الرئيسية.|تثبيت|1. اضغط على زر المشاركة في Safari.|2. اضغط على إضافة إلى الشاشة الرئيسية.|مل مخصص|هذا السرير قيد الاستخدام بالفعل.|تم نسخ الرابط إلى الحافظة|مفتاح الترخيص غير صالح أو مفعل مسبقاً.|اتصل بالإنترنت لثوانٍ للتحقق من مفتاح الترخيص.",
+  tr: "örn. B1, SR2|seçildi|Tümünü Kaldır|Yatakları Sil|Listenizden silmek istediğiniz yatağa dokunun:|Seçili Yatakları Düzen Olarak Kaydet|Sırayla Dokun|Aktif modüllerinize istediğiniz sırayla dokunun (1., 2., 3....):|Modüller, Birimler ve Tema|aktif modül|Göster / Düzenle ▾|Kapat ▲|Çevrimdışı Kullanım İçin Uygulamayı Yükle|Care Digipad'i ana ekranınıza ekleyin.|Yükle|1. Safari'de Paylaş düğmesine dokunun.|2. Ana Ekrana Ekle'ye dokunun.|Özel ml|Bu yatak zaten kullanımda.|Bağlantı panoya kopyalandı|Geçersiz veya zaten etkinleştirilmiş lisans anahtarı.|Lisans anahtarınızı doğrulamak için kısaca internete bağlanın.",
+  fa: "مثلاً B1, SR2|انتخاب‌شده|لغو انتخاب همه|حذف تخت‌ها|برای حذف تخت از فهرست روی آن بزنید:|ذخیره تخت‌های انتخاب‌شده به عنوان چیدمان|ترتیب با لمس|ماژول‌های فعال را به ترتیبی که می‌خواهید لمس کنید (۱، ۲، ۳...):|ماژول‌ها، واحدها و پوسته|ماژول فعال|نمایش / ویرایش ▾|بستن ▲|نصب برنامه برای استفاده آفلاین|Care Digipad را به صفحه اصلی خود اضافه کنید.|نصب|1. در Safari روی دکمه Share بزنید.|2. روی Add to Home Screen بزنید.|میلی‌لیتر دلخواه|این تخت در حال حاضر استفاده می‌شود.|لینک در کلیپ‌بورد کپی شد|کلید مجوز نامعتبر است یا قبلاً فعال شده است.|برای تأیید کلید مجوز خود لحظه‌ای به اینترنت متصل شوید.",
+  sw: "mf. B1, SR2|zimechaguliwa|Ondoa Alama Zote|Futa Vitanda|Gusa kitanda hapa chini kukifuta kwenye orodha:|Hifadhi Vitanda Vilivyochaguliwa kama Mpangilio|Gusa kwa Mpangilio|Gusa moduli zako zinazotumika kwa mpangilio unaotaka (1, 2, 3...):|Moduli, Vipimo na Mandhari|moduli zinazotumika|Onyesha / Hariri ▾|Funga ▲|Sakinisha Programu kwa Matumizi Bila Mtandao|Ongeza Care Digipad kwenye skrini yako ya nyumbani.|Sakinisha|1. Gusa kitufe cha Share kwenye Safari.|2. Gusa Add to Home Screen.|Weka ml|Kitanda hiki tayari kinatumika.|Kiungo kimenakiliwa|Ufunguo wa leseni si sahihi au tayari umetumika.|Unganisha kwenye mtandao kwa muda mfupi ili kuthibitisha ufunguo."
 };
 
 function mergeExtraTranslations() {
@@ -356,9 +362,29 @@ const ALL_MODS = [
   {id:'admit', pro:true}
 ];
 
+function safeGetRaw(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    return null;
+  }
+}
+
+function safeSet(key, val) {
+  try {
+    localStorage.setItem(key, val);
+  } catch (e) {}
+}
+
+function safeRemove(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch (e) {}
+}
+
 function safeLoad(key, fallback) {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = safeGetRaw(key);
     return raw ? JSON.parse(raw) : fallback;
   } catch (e) {
     return fallback;
@@ -375,13 +401,13 @@ function sortBedArray(arr) {
   return unique.sort((a, b) => bedCollator ? bedCollator.compare(a, b) : a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 }
 
-let isPro = localStorage.getItem('cdu_pro') === '1';
-let curLang = localStorage.getItem('cdu_lang') || 'en';
-let curTheme = localStorage.getItem('cdu_theme_color') || 'teal';
-let isDark = localStorage.getItem('cdu_dark') === '1';
-let curShift = localStorage.getItem('cdu_shift') || 'day';
-let bmUnit = localStorage.getItem('cdu_bm_unit') || 'mmol/L';
-let tempUnit = localStorage.getItem('cdu_temp_unit') || '°C';
+let isPro = safeGetRaw('cdu_pro') === '1';
+let curLang = safeGetRaw('cdu_lang') || 'en';
+let curTheme = safeGetRaw('cdu_theme_color') || 'teal';
+let isDark = safeGetRaw('cdu_dark') === '1';
+let curShift = safeGetRaw('cdu_shift') || 'day';
+let bmUnit = safeGetRaw('cdu_bm_unit') || 'mmol/L';
+let tempUnit = safeGetRaw('cdu_temp_unit') || '°C';
 
 let wardBeds = sortBedArray(safeLoad('cdu_ward', []));
 let alloc = sortBedArray(safeLoad('cdu_alloc', []));
@@ -390,7 +416,7 @@ if (!isPro && alloc.length > FREE_BED_LIMIT) {
 }
 let db = safeLoad('cdu_db', {});
 let layouts = safeLoad('cdu_layouts', {});
-let activeLayoutName = localStorage.getItem('cdu_active_lay') || '';
+let activeLayoutName = safeGetRaw('cdu_active_lay') || '';
 let modConfig = safeLoad('cdu_mods', null);
 
 let curBed = alloc[0] || '';
@@ -404,14 +430,23 @@ let settingsOpen = false;
 let bedDeleteMode = false;
 let quickReorderActive = false;
 let quickReorderQueue = [];
-let openForms = {};
 let expandedCards = {};
 let activeFluidIdx = 0;
 let activeFluidType = 'i';
 let wakeLockObj = null;
+let wakeLockWanted = false;
 let alertTimerId = null;
 let alarmAudioCtx = null;
 let deferredInstallPrompt = null;
+let shiftHistoryPushed = false;
+
+function pushNavState(stateObj) {
+  if (window.history && window.history.pushState) {
+    try {
+      window.history.pushState(stateObj, '');
+    } catch (e) {}
+  }
+}
 
 function isRunningStandalone() {
   return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
@@ -425,13 +460,23 @@ function isIosBrowser() {
 
 function updateInstallBanner() {
   const banner = document.getElementById('installBanner');
+  const btn = document.getElementById('btnInstallAction');
+  const guide = document.getElementById('iosInstallGuide');
   if (!banner) return;
-  if (isRunningStandalone() || sessionStorage.getItem('cdu_hide_install') === '1') {
+  let dismissed = false;
+  try { dismissed = sessionStorage.getItem('cdu_hide_install') === '1'; } catch (e) {}
+  if (isRunningStandalone() || dismissed) {
     banner.classList.add('hidden');
     return;
   }
-  if (deferredInstallPrompt || isIosBrowser()) {
+  if (deferredInstallPrompt) {
     banner.classList.remove('hidden');
+    if (btn) btn.classList.remove('hidden');
+    if (guide) guide.classList.add('hidden');
+  } else if (isIosBrowser()) {
+    banner.classList.remove('hidden');
+    if (btn) btn.classList.add('hidden');
+    if (guide) guide.classList.remove('hidden');
   } else {
     banner.classList.add('hidden');
   }
@@ -452,7 +497,7 @@ async function triggerInstallApp() {
 }
 
 function dismissInstallBanner() {
-  sessionStorage.setItem('cdu_hide_install', '1');
+  try { sessionStorage.setItem('cdu_hide_install', '1'); } catch (e) {}
   updateInstallBanner();
 }
 
@@ -482,23 +527,37 @@ function unlockAudioContext() {
   } catch (e) {}
 }
 
+function cleanupShiftRuntime() {
+  if (alertTimerId) {
+    clearInterval(alertTimerId);
+    alertTimerId = null;
+  }
+  wakeLockWanted = false;
+  if (wakeLockObj) {
+    try { wakeLockObj.release(); } catch (e) {}
+    wakeLockObj = null;
+  }
+  const priv = document.getElementById('privacyScreen');
+  if (priv) priv.classList.add('hidden');
+}
+
 function checkShiftExpiry() {
-  const st = localStorage.getItem('cdu_start');
+  const st = safeGetRaw('cdu_start');
   if (!st) return false;
   const ts = Number(st);
   if (st === '1' || isNaN(ts) || ts < 1000000000000) {
-    localStorage.setItem('cdu_start', String(Date.now()));
+    safeSet('cdu_start', String(Date.now()));
     return false;
   }
   if (Date.now() - ts >= SHIFT_MAX_MS) {
     db = {};
-    openForms = {};
     expandedCards = {};
-    localStorage.removeItem('cdu_db');
-    localStorage.removeItem('cdu_start');
+    safeRemove('cdu_db');
+    safeRemove('cdu_start');
     showSummary = false;
     showManageBed = false;
     showQuickAddBed = false;
+    cleanupShiftRuntime();
     initSetup();
     return true;
   }
@@ -520,7 +579,7 @@ function normalizeLayouts() {
       else delete layouts[k];
     } else delete layouts[k];
   });
-  localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
+  safeSet('cdu_layouts', JSON.stringify(layouts));
 }
 normalizeLayouts();
 
@@ -658,12 +717,17 @@ function getActiveSections() {
 function saveDB() {
   wardBeds = sortBedArray(wardBeds);
   if (!isPro && alloc.length > FREE_BED_LIMIT) {
-    alloc = alloc.slice(0, FREE_BED_LIMIT);
+    if (curBed && alloc.includes(curBed)) {
+      const others = alloc.filter(b => b !== curBed).slice(0, FREE_BED_LIMIT - 1);
+      alloc = [curBed, ...others];
+    } else {
+      alloc = alloc.slice(0, FREE_BED_LIMIT);
+    }
   }
   alloc = sortBedArray(alloc);
-  localStorage.setItem('cdu_db', JSON.stringify(db));
-  localStorage.setItem('cdu_alloc', JSON.stringify(alloc));
-  localStorage.setItem('cdu_ward', JSON.stringify(wardBeds));
+  safeSet('cdu_db', JSON.stringify(db));
+  safeSet('cdu_alloc', JSON.stringify(alloc));
+  safeSet('cdu_ward', JSON.stringify(wardBeds));
 }
 
 async function unlockPro() {
@@ -673,9 +737,9 @@ async function unlockPro() {
   if (!key) return;
   if (key === 'JORDAN-CDP-MASTER') {
     isPro = true;
-    localStorage.setItem('cdu_pro', '1');
+    safeSet('cdu_pro', '1');
     modConfig = ALL_MODS.map(m => ({ id: m.id, on: true }));
-    localStorage.setItem('cdu_mods', JSON.stringify(modConfig));
+    safeSet('cdu_mods', JSON.stringify(modConfig));
     initSetup();
     return;
   }
@@ -689,14 +753,16 @@ async function unlockPro() {
     const data = await res.json();
     if (data && data.activated === true) {
       isPro = true;
-      localStorage.setItem('cdu_pro', '1');
-      if (data.instance && data.instance.id) localStorage.setItem('cdu_pro_instance', data.instance.id);
+      safeSet('cdu_pro', '1');
+      if (data.instance && data.instance.id) safeSet('cdu_pro_instance', data.instance.id);
       modConfig = ALL_MODS.map(m => ({ id: m.id, on: true }));
-      localStorage.setItem('cdu_mods', JSON.stringify(modConfig));
+      safeSet('cdu_mods', JSON.stringify(modConfig));
       initSetup();
-    } else alert((data && data.error) ? data.error : 'Invalid or already activated licence key.');
+    } else {
+      alert(t('keyInvalid'));
+    }
   } catch (err) {
-    alert('Connect to the internet for 1 second to verify your licence key.');
+    alert(t('keyOffline'));
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = t('unlock'); }
   }
@@ -736,7 +802,7 @@ function initSetup() {
   document.getElementById('proBanner').classList.toggle('hidden', isPro);
   document.getElementById('savedLayoutRow').classList.toggle('hidden', !isPro || Object.keys(layouts).length === 0);
 
-  if (alloc.length > 0 && localStorage.getItem('cdu_start')) {
+  if (alloc.length > 0 && safeGetRaw('cdu_start')) {
     document.getElementById('setupView').classList.add('hidden');
     document.getElementById('mainView').classList.remove('hidden');
     document.getElementById('editBtn').classList.remove('hidden');
@@ -744,6 +810,10 @@ function initSetup() {
     activeFluidIdx = getCurrentShiftHourIdx();
     const activeSecs = getActiveSections();
     if (activeSecs.length > 0 && !activeSecs.some(s => s.id === curSec)) curSec = activeSecs[0].id;
+    if (!shiftHistoryPushed) {
+      pushNavState({ cduInShift: true });
+      shiftHistoryPushed = true;
+    }
     if (typeof renderUI === 'function') renderUI();
     if (typeof startAlertTimer === 'function') startAlertTimer();
   } else {
@@ -770,7 +840,6 @@ function applyStaticTranslations() {
     if (el) el.textContent = t(k);
   });
 
-  // Split activeMods into Title and Helper cleanly in all 30 languages
   const rawActMods = t('activeMods');
   const parenIdx = rawActMods.indexOf('(');
   const actTitleEl = document.getElementById('lblActiveMods');
@@ -792,7 +861,6 @@ function applyStaticTranslations() {
   const layInp = document.getElementById('newLayoutName');
   if (layInp) layInp.placeholder = t('saveLay');
 
-  // Shift hours pill buttons + tick boxes
   const isDay = curShift === 'day';
   document.getElementById('btnDayShift').classList.toggle('selected', isDay);
   document.getElementById('btnNightShift').classList.toggle('selected', !isDay);
@@ -801,7 +869,6 @@ function applyStaticTranslations() {
   if (tickDay) tickDay.textContent = isDay ? '✓' : '';
   if (tickNight) tickNight.textContent = !isDay ? '✓' : '';
 
-  // Glucose & Temp unit pill buttons + tick boxes
   const isMmol = bmUnit === 'mmol/L';
   document.getElementById('btnBmMmol').classList.toggle('selected', isMmol);
   document.getElementById('btnBmMg').classList.toggle('selected', !isMmol);
@@ -831,7 +898,7 @@ function applyStaticTranslations() {
 function setLang(l) {
   if (!l) return;
   curLang = l;
-  localStorage.setItem('cdu_lang', l);
+  safeSet('cdu_lang', l);
   initSetup();
 }
 
@@ -845,13 +912,13 @@ function renderThemeOptions() {
 function setTheme(th) {
   if (!isPro) return;
   curTheme = th;
-  localStorage.setItem('cdu_theme_color', th);
+  safeSet('cdu_theme_color', th);
   document.body.setAttribute('data-color', th);
 }
 
 function setShift(s) {
   curShift = s;
-  localStorage.setItem('cdu_shift', s);
+  safeSet('cdu_shift', s);
   const hrs = getShiftHours();
   Object.keys(db).forEach(b => {
     if (db[b] && Array.isArray(db[b].fluids) && db[b].fluids.length === 12) {
@@ -864,13 +931,13 @@ function setShift(s) {
 
 function setBmUnit(u) {
   bmUnit = u;
-  localStorage.setItem('cdu_bm_unit', u);
+  safeSet('cdu_bm_unit', u);
   applyStaticTranslations();
 }
 
 function setTempUnit(u) {
   tempUnit = u;
-  localStorage.setItem('cdu_temp_unit', u);
+  safeSet('cdu_temp_unit', u);
   applyStaticTranslations();
 }
 
@@ -898,15 +965,16 @@ function renderLayoutDropdown() {
 }
 
 function loadLayout(name) {
+  if (!isPro) return;
   if (!name || !Array.isArray(layouts[name])) {
     activeLayoutName = '';
-    localStorage.setItem('cdu_active_lay', '');
+    safeSet('cdu_active_lay', '');
     renderLayoutDropdown();
     renderSetupBeds();
     return;
   }
   activeLayoutName = name;
-  localStorage.setItem('cdu_active_lay', name);
+  safeSet('cdu_active_lay', name);
   layouts[name] = sortBedArray(layouts[name]);
   layouts[name].forEach(b => { if (!wardBeds.includes(b)) wardBeds.push(b); });
   wardBeds = sortBedArray(wardBeds);
@@ -924,8 +992,8 @@ function saveLayout() {
   if (alloc.length === 0) { alert(t('selectAtLeastOne')); return; }
   layouts[name] = sortBedArray(alloc);
   activeLayoutName = name;
-  localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
-  localStorage.setItem('cdu_active_lay', name);
+  safeSet('cdu_layouts', JSON.stringify(layouts));
+  safeSet('cdu_active_lay', name);
   if (inp) inp.value = '';
   renderLayoutDropdown();
   renderSetupBeds();
@@ -935,18 +1003,19 @@ function updateActiveLayoutInSetup() {
   if (!isPro || !activeLayoutName || !layouts[activeLayoutName]) return;
   if (alloc.length === 0) { alert(t('selectAtLeastOne')); return; }
   layouts[activeLayoutName] = sortBedArray(alloc);
-  localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
+  safeSet('cdu_layouts', JSON.stringify(layouts));
   renderLayoutDropdown();
   renderSetupBeds();
   alert(`${t('layoutSaved')}: ${activeLayoutName}`);
 }
 
 function deleteLayout() {
+  if (!isPro) return;
   if (!activeLayoutName || !layouts[activeLayoutName] || !confirm(t('delConfirm'))) return;
   delete layouts[activeLayoutName];
   activeLayoutName = '';
-  localStorage.setItem('cdu_layouts', JSON.stringify(layouts));
-  localStorage.setItem('cdu_active_lay', '');
+  safeSet('cdu_layouts', JSON.stringify(layouts));
+  safeSet('cdu_active_lay', '');
   renderLayoutDropdown();
   renderSetupBeds();
 }
@@ -1062,6 +1131,9 @@ function deleteWardBed(idx) {
   wardBeds.splice(idx, 1);
   alloc = alloc.filter(x => x !== b);
   delete db[b];
+  Object.keys(expandedCards).forEach(k => {
+    if (k.startsWith(b + '_')) delete expandedCards[k];
+  });
   saveDB();
   renderSetupBeds();
 }
@@ -1069,7 +1141,7 @@ function deleteWardBed(idx) {
 function updateStartBtn() {
   const btn = document.getElementById('startBtn');
   if (!btn) return;
-  const inShift = !!localStorage.getItem('cdu_start');
+  const inShift = !!safeGetRaw('cdu_start');
   if (alloc.length === 0) {
     btn.textContent = t('startEmpty');
     btn.disabled = true;
@@ -1094,7 +1166,7 @@ function commitQuickReorderQueue() {
     });
     modConfig = ordered;
     sortModConfig();
-    localStorage.setItem('cdu_mods', JSON.stringify(modConfig));
+    safeSet('cdu_mods', JSON.stringify(modConfig));
   }
   quickReorderActive = false;
   quickReorderQueue = [];
@@ -1210,7 +1282,7 @@ function toggleMod(idx, checked) {
   }
   modConfig[idx].on = checked;
   sortModConfig();
-  localStorage.setItem('cdu_mods', JSON.stringify(modConfig));
+  safeSet('cdu_mods', JSON.stringify(modConfig));
   renderModList();
   applyStaticTranslations();
 }
@@ -1223,7 +1295,7 @@ function moveMod(idx, dir) {
   const temp = modConfig[idx];
   modConfig[idx] = modConfig[target];
   modConfig[target] = temp;
-  localStorage.setItem('cdu_mods', JSON.stringify(modConfig));
+  safeSet('cdu_mods', JSON.stringify(modConfig));
   renderModList();
 }
 
@@ -1233,8 +1305,8 @@ function startShift() {
   if (quickReorderActive) commitQuickReorderQueue();
   unlockAudioContext();
   alloc = sortBedArray(alloc);
-  const curSt = Number(localStorage.getItem('cdu_start'));
-  if (!curSt || curSt < 1000000000000) localStorage.setItem('cdu_start', String(Date.now()));
+  const curSt = Number(safeGetRaw('cdu_start'));
+  if (!curSt || curSt < 1000000000000) safeSet('cdu_start', String(Date.now()));
   if (!curBed || !alloc.includes(curBed)) curBed = alloc[0];
   activeFluidIdx = getCurrentShiftHourIdx();
   const activeSecs = getActiveSections();
@@ -1243,9 +1315,8 @@ function startShift() {
   document.getElementById('setupView').classList.add('hidden');
   document.getElementById('mainView').classList.remove('hidden');
   document.getElementById('editBtn').classList.remove('hidden');
-  if (window.history && window.history.pushState) {
-    window.history.pushState({ cduInShift: true }, '');
-  }
+  pushNavState({ cduInShift: true });
+  shiftHistoryPushed = true;
   renderUI();
   startAlertTimer();
 }
@@ -1257,6 +1328,7 @@ function editBeds() {
   document.getElementById('mainView').classList.add('hidden');
   document.getElementById('setupView').classList.remove('hidden');
   document.getElementById('editBtn').classList.add('hidden');
+  pushNavState({ cduEditSetup: true });
   renderLayoutDropdown();
   renderSetupBeds();
   renderModList();
@@ -1265,57 +1337,80 @@ function editBeds() {
 function clearShift() {
   if (!confirm(t('endShift') + '?')) return;
   db = {};
-  openForms = {};
   expandedCards = {};
-  localStorage.removeItem('cdu_db');
-  localStorage.removeItem('cdu_start');
+  safeRemove('cdu_db');
+  safeRemove('cdu_start');
   showSummary = false;
   showManageBed = false;
   showQuickAddBed = false;
+  cleanupShiftRuntime();
   initSetup();
 }
 
 function toggleDark(checked) {
   isDark = checked;
-  localStorage.setItem('cdu_dark', checked ? '1' : '0');
+  safeSet('cdu_dark', checked ? '1' : '0');
   document.body.setAttribute('data-theme', isDark ? 'night' : 'day');
 }
 
 function togglePrivacy(show) {
   document.getElementById('privacyScreen').classList.toggle('hidden', !show);
-  if (show && window.history && window.history.pushState) {
-    window.history.pushState({ cduPrivacy: true }, '');
+  if (show) {
+    pushNavState({ cduPrivacy: true });
   }
 }
 
 function shareApp() {
   if (navigator.share) navigator.share({ title: 'Care Digipad', text: t('sub'), url: window.location.href }).catch(() => {});
-  else if (navigator.clipboard) { navigator.clipboard.writeText(window.location.href); alert('Link copied to clipboard'); }
+  else if (navigator.clipboard) { navigator.clipboard.writeText(window.location.href); alert(t('linkCopied')); }
 }
 
 window.addEventListener('popstate', () => {
   const priv = document.getElementById('privacyScreen');
   if (priv && !priv.classList.contains('hidden')) {
     priv.classList.add('hidden');
+    pushNavState({ cduInShift: true });
     return;
   }
-  if (showManageBed || showQuickAddBed || showSummary) {
+  const setupEl = document.getElementById('setupView');
+  if (setupEl && !setupEl.classList.contains('hidden') && safeGetRaw('cdu_start') && alloc.length > 0) {
+    startShift();
+    return;
+  }
+  if (showManageBed || showQuickAddBed) {
     showManageBed = false;
     showQuickAddBed = false;
+    if (typeof renderUI === 'function') renderUI();
+    pushNavState({ cduInShift: true });
+    return;
+  }
+  if (showSummary) {
     showSummary = false;
     if (typeof renderUI === 'function') renderUI();
-    if (window.history && window.history.pushState) {
-      window.history.pushState({ cduInShift: true }, '');
-    }
+    pushNavState({ cduInShift: true });
   }
 });
 
-document.addEventListener('visibilitychange', () => { if (!document.hidden) checkShiftExpiry(); });
+document.addEventListener('visibilitychange', async () => {
+  if (!document.hidden) {
+    if (checkShiftExpiry()) return;
+    if (wakeLockWanted && !wakeLockObj && 'wakeLock' in navigator) {
+      try {
+        wakeLockObj = await navigator.wakeLock.request('screen');
+        wakeLockObj.addEventListener('release', () => {
+          wakeLockObj = null;
+          if (showSummary && typeof renderSummary === 'function') renderSummary();
+        });
+        if (showSummary && typeof renderSummary === 'function') renderSummary();
+      } catch (e) {}
+    }
+  }
+});
 window.addEventListener('pageshow', checkShiftExpiry);
 window.addEventListener('DOMContentLoaded', initSetup);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=9').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=10').catch(() => {});
   });
 }
