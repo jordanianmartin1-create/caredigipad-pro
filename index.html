@@ -105,7 +105,23 @@
   </div>
 
   <div class="card">
-    <div id="savedLayoutRow" style="margin-bottom:12px;">
+    <div class="step-hdr">
+      <span class="step-badge">1</span>
+      <span id="lblShiftHrs" class="step-title">Shift Hours</span>
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button type="button" id="btnDayShift" class="mini-btn" style="padding:10px 8px; font-size:0.86rem;" onclick="setShift('day')">Day (07:00)</button>
+      <button type="button" id="btnNightShift" class="mini-btn" style="padding:10px 8px; font-size:0.86rem;" onclick="setShift('night')">Night (19:00)</button>
+    </div>
+
+    <div class="step-divider"></div>
+
+    <div class="step-hdr" style="margin-bottom:10px;">
+      <span class="step-badge">2</span>
+      <span id="lblAddBed" class="step-title">Your Patient Beds (Max 4 chars)</span>
+    </div>
+
+    <div id="savedLayoutRow" class="layout-box hidden">
       <label id="lblSavedLay">Saved Ward Layouts</label>
       <div style="display:flex; gap:8px;">
         <select id="layoutSelect" onchange="loadLayout(this.value)" style="flex:1; font-size:1rem;"></select>
@@ -113,10 +129,16 @@
       </div>
     </div>
 
-    <label id="lblAddBed">Your Patient Beds (Max 4 chars)</label>
     <div style="display:flex; gap:8px; margin-bottom:10px;">
       <input type="text" id="newBedInput" maxlength="4" placeholder="e.g. B1, SR2" style="flex:1; text-transform:uppercase; font-size:1rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomBed();}">
       <button type="button" id="btnAddBed" class="btn btn-primary btn-sm" onclick="addCustomBed()">+ Add</button>
+    </div>
+
+    <div id="firstTimeGuide" class="first-time-box hidden">
+      <div style="font-weight:800; margin-bottom:4px; color:var(--teal);">Quick Start Guide:</div>
+      <div>1. Type your bed numbers or bay codes above (e.g. <strong>B1</strong>, <strong>SR2</strong>) and tap <strong>+ Add</strong>.</div>
+      <div>2. Tap your beds below to tick them for today's shift.</div>
+      <div>3. Tap <strong>Start Shift</strong> at the bottom of the screen.</div>
     </div>
 
     <div class="bed-toolbar">
@@ -131,23 +153,32 @@
     </div>
 
     <div id="setupBedGrid" class="bed-grid"></div>
+
+    <div id="saveLayoutBox" class="save-layout-footer hidden">
+      <label id="lblSaveLayTitle" style="margin-bottom:6px;">Save Ticked Beds as a Ward Layout</label>
+      <button type="button" id="btnUpdActiveLay" class="btn btn-subtle btn-sm hidden" style="width:100%; margin-bottom:8px; border-color:var(--teal); color:var(--teal); font-weight:800;" onclick="updateActiveLayoutInSetup()"></button>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="newLayoutName" placeholder="Or save as new layout (e.g. Night)" style="flex:1; font-size:1rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveLayout();}">
+        <button type="button" id="btnSaveLay" class="btn btn-primary btn-sm" onclick="saveLayout()">+ Save New</button>
+      </div>
+    </div>
   </div>
 
   <div class="card">
-    <button type="button" id="btnToggleSettings" class="settings-toggle-btn" onclick="toggleSettingsPanel()">Shift Hours, Units &amp; Active Modules ▾</button>
-    <div id="settingsBody" class="hidden" style="margin-top:14px;">
-      <h3 id="lblPrefs" style="font-size:0.95rem; margin-bottom:10px;">Preferences &amp; Units</h3>
+    <div id="btnToggleSettings" class="settings-card-hdr" onclick="toggleSettingsPanel()">
+      <div style="flex:1; min-width:0;">
+        <div id="lblToggleSettingsTitle" class="settings-hdr-title">Customise Modules, Units &amp; Theme</div>
+        <div id="settingsSummarySub" class="settings-hdr-sub">2 modules active • mmol/L • °C</div>
+      </div>
+      <span id="btnToggleSettingsPill" class="settings-pill">Show / Edit ▾</span>
+    </div>
+
+    <div id="settingsBody" class="hidden" style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border);">
+      <h3 id="lblPrefs" style="font-size:0.92rem; margin-bottom:10px;">Preferences &amp; Units</h3>
       <div class="row">
         <div>
           <label id="lblTheme">Theme</label>
           <select id="themeSelect" style="font-size:1rem;" onchange="setTheme(this.value)"></select>
-        </div>
-        <div>
-          <label id="lblShiftHrs">Shift Hours</label>
-          <div style="display:flex; gap:6px;">
-            <button type="button" id="btnDayShift" class="mini-btn" onclick="setShift('day')">Day (07:00)</button>
-            <button type="button" id="btnNightShift" class="mini-btn" onclick="setShift('night')">Night (19:00)</button>
-          </div>
         </div>
       </div>
       <div class="row">
@@ -167,13 +198,19 @@
         </div>
       </div>
 
-      <label id="lblActiveMods" style="margin-top:12px; margin-bottom:8px;">Active Modules (Tick to show • Tap ▲ ▼ to reorder)</label>
-      <div id="modList"></div>
-
-      <div style="display:flex; gap:8px; margin-top:12px;">
-        <input type="text" id="newLayoutName" placeholder="Or save as new layout (e.g. Night)" style="flex:1; font-size:1rem;">
-        <button type="button" id="btnSaveLay" class="btn btn-primary btn-sm" onclick="saveLayout()">+ Save New</button>
+      <div class="mod-sec-hdr">
+        <div style="flex:1; min-width:0;">
+          <div id="lblActiveMods" style="font-weight:800; font-size:0.9rem; color:var(--text);">Shift Modules &amp; Tab Order</div>
+          <div id="lblModOrderHelp" style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">Tick modules to show on shift. Use Up / Down or Tap in Order to set their left-to-right tab sequence.</div>
+        </div>
+        <button type="button" id="btnQuickReorder" class="btn btn-subtle btn-sm" style="flex-shrink:0; border-color:var(--teal); color:var(--teal);" onclick="toggleQuickReorder()">Tap in Order</button>
       </div>
+
+      <div id="quickReorderBanner" class="reorder-banner hidden">
+        <span id="lblQuickReorderPrompt">Tap your active modules below in the order you want them (1st, 2nd, 3rd...):</span>
+      </div>
+
+      <div id="modList"></div>
     </div>
   </div>
 
