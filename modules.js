@@ -120,18 +120,31 @@ function isObsFilled(o) {
   return hasVal(o.rr) || hasVal(o.sp) || hasVal(o.o2) || hasVal(o.sys) || hasVal(o.dia) || (hasVal(o.bp) && o.bp !== '-/-') || hasVal(o.hr) || hasVal(o.tm) || (o.aIdx !== null && o.aIdx !== undefined && o.aIdx !== '') || hasVal(o.pn);
 }
 
+function kvPill(label, valHtml) {
+  if (!label) return `<span class="sum-kv"><span class="sum-v">${valHtml}</span></span>`;
+  return `<span class="sum-kv"><span class="sum-k">${esc(label)}</span><span class="sum-v">${valHtml}</span></span>`;
+}
+
+function timePill(tStr) {
+  return `<span class="sum-time">${esc(tStr || '--:--')}</span>`;
+}
+
 function formatObsLine(o) {
   const acvpuList = getLangList('acvpu');
   const parts = [];
-  if (o.rr && o.rr !== '-') parts.push(`RR <b>${esc(o.rr)}</b>`);
-  if (o.sp && o.sp !== '-') parts.push(`SpO2 <b>${esc(o.sp)}%</b>${(o.o2 && o.o2 !== '-') ? ` (${esc(trCode(o.o2))})` : ''}`);
-  else if (o.o2 && o.o2 !== '-') parts.push(`<b>${esc(trCode(o.o2))}</b>`);
-  if (o.bp && o.bp !== '-' && o.bp !== '-/-') parts.push(`BP <b>${esc(o.bp)}</b>`);
-  if (o.hr && o.hr !== '-') parts.push(`HR <b>${esc(o.hr)}</b>`);
-  if (typeof o.aIdx === 'number' && acvpuList[o.aIdx]) parts.push(`<b>${esc(acvpuList[o.aIdx])}</b>`);
-  if (o.tm && o.tm !== '-') parts.push(`Temp <b>${esc(o.tm)}${esc(o.u || tempUnit)}</b>`);
-  if (o.pn !== '' && o.pn !== undefined && o.pn !== null && o.pn !== '-') parts.push(`${esc(t('pain'))} <b>${esc(o.pn)}/10</b>`);
-  return parts.join(' • ');
+  if (o.rr && o.rr !== '-') parts.push(kvPill('RR', esc(o.rr)));
+  if (o.sp && o.sp !== '-') {
+    const o2Txt = (o.o2 && o.o2 !== '-') ? ` (${esc(trCode(o.o2))})` : '';
+    parts.push(kvPill('SpO2', `${esc(o.sp)}%${o2Txt}`));
+  } else if (o.o2 && o.o2 !== '-') {
+    parts.push(kvPill('O2', esc(trCode(o.o2))));
+  }
+  if (o.bp && o.bp !== '-' && o.bp !== '-/-') parts.push(kvPill('BP', esc(o.bp)));
+  if (o.hr && o.hr !== '-') parts.push(kvPill('HR', esc(o.hr)));
+  if (typeof o.aIdx === 'number' && acvpuList[o.aIdx]) parts.push(kvPill('ACVPU', esc(acvpuList[o.aIdx])));
+  if (o.tm && o.tm !== '-') parts.push(kvPill('Temp', `${esc(o.tm)}${esc(o.u || tempUnit)}`));
+  if (o.pn !== '' && o.pn !== undefined && o.pn !== null && o.pn !== '-') parts.push(kvPill(t('pain'), `${esc(o.pn)}/10`));
+  return parts.join('');
 }
 
 function modEntryCount(b, modId) {
@@ -388,7 +401,7 @@ function renderSection() {
     topHtml += `<div class="manage-panel">
       <div style="font-weight:800; margin-bottom:8px;">${esc(t('quickAddBedTitle'))}</div>
       <div style="display:flex; gap:8px; margin-bottom:8px;">
-        <input type="text" id="quickBedInput" maxlength="4" style="text-transform:uppercase; font-size:1rem;">
+        <input type="text" id="quickBedInput" maxlength="4" placeholder="${esc(t('bedPh'))}" style="text-transform:uppercase; font-size:1rem;">
         <button type="button" class="btn btn-primary btn-sm" onclick="quickAddBedToShift()">${esc(t('add'))}</button>
       </div>
       ${unalloc.length > 0 ? `<div style="font-size:0.78rem; color:var(--text-sub); margin-bottom:6px;">${esc(t('savedWardBeds'))}</div>
@@ -420,7 +433,7 @@ function renderSection() {
     bodyHtml = p.obs.map((o, i) => {
       if (i !== expIdx && isObsFilled(o)) {
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('obs', ${i})">
-          <div><strong>${esc(o.t || '--:--')}</strong> — ${formatObsLine(o)} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:6px;">✎</span></div>
+          <div style="line-height:1.8;">${timePill(o.t)}${formatObsLine(o)} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('obs', ${i})">✕</button>
         </div>`;
       }
@@ -484,7 +497,7 @@ function renderSection() {
       const flags = Array.isArray(b.f) ? b.f : [];
       if (i !== expIdx && b.v) {
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bm', ${i})">
-          <div><strong>${esc(b.t)}</strong> — <b>${esc(b.v)} ${esc(b.u || bmUnit)}</b>${b.c ? ' (' + esc(trCode(b.c)) + ')' : ''}${flags.length ? ' • ' + flags.map(f => esc(trCode(f))).join(', ') : ''} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:6px;">✎</span></div>
+          <div>${timePill(b.t)}${kvPill(b.c ? trCode(b.c) : t('bm'), `${esc(b.v)} ${esc(b.u || bmUnit)}`)}${flags.map(f => kvPill('', esc(trCode(f)))).join('')} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bm', ${i})">✕</button>
         </div>`;
       }
@@ -521,7 +534,7 @@ function renderSection() {
       const syms = Array.isArray(x.sym) ? x.sym : [];
       if (i !== expIdx && ((x.l && x.l !== '-') || (x.s && x.s !== '-'))) {
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bp', ${i})">
-          <div><strong>${esc(x.t)}</strong> — ${esc(t('lying'))}: <b>${esc(x.l)}</b> | ${esc(t('standing'))}: <b>${esc(x.s)}</b>${syms.length ? ' (' + syms.map(s => esc(trCode(s))).join(', ') + ')' : ''} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:6px;">✎</span></div>
+          <div>${timePill(x.t)}${kvPill(t('lying'), esc(x.l))}${kvPill(t('standing'), esc(x.s))}${syms.map(s => kvPill('', esc(trCode(s)))).join('')} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bp', ${i})">✕</button>
         </div>`;
       }
@@ -535,7 +548,7 @@ function renderSection() {
         </div>
         <div class="row">
           <div>
-            <label>${esc(t('lying'))} BP (Sys / Dia)</label>
+            <label>${esc(t('lying'))} — ${esc(t('bpLbl'))}</label>
             <div class="bp-pair">
               <input type="number" id="bpLSys_${i}" inputmode="numeric" value="${esc(lSys)}" oninput="updBpPair(${i}, 'l', 'Sys', this.value); autoJumpBp(this.value, 'bpLDia_${i}', 60)">
               <span>/</span>
@@ -545,7 +558,7 @@ function renderSection() {
         </div>
         <div class="row">
           <div>
-            <label>${esc(t('standing'))} BP (Sys / Dia)</label>
+            <label>${esc(t('standing'))} — ${esc(t('bpLbl'))}</label>
             <div class="bp-pair">
               <input type="number" id="bpSSys_${i}" inputmode="numeric" value="${esc(sSys)}" oninput="updBpPair(${i}, 's', 'Sys', this.value); autoJumpBp(this.value, 'bpSDia_${i}', 60)">
               <span>/</span>
@@ -618,9 +631,11 @@ function renderSection() {
     const expIdx = getExpIdx('bowel', p.bowel.length);
     bodyHtml = p.bowel.map((b, i) => {
       if (i !== expIdx && b.a) {
-        const sumTxt = b.a === 'bno' ? `<b>${esc(t('bnoFull'))}</b>` : `<b>${esc(trCode(b.a))}</b>${b.ty ? ' — ' + esc(trCode(b.ty)) : ''}${b.m ? ' • ' + esc(trCode(b.m)) : ''}`;
+        const sumTxt = b.a === 'bno'
+          ? kvPill('', esc(t('bnoFull')))
+          : `${kvPill(t('amt'), esc(trCode(b.a)))}${b.ty ? kvPill('', esc(trCode(b.ty))) : ''}${b.m ? kvPill('', esc(trCode(b.m))) : ''}`;
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bowel', ${i})">
-          <div><strong>${esc(b.t)}</strong> — ${sumTxt} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:6px;">✎</span></div>
+          <div>${timePill(b.t)}${sumTxt} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bowel', ${i})">✕</button>
         </div>`;
       }
@@ -771,7 +786,7 @@ function renderSection() {
         <button type="button" class="btn btn-primary btn-sm" onclick="addCustomSupp()">${esc(t('add'))}</button>
       </div>
       ${p.diet.supps.map((s, idx) => `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:var(--bg); border-radius:6px; margin-bottom:6px; font-size:0.86rem;">
-        <span><strong>${esc(s.t)}</strong> — ${esc(trCode(s.v))}</span>
+        <span>${timePill(s.t)} ${kvPill('', esc(trCode(s.v)))}</span>
         <button type="button" class="del-btn" onclick="delSupp(${idx})">✕</button>
       </div>`).join('')}
       <div class="chip-row" style="margin-top:8px; margin-bottom:0;">
@@ -832,7 +847,7 @@ function renderSection() {
     const listHtml = p.mh.map((m, i) => {
       if (i !== expIdx && (m.m || m.r || m.rat || m.n)) {
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('mh', ${i})">
-          <div><strong>${esc(m.t)}</strong> — ${m.m ? `<b>${esc(trCode(m.m))}</b>` : ''}${m.r ? (m.m ? ' • ' : '') + esc(trCode(m.r)) : ''}${m.rat ? ' • ' + esc(trCode(m.rat)) : ''}${m.n ? ' (' + esc(m.n) + ')' : ''} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:6px;">✎</span></div>
+          <div>${timePill(m.t)}${m.m ? kvPill(t('mood'), esc(trCode(m.m))) : ''}${m.r ? kvPill('', esc(trCode(m.r))) : ''}${m.rat ? kvPill('', esc(trCode(m.rat))) : ''}${m.n ? kvPill('', esc(m.n)) : ''} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('mh', ${i})">✕</button>
         </div>`;
       }
@@ -1235,16 +1250,16 @@ function jumpToBedMod(bIdx, modId) {
 function doneBtnHtml(bIdx, sec, idx, isDone) {
   const lbl = isDone ? esc(t('done')) : esc(t('markDone'));
   const style = isDone
-    ? 'background:var(--green); color:#fff; border:1px solid var(--green); padding:3px 9px; border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer; flex-shrink:0;'
-    : 'background:transparent; color:var(--text-sub); border:1px solid var(--input-border); padding:3px 9px; border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer; flex-shrink:0;';
+    ? 'background:var(--green); color:#fff; border:1px solid var(--green); padding:4px 10px; border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer; flex-shrink:0;'
+    : 'background:transparent; color:var(--text-sub); border:1px solid var(--input-border); padding:4px 10px; border-radius:6px; font-size:0.74rem; font-weight:700; cursor:pointer; flex-shrink:0;';
   return `<button type="button" style="${style}" onclick="toggleSumDone(${bIdx}, '${sec}', ${idx})">${lbl}</button>`;
 }
 
 function sumRowWrap(leftHtml, bIdx, sec, idx, isDone) {
   if (hideCompleted && isDone) return '';
-  const textStyle = isDone ? 'opacity:0.48; color:var(--text-sub); flex:1;' : 'flex:1;';
-  return `<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:5px 0; border-bottom:1px solid var(--border);">
-    <span style="${textStyle}">${leftHtml}</span>
+  const textStyle = isDone ? 'opacity:0.45; color:var(--text-sub); flex:1; line-height:1.8;' : 'flex:1; line-height:1.8;';
+  return `<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--border);">
+    <div style="${textStyle}">${leftHtml}</div>
     ${doneBtnHtml(bIdx, sec, idx, isDone)}
   </div>`;
 }
@@ -1309,21 +1324,23 @@ function buildModuleSummaryForBed(b, modId) {
   if (modId === 'obs') {
     p.obs.forEach((o, i) => {
       if (!isObsFilled(o)) return;
-      rows += sumRowWrap(`<strong>${esc(o.t || '--:--')}</strong> — ${formatObsLine(o)}`, bIdx, 'obs', i, !!o.done);
+      rows += sumRowWrap(`${timePill(o.t)}${formatObsLine(o)}`, bIdx, 'obs', i, !!o.done);
     });
   } else if (modId === 'bm') {
     p.bm.forEach((x, i) => {
       if (!x.v || String(x.v).trim() === '') return;
-      rows += sumRowWrap(`<strong>${esc(x.t)}</strong> — <b>${esc(x.v)} ${esc(x.u || bmUnit)}</b>${x.c ? ' (' + esc(trCode(x.c)) + ')' : ''}${(x.f && x.f.length) ? ' • ' + x.f.map(f => esc(trCode(f))).join(', ') : ''}`, bIdx, 'bm', i, !!x.done);
+      const flagsHtml = (x.f && x.f.length) ? x.f.map(f => kvPill('', esc(trCode(f)))).join('') : '';
+      rows += sumRowWrap(`${timePill(x.t)}${kvPill(x.c ? trCode(x.c) : t('bm'), `${esc(x.v)} ${esc(x.u || bmUnit)}`)}${flagsHtml}`, bIdx, 'bm', i, !!x.done);
     });
   } else if (modId === 'bp') {
     p.bp.forEach((x, i) => {
       const hasL = x.l && x.l !== '-' && x.l !== '-/-', hasS = x.s && x.s !== '-' && x.s !== '-/-';
       if (!hasL && !hasS && (!x.sym || !x.sym.length)) return;
       const bpParts = [];
-      if (hasL) bpParts.push(`${esc(t('lying'))}: <b>${esc(x.l)}</b>`);
-      if (hasS) bpParts.push(`${esc(t('standing'))}: <b>${esc(x.s)}</b>`);
-      rows += sumRowWrap(`<strong>${esc(x.t)}</strong> — ${bpParts.join(' | ')}${(x.sym && x.sym.length) ? ' (' + x.sym.map(s => esc(trCode(s))).join(', ') + ')' : ''}`, bIdx, 'bp', i, !!x.done);
+      if (hasL) bpParts.push(kvPill(t('lying'), esc(x.l)));
+      if (hasS) bpParts.push(kvPill(t('standing'), esc(x.s)));
+      if (x.sym && x.sym.length) x.sym.forEach(s => bpParts.push(kvPill('', esc(trCode(s)))));
+      rows += sumRowWrap(`${timePill(x.t)}${bpParts.join('')}`, bIdx, 'bp', i, !!x.done);
     });
   } else if (modId === 'fluid') {
     let totI = 0, totO = 0, hasFluidActivity = false;
@@ -1333,83 +1350,100 @@ function buildModuleSummaryForBed(b, modId) {
       if (fi > 0 || fo > 0 || fw > 0) {
         hasFluidActivity = true;
         const segs = [];
-        if (fi > 0) segs.push(`${esc(t('flIn'))} <b>${fi}ml</b>`);
-        if (fo > 0) segs.push(`${esc(t('flOut'))} <b>${fo}ml</b>${f.src ? ' (' + esc(trCode(f.src)) + ')' : ''}`);
-        else if (f.src) segs.push(`<b>${esc(trCode(f.src))}</b>`);
-        if (fw > 0) segs.push(`${esc(t('wetPad'))} x<b>${fw}</b>`);
-        rows += sumRowWrap(`<strong>${esc(f.t || '')}</strong> — ${segs.join(' | ')}`, bIdx, 'fluids', i, !!f.done);
+        if (fi > 0) segs.push(kvPill(t('flIn'), `${fi}ml`));
+        if (fo > 0) segs.push(kvPill(t('flOut'), `${fo}ml${f.src ? ' (' + esc(trCode(f.src)) + ')' : ''}`));
+        else if (f.src) segs.push(kvPill(t('flOut'), esc(trCode(f.src))));
+        if (fw > 0) segs.push(kvPill(t('wetPad'), `x${fw}`));
+        rows += sumRowWrap(`${timePill(f.t)}${segs.join('')}`, bIdx, 'fluids', i, !!f.done);
       }
     });
     if (rows || (hasFluidActivity && !hideCompleted)) {
       const net = totI - totO;
-      rows += `<div style="padding-top:6px; font-size:0.9rem;"><strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b>${totI}ml</b> | ${esc(t('flOut'))} <b>${totO}ml</b> | ${esc(t('flNet'))} <b>${net > 0 ? '+' + net : net}ml</b></div>`;
+      rows += `<div style="padding-top:8px;">${kvPill(t('flIn'), `${totI}ml`)}${kvPill(t('flOut'), `${totO}ml`)}${kvPill(t('flNet'), `${net > 0 ? '+' + net : net}ml`)}</div>`;
     }
   } else if (modId === 'bowel') {
     p.bowel.forEach((x, i) => {
       if (!x.a) return;
-      const txt = x.a === 'bno' ? `<strong>${esc(x.t)}</strong> — <b>${esc(t('bnoFull'))}</b>` : `<strong>${esc(x.t)}</strong> — <b>${esc(trCode(x.a))}</b>${x.ty ? ' — ' + esc(trCode(x.ty)) : ''}${x.m ? ' • ' + esc(trCode(x.m)) : ''}`;
-      rows += sumRowWrap(txt, bIdx, 'bowel', i, !!x.done);
+      const pills = x.a === 'bno'
+        ? kvPill('', esc(t('bnoFull')))
+        : `${kvPill(t('amt'), esc(trCode(x.a)))}${x.ty ? kvPill('', esc(trCode(x.ty))) : ''}${x.m ? kvPill('', esc(trCode(x.m))) : ''}`;
+      rows += sumRowWrap(`${timePill(x.t)}${pills}`, bIdx, 'bowel', i, !!x.done);
     });
   } else if (modId === 'amy') {
     const skParts = [];
-    ['sacrum', 'groin', 'heels', 'elbows'].forEach(st => { if (p.skin[st]) skParts.push(`${esc(t(st))}: <b>${esc(trCode(p.skin[st]))}</b>`); });
-    p.skinCustom.forEach(c => { if (c.site && c.cond) skParts.push(`${esc(trCode(c.site))}${c.side ? ' (' + esc(trCode(c.side)) + ')' : ''}: <b>${esc(trCode(c.cond))}</b>`); });
-    if (p.skinCare.length > 0) skParts.push(p.skinCare.map(ck => `<b>${esc(trCode(ck))}</b>`).join(', '));
-    if (skParts.length > 0) rows += sumRowWrap(skParts.join(', '), bIdx, 'skin', 0, !!p.skinDone);
+    ['sacrum', 'groin', 'heels', 'elbows'].forEach(st => { if (p.skin[st]) skParts.push(kvPill(t(st), esc(trCode(p.skin[st])))); });
+    p.skinCustom.forEach(c => { if (c.site && c.cond) skParts.push(kvPill(`${trCode(c.site)}${c.side ? ' (' + trCode(c.side) + ')' : ''}`, esc(trCode(c.cond)))); });
+    p.skinCare.forEach(ck => skParts.push(kvPill('', esc(trCode(ck)))));
+    if (skParts.length > 0) rows += sumRowWrap(skParts.join(''), bIdx, 'skin', 0, !!p.skinDone);
     p.dressings.forEach((d, i) => {
       if (!d.l || !d.l.trim()) return;
-      rows += sumRowWrap(`<strong>${esc(t('dressing'))}:</strong> <b>${esc(d.l)}</b>${d.st ? ' (' + esc(trCode(d.st)) + ')' : ''}${d.f ? ` — ${esc(t('due'))}: <b>${esc(calcDue(d.dt, d.f))}</b>` : ` — ${esc(formatIsoDate(d.dt))}`}`, bIdx, 'dressings', i, !!d.done);
+      const drPills = [
+        kvPill(t('dressing'), esc(d.l)),
+        d.st ? kvPill('', esc(trCode(d.st))) : '',
+        d.f ? kvPill(t('due'), esc(calcDue(d.dt, d.f))) : kvPill(t('date'), esc(formatIsoDate(d.dt)))
+      ].join('');
+      rows += sumRowWrap(drPills, bIdx, 'dressings', i, !!d.done);
     });
   } else if (modId === 'food') {
     const dParts = [];
-    if (p.diet.b) dParts.push(`${esc(t('b'))}: <b>${esc(trCode(p.diet.b))}</b>`);
-    if (p.diet.l) dParts.push(`${esc(t('l'))}: <b>${esc(trCode(p.diet.l))}</b>`);
-    if (p.diet.d) dParts.push(`${esc(t('d'))}: <b>${esc(trCode(p.diet.d))}</b>`);
-    if (p.diet.supp) dParts.push(`${esc(t('supp'))}: <b>${esc(p.diet.supp)}</b>`);
-    p.diet.supps.forEach(s => dParts.push(`${esc(s.t)} <b>${esc(trCode(s.v))}</b>`));
-    if (p.diet.flags.length > 0) dParts.push(p.diet.flags.map(fl => `<b>${esc(trCode(fl))}</b>`).join(', '));
-    if (dParts.length > 0) rows += sumRowWrap(dParts.join(' | '), bIdx, 'diet', 0, !!p.diet.done);
+    if (p.diet.b) dParts.push(kvPill(t('b'), esc(trCode(p.diet.b))));
+    if (p.diet.l) dParts.push(kvPill(t('l'), esc(trCode(p.diet.l))));
+    if (p.diet.d) dParts.push(kvPill(t('d'), esc(trCode(p.diet.d))));
+    if (p.diet.supp) dParts.push(kvPill(t('supp'), esc(p.diet.supp)));
+    p.diet.supps.forEach(s => dParts.push(`${timePill(s.t)}${kvPill(t('supp'), esc(trCode(s.v)))}`));
+    p.diet.flags.forEach(fl => dParts.push(kvPill('', esc(trCode(fl)))));
+    if (dParts.length > 0) rows += sumRowWrap(dParts.join(''), bIdx, 'diet', 0, !!p.diet.done);
   } else if (modId === 'turn') {
     if (p.turnFreq || p.turnChecks.length > 0) {
-      const planTxt = `${p.turnFreq ? `${esc(t('turnFreqLbl'))}: <b>${esc(trCode(p.turnFreq))}</b>` : ''}${p.turnChecks.length ? (p.turnFreq ? ' • ' : '') + p.turnChecks.map(ck => `<b>${esc(trCode(ck))}</b>`).join(', ') : ''}`;
-      rows += sumRowWrap(planTxt, bIdx, 'turnPlan', 0, !!p.turnPlanDone);
+      const planPills = [];
+      if (p.turnFreq) planPills.push(kvPill(t('turnFreqLbl'), esc(trCode(p.turnFreq))));
+      p.turnChecks.forEach(ck => planPills.push(kvPill('', esc(trCode(ck)))));
+      rows += sumRowWrap(planPills.join(''), bIdx, 'turnPlan', 0, !!p.turnPlanDone);
     }
-    p.turns.forEach((tr, i) => { if (tr.p) rows += sumRowWrap(`<strong>${esc(tr.t)}</strong> — <b>${esc(trCode(tr.p))}</b>`, bIdx, 'turns', i, !!tr.done); });
+    p.turns.forEach((tr, i) => { if (tr.p) rows += sumRowWrap(`${timePill(tr.t)}${kvPill(t('posLbl'), esc(trCode(tr.p)))}`, bIdx, 'turns', i, !!tr.done); });
   } else if (modId === 'mh') {
     if (p.mhLevel && p.mh.length === 0) {
-      rows += sumRowWrap(`${esc(t('obsLevel'))}: <b>${esc(trCode(p.mhLevel))}</b>`, bIdx, 'mhLevel', 0, !!p.mhLevelDone);
+      rows += sumRowWrap(kvPill(t('obsLevel'), esc(trCode(p.mhLevel))), bIdx, 'mhLevel', 0, !!p.mhLevelDone);
     }
     p.mh.forEach((m, i) => {
       if (!m.m && !m.r && !m.rat && !m.n) return;
-      rows += sumRowWrap(`<strong>${esc(m.t)}</strong>${p.mhLevel ? ' (' + esc(trCode(p.mhLevel)) + ')' : ''} — ${m.m ? `<b>${esc(trCode(m.m))}</b>` : ''}${m.r ? (m.m ? ' • ' : '') + esc(trCode(m.r)) : ''}${m.rat ? ' • ' + esc(trCode(m.rat)) : ''}${m.n ? ' (' + esc(m.n) + ')' : ''}`, bIdx, 'mh', i, !!m.done);
+      const mhPills = [
+        timePill(m.t),
+        p.mhLevel ? kvPill(t('obsLevel'), esc(trCode(p.mhLevel))) : '',
+        m.m ? kvPill(t('mood'), esc(trCode(m.m))) : '',
+        m.r ? kvPill(t('rest'), esc(trCode(m.r))) : '',
+        m.rat ? kvPill('', esc(trCode(m.rat))) : '',
+        m.n ? kvPill('', esc(m.n)) : ''
+      ].join('');
+      rows += sumRowWrap(mhPills, bIdx, 'mh', i, !!m.done);
     });
   } else if (modId === 'events') {
     p.events.forEach((e, i) => {
       const noteTxt = (typeof e.pIdx === 'number' && phrases[e.pIdx] && !e.customEdited) ? phrases[e.pIdx] : (e.e || '');
-      if (noteTxt.trim()) rows += sumRowWrap(`<strong>${esc(e.t)}</strong> — ${esc(noteTxt)}${e.o ? ' → <b>' + esc(e.o) + '</b>' : ''}`, bIdx, 'events', i, !!e.done);
+      if (noteTxt.trim()) rows += sumRowWrap(`${timePill(e.t)}<span style="font-weight:700;">${esc(noteTxt)}</span>${e.o ? ' ' + kvPill(t('outcome'), esc(e.o)) : ''}`, bIdx, 'events', i, !!e.done);
     });
   } else if (modId === 'reminders') {
     p.reminders.forEach((r, i) => {
       const tkTxt = (typeof r.tIdx === 'number' && taskList[r.tIdx] && !r.customEdited) ? taskList[r.tIdx] : (r.txt || '');
       if (!tkTxt.trim()) return;
       const overdue = isTaskOverdue(r);
-      rows += sumRowWrap(`<strong>${esc(r.due || '--:--')}</strong> — <b>${esc(tkTxt)}</b>${overdue ? ` <span class="task-badge overdue">${esc(t('overdue'))}</span>` : ''}`, bIdx, 'reminders', i, !!r.done);
+      rows += sumRowWrap(`${timePill(r.due)}${kvPill(t('reminders'), esc(tkTxt))}${overdue ? ` <span class="task-badge overdue">${esc(t('overdue'))}</span>` : ''}`, bIdx, 'reminders', i, !!r.done);
     });
   } else if (modId === 'admit') {
     const aParts = [];
-    if (p.admit.w) aParts.push(`${esc(t('weight'))}: <b>${esc(p.admit.w)}kg</b>`);
-    if (p.admit.h) aParts.push(`${esc(t('height'))}: <b>${esc(p.admit.h)}cm</b>`);
-    if (p.admit.wb) aParts.push(`<b>✓ ${esc(t('wristband'))}</b>`);
+    if (p.admit.w) aParts.push(kvPill(t('weight'), `${esc(p.admit.w)}kg`));
+    if (p.admit.h) aParts.push(kvPill(t('height'), `${esc(p.admit.h)}cm`));
+    if (p.admit.wb) aParts.push(kvPill('', `✓ ${esc(t('wristband'))}`));
     Object.entries(p.admit.items).forEach(([k, lc]) => {
       const idx = parseInt(k.replace('std_', ''), 10);
       const lbl = !isNaN(idx) && admitList[idx] ? admitList[idx] : k;
-      aParts.push(`<b>${esc(lbl)}</b>${lc ? ' (' + esc(trCode(lc)) + ')' : ''}`);
+      aParts.push(kvPill(lbl, lc ? esc(trCode(lc)) : '✓'));
     });
     p.admit.custom.forEach(ci => {
-      aParts.push(`<b>${esc(ci.name)}</b>${ci.loc ? ' (' + esc(trCode(ci.loc)) + ')' : ''}`);
+      aParts.push(kvPill(ci.name, ci.loc ? esc(trCode(ci.loc)) : '✓'));
     });
-    if (p.admit.other && p.admit.other.trim()) aParts.push(`<b>${esc(p.admit.other.trim())}</b>`);
-    if (aParts.length > 0) rows += sumRowWrap(aParts.join(' • '), bIdx, 'admit', 0, !!p.admit.done);
+    if (p.admit.other && p.admit.other.trim()) aParts.push(kvPill('', esc(p.admit.other.trim())));
+    if (aParts.length > 0) rows += sumRowWrap(aParts.join(''), bIdx, 'admit', 0, !!p.admit.done);
   }
   return rows;
 }
@@ -1462,4 +1496,4 @@ function renderSummary() {
 function setSumGroup(g) { summaryGroup = g; renderSummary(); }
 function toggleHideCompleted() { hideCompleted = !hideCompleted; renderSummary(); }
 
-window.CDP_MOD_VER = 8;
+window.CDP_MOD_VER = 9;
