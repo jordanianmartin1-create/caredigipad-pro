@@ -105,7 +105,9 @@ label,
 .quick-fluid-btn,
 .tool-btn,
 .sum-mod-hdr,
-.btn-link {
+.btn-link,
+.settings-card-hdr,
+.order-btn {
   touch-action: manipulation;
 }
 
@@ -228,6 +230,160 @@ input:checked + .slider:before {
   font-size: 0.8rem;
   color: var(--text);
   line-height: 1.5;
+}
+
+.step-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.step-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-weight: 800;
+  font-size: 0.94rem;
+  color: var(--text);
+}
+
+.step-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0;
+}
+
+.layout-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.first-time-box {
+  background: var(--teal-light);
+  border: 1.5px dashed var(--teal);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.save-layout-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.settings-card-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.settings-hdr-title {
+  font-weight: 800;
+  font-size: 0.94rem;
+  color: var(--text);
+}
+
+.settings-hdr-sub {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+.settings-pill {
+  background: var(--teal-light);
+  color: var(--teal);
+  border: 1.5px solid var(--teal);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.mod-sec-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  margin-bottom: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.reorder-banner {
+  background: var(--teal-light);
+  border: 1.5px solid var(--teal);
+  color: var(--teal);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.mod-num-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mod-num-badge.unassigned {
+  background: var(--card);
+  color: var(--text-sub);
+  border: 1.5px dashed var(--teal);
+}
+
+.order-btn {
+  background: var(--card);
+  color: var(--text);
+  border: 1.5px solid var(--input-border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.order-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .entry-card {
@@ -655,11 +811,22 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 10px;
+  padding: 9px 10px;
   border-radius: 8px;
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   margin-bottom: 6px;
   background: var(--bg);
+}
+
+.mod-item.active-mod {
+  border-color: var(--teal);
+  background: var(--card);
+}
+
+.mod-item.reorder-tap {
+  cursor: pointer;
+  border-style: dashed;
+  border-color: var(--teal);
 }
 
 .pro-badge {
@@ -896,19 +1063,6 @@ textarea {
 .pro-card {
   border: 2px solid var(--teal);
   background: var(--teal-light);
-}
-
-.settings-toggle-btn {
-  width: 100%;
-  padding: 11px;
-  border-radius: 8px;
-  border: 1.5px solid var(--input-border);
-  background: var(--bg);
-  color: var(--text);
-  font-weight: 700;
-  font-size: 0.88rem;
-  cursor: pointer;
-  text-align: center;
 }
 
 #privacyScreen {
