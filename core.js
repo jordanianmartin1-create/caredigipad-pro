@@ -3,10 +3,13 @@ const EN_DICT = {
   sub: "100% offline digital shift notepad. Data never leaves your device.",
   disclaimer: "Personal shift scratchpad only. Does not provide clinical advice, diagnosis or decision support.",
   proTitle: "Unlock Care Digipad Pro (Lifetime)",
-  proSub: "Unlocks unlimited beds, saved ward layouts, themes, task alarms and all specialist modules.",
+  proSub: "Free version includes 2 beds & 2 modules (Vitals & Fluids). Pro unlocks unlimited beds, saved ward layouts, themes, task alarms and all 12 modules.",
   proPlaceholder: "Enter licence key",
   unlock: "Unlock",
   getPro: "Get a Lifetime Licence Key →",
+  installTitle: "Install App for Offline Ward Use",
+  installSub: "Add Care Digipad to your home screen for instant full-screen access.",
+  installBtn: "Install",
   prefs: "Preferences & Units",
   theme: "Theme",
   thTeal: "Clinical Teal",
@@ -23,7 +26,12 @@ const EN_DICT = {
   savedLay: "Saved Ward Layouts",
   noLay: "Select a saved layout...",
   addBed: "Your Patient Beds (Max 4 chars)",
-  bedHelper: "Tap a bed below to select or deselect it for today:",
+  bedHelper: "Tap beds to tick for today:",
+  selectedLbl: "selected",
+  untickAll: "Untick All",
+  removeBedsBtn: "Remove Beds",
+  doneRemovingBtn: "Done",
+  tapToDeleteHelper: "Tap any bed below to delete it from your saved list:",
   noBedsYet: "No beds added yet. Type a bed number or initials above and tap + Add.",
   selectAtLeastOne: "Please tap at least one bed to select it for today's shift.",
   add: "+ Add",
@@ -83,8 +91,6 @@ const EN_DICT = {
   allDoneMsg: "All logged entries are marked as done.",
   nothingLoggedMsg: "No entries logged for this shift yet.",
   overdue: "OVERDUE",
-  copyHandover: "Copy Handover",
-  copiedMsg: "Handover notes copied to clipboard",
   time: "Time",
   dueTime: "Due Time",
   air: "Air",
@@ -276,10 +282,20 @@ const EN_DICT = {
 
 const RTL_LANGS = ['ar', 'ur', 'fa'];
 const SHIFT_MAX_MS = 14 * 60 * 60 * 1000;
+const FREE_BED_LIMIT = 2;
 const ALL_MODS = [
-  {id:'obs', pro:false}, {id:'bm', pro:false}, {id:'bp', pro:true}, {id:'fluid', pro:false},
-  {id:'bowel', pro:false}, {id:'amy', pro:true}, {id:'food', pro:false}, {id:'turn', pro:false},
-  {id:'mh', pro:true}, {id:'events', pro:false}, {id:'reminders', pro:true}, {id:'admit', pro:true}
+  {id:'obs', pro:false},
+  {id:'fluid', pro:false},
+  {id:'bm', pro:true},
+  {id:'bp', pro:true},
+  {id:'bowel', pro:true},
+  {id:'amy', pro:true},
+  {id:'food', pro:true},
+  {id:'turn', pro:true},
+  {id:'mh', pro:true},
+  {id:'events', pro:true},
+  {id:'reminders', pro:true},
+  {id:'admit', pro:true}
 ];
 
 function safeLoad(key, fallback) {
@@ -311,6 +327,9 @@ let tempUnit = localStorage.getItem('cdu_temp_unit') || '°C';
 
 let wardBeds = sortBedArray(safeLoad('cdu_ward', []));
 let alloc = sortBedArray(safeLoad('cdu_alloc', []));
+if (!isPro && alloc.length > FREE_BED_LIMIT) {
+  alloc = alloc.slice(0, FREE_BED_LIMIT);
+}
 let db = safeLoad('cdu_db', {});
 let layouts = safeLoad('cdu_layouts', {});
 let activeLayoutName = localStorage.getItem('cdu_active_lay') || '';
@@ -324,6 +343,7 @@ let hideCompleted = false;
 let showManageBed = false;
 let showQuickAddBed = false;
 let settingsOpen = false;
+let bedDeleteMode = false;
 let openForms = {};
 let expandedCards = {};
 let activeFluidIdx = 0;
@@ -331,6 +351,67 @@ let activeFluidType = 'i';
 let wakeLockObj = null;
 let alertTimerId = null;
 let alarmAudioCtx = null;
+let deferredInstallPrompt = null;
+
+function isRunningStandalone() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+}
+
+function isIosBrowser() {
+  const ua = window.navigator.userAgent || '';
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return isIOS && !isRunningStandalone();
+}
+
+function updateInstallBanner() {
+  const banner = document.getElementById('installBanner');
+  if (!banner) return;
+  if (isRunningStandalone() || sessionStorage.getItem('cdu_hide_install') === '1') {
+    banner.classList.add('hidden');
+    return;
+  }
+  if (deferredInstallPrompt || isIosBrowser()) {
+    banner.classList.remove('hidden');
+  } else {
+    banner.classList.add('hidden');
+  }
+}
+
+async function triggerInstallApp() {
+  if (deferredInstallPrompt) {
+    try {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+    } catch (e) {}
+    deferredInstallPrompt = null;
+    updateInstallBanner();
+  } else if (isIosBrowser()) {
+    const guide = document.getElementById('iosInstallGuide');
+    if (guide) guide.classList.toggle('hidden');
+  }
+}
+
+function dismissInstallBanner() {
+  sessionStorage.setItem('cdu_hide_install', '1');
+  updateInstallBanner();
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  updateInstallBanner();
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  updateInstallBanner();
+});
+
+if (window.matchMedia) {
+  try {
+    window.matchMedia('(display-mode: standalone)').addEventListener('change', updateInstallBanner);
+  } catch (e) {}
+}
 
 function unlockAudioContext() {
   try {
@@ -403,6 +484,7 @@ function getDict() {
 }
 
 function t(k) {
+  if (k === 'proSub' && curLang === 'en') return EN_DICT.proSub;
   const dict = getDict();
   let val = (dict && dict[k] !== undefined && dict[k] !== '') ? dict[k] : (EN_DICT[k] || k);
   if (k === 'proTitle' && typeof val === 'string') val = val.replace(/£9\.99\s*|9,99\s*£\s*/g, '');
@@ -473,7 +555,7 @@ function initModConfig() {
   if (!isPro) {
     modConfig.forEach(m => {
       const def = ALL_MODS.find(x => x.id === m.id);
-      if (def && def.pro) m.on = false;
+      if (def) m.on = !def.pro;
     });
   }
 }
@@ -488,6 +570,9 @@ function getActiveSections() {
 
 function saveDB() {
   wardBeds = sortBedArray(wardBeds);
+  if (!isPro && alloc.length > FREE_BED_LIMIT) {
+    alloc = alloc.slice(0, FREE_BED_LIMIT);
+  }
   alloc = sortBedArray(alloc);
   localStorage.setItem('cdu_db', JSON.stringify(db));
   localStorage.setItem('cdu_alloc', JSON.stringify(alloc));
@@ -537,6 +622,9 @@ function initSetup() {
   }
   normalizeLayouts();
   wardBeds = sortBedArray(wardBeds);
+  if (!isPro && alloc.length > FREE_BED_LIMIT) {
+    alloc = alloc.slice(0, FREE_BED_LIMIT);
+  }
   alloc = sortBedArray(alloc);
   document.documentElement.lang = curLang;
   document.documentElement.dir = RTL_LANGS.includes(curLang) ? 'rtl' : 'ltr';
@@ -551,6 +639,7 @@ function initSetup() {
 
   initModConfig();
   applyStaticTranslations();
+  updateInstallBanner();
   renderThemeOptions();
   renderLayoutDropdown();
   renderSetupBeds();
@@ -580,11 +669,13 @@ function applyStaticTranslations() {
   const map = {
     editBtn:'edit', hideBtn:'hide', darkLbl:'dark', privTitle:'hiddenTitle', privSub:'hiddenSub',
     lblSetup:'setup', lblSub:'sub', lblDisclaimer:'disclaimer', lblProTitle:'proTitle', lblProSub:'proSub',
-    btnUnlock:'unlock', lnkGetPro:'getPro', lblSavedLay:'savedLay', delLayBtn:'del', lblAddBed:'addBed',
-    btnAddBed:'add', lblBedHelper:'bedHelper', btnToggleSettings:'toggleSettings', lblPrefs:'prefs',
+    btnUnlock:'unlock', lnkGetPro:'getPro', lblInstallTitle:'installTitle', lblInstallSub:'installSub',
+    btnInstallAction:'installBtn', lblSavedLay:'savedLay', delLayBtn:'del', lblAddBed:'addBed',
+    btnAddBed:'add', btnToggleSettings:'toggleSettings', lblPrefs:'prefs',
     lblTheme:'theme', lblShiftHrs:'shiftHrs', btnDayShift:'dayShift', btnNightShift:'nightShift',
     lblBmUnit:'bmUnit', lblTempUnit:'tempUnit', lblActiveMods:'activeMods', btnSaveLay:'save',
-    btnShareSetup:'share', btnShareMain:'share', btnEndShift:'endShift'
+    btnShareSetup:'share', btnShareMain:'share', btnEndShift:'endShift',
+    btnClearSel:'untickAll'
   };
   Object.entries(map).forEach(([id, k]) => {
     const el = document.getElementById(id);
@@ -689,17 +780,61 @@ function deleteLayout() {
   renderLayoutDropdown();
 }
 
+function toggleBedDeleteMode() {
+  bedDeleteMode = !bedDeleteMode;
+  renderSetupBeds();
+}
+
+function clearBedSelection() {
+  alloc = [];
+  saveDB();
+  renderSetupBeds();
+}
+
 function renderSetupBeds() {
   const grid = document.getElementById('setupBedGrid');
+  const helperEl = document.getElementById('lblBedHelper');
+  const countEl = document.getElementById('bedSelCount');
+  const actionsWrap = document.getElementById('bedActionLinks');
+  const clearBtn = document.getElementById('btnClearSel');
+  const editWardBtn = document.getElementById('btnEditWardBeds');
   if (!grid) return;
+
   wardBeds = sortBedArray(wardBeds);
   alloc = sortBedArray(alloc);
+  if (wardBeds.length === 0) bedDeleteMode = false;
+
+  if (helperEl) {
+    helperEl.textContent = bedDeleteMode ? t('tapToDeleteHelper') : t('bedHelper');
+    helperEl.style.color = bedDeleteMode ? 'var(--red)' : 'var(--text-sub)';
+  }
+  if (countEl) {
+    countEl.textContent = isPro
+      ? `${alloc.length} ${t('selectedLbl')}`
+      : `${alloc.length} / ${FREE_BED_LIMIT} ${t('selectedLbl')}`;
+    countEl.classList.toggle('hidden', bedDeleteMode || wardBeds.length === 0);
+  }
+  if (actionsWrap) {
+    actionsWrap.classList.toggle('hidden', wardBeds.length === 0);
+  }
+  if (clearBtn) {
+    clearBtn.classList.toggle('hidden', bedDeleteMode || alloc.length === 0);
+  }
+  if (editWardBtn) {
+    editWardBtn.textContent = bedDeleteMode ? t('doneRemovingBtn') : t('removeBedsBtn');
+    editWardBtn.classList.toggle('danger-active', bedDeleteMode);
+  }
+
   if (wardBeds.length === 0) {
     grid.innerHTML = `<div style="grid-column:1/-1; font-size:0.84rem; color:var(--text-sub); padding:8px 0;">${esc(t('noBedsYet'))}</div>`;
+  } else if (bedDeleteMode) {
+    grid.innerHTML = wardBeds.map((b, idx) =>
+      `<div class="bed-item delete-mode" onclick="deleteWardBed(${idx})"><span>${esc(b)}</span><span class="bed-del">✕</span></div>`
+    ).join('');
   } else {
     grid.innerHTML = wardBeds.map((b, idx) => {
       const sel = alloc.includes(b);
-      return `<div class="bed-item ${sel ? 'selected' : ''}" onclick="toggleBedAlloc(${idx})">${esc(b)}<button type="button" class="bed-del" onclick="event.stopPropagation(); deleteWardBed(${idx})">✕</button></div>`;
+      return `<div class="bed-item ${sel ? 'selected' : ''}" onclick="toggleBedAlloc(${idx})"><span class="bed-check">${sel ? '✓' : ''}</span><span>${esc(b)}</span></div>`;
     }).join('');
   }
   updateStartBtn();
@@ -709,9 +844,15 @@ function addCustomBed() {
   const inp = document.getElementById('newBedInput');
   const val = (inp ? inp.value : '').trim().toUpperCase().slice(0, 4);
   if (!val) return;
-  if (!isPro && alloc.length >= 4 && !alloc.includes(val)) { alert(t('proSub')); return; }
+  bedDeleteMode = false;
   if (!wardBeds.includes(val)) wardBeds.push(val);
-  if (!alloc.includes(val)) alloc.push(val);
+  if (!alloc.includes(val)) {
+    if (!isPro && alloc.length >= FREE_BED_LIMIT) {
+      alert(t('proSub'));
+    } else {
+      alloc.push(val);
+    }
+  }
   inp.value = '';
   saveDB();
   renderSetupBeds();
@@ -723,7 +864,7 @@ function toggleBedAlloc(idx) {
   const pos = alloc.indexOf(b);
   if (pos > -1) alloc.splice(pos, 1);
   else {
-    if (!isPro && alloc.length >= 4) { alert(t('proSub')); return; }
+    if (!isPro && alloc.length >= FREE_BED_LIMIT) { alert(t('proSub')); return; }
     alloc.push(b);
   }
   saveDB();
@@ -735,6 +876,7 @@ function deleteWardBed(idx) {
   if (!b) return;
   wardBeds.splice(idx, 1);
   alloc = alloc.filter(x => x !== b);
+  delete db[b];
   saveDB();
   renderSetupBeds();
 }
@@ -789,6 +931,7 @@ function moveMod(idx, dir) {
 
 function startShift() {
   if (alloc.length === 0) { alert(t('selectAtLeastOne')); return; }
+  bedDeleteMode = false;
   unlockAudioContext();
   alloc = sortBedArray(alloc);
   const curSt = Number(localStorage.getItem('cdu_start'));
@@ -809,6 +952,7 @@ function startShift() {
 }
 
 function editBeds() {
+  bedDeleteMode = false;
   saveDB();
   document.getElementById('mainView').classList.add('hidden');
   document.getElementById('setupView').classList.remove('hidden');
@@ -870,6 +1014,6 @@ window.addEventListener('DOMContentLoaded', initSetup);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=7').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=8').catch(() => {});
   });
 }
