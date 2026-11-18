@@ -8,10 +8,10 @@
 <meta name="apple-mobile-web-app-title" content="Care Digipad">
 <meta name="theme-color" content="#0f172a">
 <title>Care Digipad</title>
-<link rel="manifest" href="manifest.json?v=7">
-<link rel="icon" type="image/png" href="icon.png?v=7">
-<link rel="apple-touch-icon" href="icon.png?v=7">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="manifest" href="manifest.json?v=8">
+<link rel="icon" type="image/png" href="icon.png?v=8">
+<link rel="apple-touch-icon" href="icon.png?v=8">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body data-theme="day" data-color="teal">
 
@@ -76,9 +76,27 @@
     <p id="lblDisclaimer" style="font-size:0.74rem; color:var(--text-sub); margin:0; opacity:0.85;">Personal shift scratchpad only. Does not provide clinical advice, diagnosis or decision support.</p>
   </div>
 
+  <div id="installBanner" class="card install-card hidden">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+      <div style="flex:1;">
+        <div id="lblInstallTitle" style="font-weight:800; font-size:0.9rem; color:var(--text); margin-bottom:2px;">Install App for Offline Ward Use</div>
+        <div id="lblInstallSub" style="font-size:0.78rem; color:var(--text-sub);">Add Care Digipad to your home screen for instant full-screen access.</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+        <button type="button" id="btnInstallAction" class="btn btn-primary btn-sm" onclick="triggerInstallApp()">Install</button>
+        <button type="button" class="del-btn" aria-label="Dismiss" onclick="dismissInstallBanner()">✕</button>
+      </div>
+    </div>
+    <div id="iosInstallGuide" class="ios-guide hidden">
+      <div><strong>iPhone / iPad Install:</strong></div>
+      <div>1. Tap the <strong>Share</strong> button at the bottom of Safari.</div>
+      <div>2. Scroll down and tap <strong>Add to Home Screen</strong>.</div>
+    </div>
+  </div>
+
   <div id="proBanner" class="card pro-card">
     <div style="font-weight:800; font-size:0.95rem; color:var(--teal); margin-bottom:4px;" id="lblProTitle">Unlock Care Digipad Pro (Lifetime)</div>
-    <p id="lblProSub" style="font-size:0.8rem; color:var(--text-sub); margin:0 0 10px 0;">Unlocks unlimited beds, saved ward layouts, themes, task alarms and all specialist modules.</p>
+    <p id="lblProSub" style="font-size:0.8rem; color:var(--text-sub); margin:0 0 10px 0;">Free version includes 2 beds &amp; 2 modules (Vitals &amp; Fluids). Pro unlocks unlimited beds, saved ward layouts, themes, task alarms and all 12 modules.</p>
     <div style="display:flex; gap:8px; margin-bottom:8px;">
       <input type="text" id="proKeyInput" placeholder="Enter licence key" style="flex:1; text-transform:uppercase; font-size:1rem;">
       <button type="button" id="btnUnlock" class="btn btn-primary btn-sm" onclick="unlockPro()">Unlock</button>
@@ -96,11 +114,22 @@
     </div>
 
     <label id="lblAddBed">Your Patient Beds (Max 4 chars)</label>
-    <div style="display:flex; gap:8px; margin-bottom:8px;">
-      <input type="text" id="newBedInput" maxlength="4" style="flex:1; text-transform:uppercase; font-size:1rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomBed();}">
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+      <input type="text" id="newBedInput" maxlength="4" placeholder="e.g. B1, SR2" style="flex:1; text-transform:uppercase; font-size:1rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomBed();}">
       <button type="button" id="btnAddBed" class="btn btn-primary btn-sm" onclick="addCustomBed()">+ Add</button>
     </div>
-    <div id="lblBedHelper" style="font-size:0.78rem; color:var(--text-sub); margin-bottom:4px;">Tap a bed below to select or deselect it for today:</div>
+
+    <div class="bed-toolbar">
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <span id="lblBedHelper" style="font-size:0.78rem; font-weight:600; color:var(--text-sub);">Tap beds to tick for today:</span>
+        <span id="bedSelCount" class="sel-count-badge">0 selected</span>
+      </div>
+      <div id="bedActionLinks" style="display:flex; align-items:center; gap:10px;">
+        <button type="button" id="btnClearSel" class="btn-link" onclick="clearBedSelection()">Untick All</button>
+        <button type="button" id="btnEditWardBeds" class="btn-link" onclick="toggleBedDeleteMode()">Remove Beds</button>
+      </div>
+    </div>
+
     <div id="setupBedGrid" class="bed-grid"></div>
   </div>
 
@@ -164,13 +193,13 @@
   </div>
 </div>
 
-<script src="lang.js?v=7" onerror="window.CDU_LANGS = {}"></script>
-<script src="core.js?v=7"></script>
-<script src="modules.js?v=7"></script>
+<script src="lang.js?v=8" onerror="window.CDU_LANGS = {}"></script>
+<script src="core.js?v=8"></script>
+<script src="modules.js?v=8"></script>
 <script>
 window.addEventListener('load', function() {
-  if (window.CDP_MOD_VER !== 7 && !sessionStorage.getItem('cdp_v7_reload')) {
-    sessionStorage.setItem('cdp_v7_reload', '1');
+  if (window.CDP_MOD_VER !== 8 && !sessionStorage.getItem('cdp_v8_reload')) {
+    sessionStorage.setItem('cdp_v8_reload', '1');
     window.location.reload();
   }
 });
