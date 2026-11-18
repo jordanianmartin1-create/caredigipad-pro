@@ -10,6 +10,8 @@ const EN_DICT = {
   installTitle: "Install App for Offline Ward Use",
   installSub: "Add Care Digipad to your home screen for instant full-screen access.",
   installBtn: "Install",
+  iosGuide1: "1. Tap the Share button in Safari.",
+  iosGuide2: "2. Scroll down and tap Add to Home Screen.",
   prefs: "Preferences & Units",
   theme: "Theme",
   thTeal: "Clinical Teal",
@@ -26,26 +28,24 @@ const EN_DICT = {
   savedLay: "Saved Ward Layouts",
   noLay: "Select a saved layout...",
   addBed: "Your Patient Beds (Max 4 chars)",
-  bedHelper: "Tap beds to tick for today:",
+  bedPh: "e.g. B1, SR2",
+  bedHelper: "Tap a bed below to select or deselect it for today:",
   selectedLbl: "selected",
   untickAll: "Untick All",
   removeBedsBtn: "Remove Beds",
-  doneRemovingBtn: "Done",
   tapToDeleteHelper: "Tap any bed below to delete it from your saved list:",
   noBedsYet: "No beds added yet. Type a bed number or initials above and tap + Add.",
   selectAtLeastOne: "Please tap at least one bed to select it for today's shift.",
   add: "+ Add",
   del: "Del",
   save: "+ Save New",
-  updActiveLay: "Update Layout",
-  activeMods: "Shift Modules & Tab Order",
-  modOrderHelp: "Tick modules to show on shift. Use Up / Down or Tap in Order to set their left-to-right tab sequence.",
+  activeMods: "Active Modules (Tick to show • Tap ▲ ▼ to reorder)",
   tapInOrder: "Tap in Order",
-  doneOrdering: "Done",
   quickReorderPrompt: "Tap your active modules below in the order you want them (1st, 2nd, 3rd...):",
   saveLayTitle: "Save Ticked Beds as a Ward Layout",
   saveLay: "Or save as new layout (e.g. Night)",
   toggleSettingsTitle: "Customise Modules, Units & Theme",
+  modsActiveLbl: "modules active",
   showEdit: "Show / Edit ▾",
   closeEdit: "Close ▲",
   start: "Start Shift",
@@ -287,6 +287,56 @@ const EN_DICT = {
   admits: ["Dentures", "Glasses", "Hearing Aid", "Walking Frame / Stick", "Phone & Charger", "Keys", "Cash / Wallet"],
   drSites: ["Sacrum", "Left Heel", "Right Heel", "Left Leg", "Right Leg", "Abdomen"]
 };
+
+const _EXTRA_KEYS = [
+  'bedPh','selectedLbl','untickAll','removeBedsBtn','tapToDeleteHelper','saveLayTitle',
+  'tapInOrder','quickReorderPrompt','toggleSettingsTitle','modsActiveLbl','showEdit','closeEdit',
+  'installTitle','installSub','installBtn','iosGuide1','iosGuide2'
+];
+
+const _UI_EXTRA = {
+  es: "ej. B1, SR2|seleccionadas|Desmarcar Todo|Eliminar Camas|Toque una cama abajo para eliminarla de su lista:|Guardar Camas Marcadas como Diseño|Ordenar al Tocar|Toque sus módulos activos en el orden deseado (1º, 2º, 3º...):|Módulos, Unidades y Tema|módulos activos|Mostrar / Editar ▾|Cerrar ▲|Instalar App para Uso sin Conexión|Añada Care Digipad a su pantalla de inicio para acceso rápido.|Instalar|1. Toque el botón Compartir en Safari.|2. Toque Añadir a pantalla de inicio.",
+  fr: "ex. B1, SR2|sélectionnés|Tout Décocher|Supprimer Lits|Touchez un lit ci-dessous pour le supprimer de votre liste :|Enregistrer les Lits Cochés comme Plan|Trier au Toucher|Touchez vos modules actifs dans l'ordre souhaité (1er, 2e, 3e...) :|Modules, Unités et Thème|modules actifs|Afficher / Modifier ▾|Fermer ▲|Installer l'App Hors Ligne|Ajoutez Care Digipad à votre écran d'accueil.|Installer|1. Touchez le bouton Partager dans Safari.|2. Touchez Sur l'écran d'accueil.",
+  de: "z.B. B1, SR2|ausgewählt|Alle Abwählen|Betten Entfernen|Tippen Sie unten auf ein Bett, um es aus der Liste zu löschen:|Ausgewählte Betten als Layout Speichern|Per Tippen Sortieren|Tippen Sie Ihre aktiven Module in der gewünschten Reihenfolge an (1., 2., 3....):|Module, Einheiten & Farbschema|Module aktiv|Anzeigen / Bearb. ▾|Schließen ▲|App für Offline-Nutzung Installieren|Care Digipad zum Startbildschirm hinzufügen.|Installieren|1. Tippen Sie in Safari auf Teilen.|2. Tippen Sie auf Zum Home-Bildschirm.",
+  pt: "ex. B1, SR2|selecionadas|Desmarcar Tudo|Remover Camas|Toque numa cama abaixo para a eliminar da lista:|Guardar Camas Selecionadas como Layout|Ordenar ao Tocar|Toque nos módulos ativos na ordem desejada (1º, 2º, 3º...):|Módulos, Unidades e Tema|módulos ativos|Mostrar / Editar ▾|Fechar ▲|Instalar App para Uso Offline|Adicione o Care Digipad ao ecrã principal.|Instalar|1. Toque no botão Partilhar no Safari.|2. Toque em Adicionar ao Ecrã Principal.",
+  it: "es. B1, SR2|selezionati|Deseleziona Tutto|Rimuovi Letti|Tocca un letto qui sotto per eliminarlo dalla lista:|Salva Letti Selezionati come Reparto|Ordina Toccando|Tocca i moduli attivi nell'ordine desiderato (1º, 2º, 3º...):|Moduli, Unità e Tema|moduli attivi|Mostra / Modifica ▾|Chiudi ▲|Installa App per Uso Offline|Aggiungi Care Digipad alla schermata Home.|Installa|1. Tocca Condividi in Safari.|2. Tocca Aggiungi alla schermata Home.",
+  nl: "bijv. B1, SR2|geselecteerd|Alles Deselecteren|Bedden Verwijderen|Tik hieronder op een bed om het uit uw lijst te verwijderen:|Geselecteerde Bedden Opslaan als Indeling|Tik op Volgorde|Tik uw actieve modules aan in de gewenste volgorde (1e, 2e, 3e...):|Modules, Eenheden & Thema|modules actief|Tonen / Wijzigen ▾|Sluiten ▲|App Installeren voor Offline Gebruik|Voeg Care Digipad toe aan uw beginscherm.|Installeren|1. Tik op Deel in Safari.|2. Tik op Zet op beginscherm.",
+  sv: "t.ex. B1, SR2|valda|Avmarkera Alla|Ta Bort Sängar|Tryck på en säng nedan för att ta bort den från listan:|Spara Valda Sängar som Layout|Tryck i Ordning|Tryck på dina aktiva moduler i den ordning du vill ha dem (1:a, 2:a, 3:e...):|Moduler, Enheter & Tema|aktiva moduler|Visa / Ändra ▾|Stäng ▲|Installera App för Offlinebruk|Lägg till Care Digipad på hemskärmen.|Installera|1. Tryck på Dela i Safari.|2. Tryck på Lägg till på hemskärmen.",
+  pl: "np. B1, SR2|wybrano|Odznacz Wszystko|Usuń Łóżka|Dotknij łóżka poniżej, aby usunąć je z listy:|Zapisz Zaznaczone Łóżka jako Układ|Kolejność Dotykiem|Dotknij aktywnych modułów w wybranej kolejności (1., 2., 3....):|Moduły, Jednostki i Motyw|aktywnych modułów|Pokaż / Edytuj ▾|Zamknij ▲|Zainstaluj Aplikację Offline|Dodaj Care Digipad do ekranu głównego.|Zainstaluj|1. Dotknij Udostępnij w Safari.|2. Dotknij Dodaj do ekranu początkowego.",
+  ro: "ex. B1, SR2|selectate|Deselectează Tot|Elimină Paturi|Atingeți un pat mai jos pentru a-l șterge din listă:|Salvează Paturile Bifate ca Aspect|Ordonează prin Atingere|Atingeți modulele active în ordinea dorită (1, 2, 3...):|Module, Unități și Temă|module active|Arată / Editează ▾|Închide ▲|Instalează Aplicația Offline|Adăugați Care Digipad pe ecranul principal.|Instalează|1. Atingeți Partajare în Safari.|2. Atingeți Adăugați la ecranul principal.",
+  uk: "напр. B1, SR2|обрано|Зняти Позначки|Видалити Ліжка|Натисніть на ліжко нижче, щоб видалити його зі списку:|Зберегти Обрані Ліжка як Схему|Порядок Дотиком|Торкайтеся активних модулів у потрібному порядку (1-й, 2-й, 3-й...):|Модулі, Одиниці та Тема|активних модулів|Показати / Редаг. ▾|Закрити ▲|Встановити Додаток Офлайн|Додайте Care Digipad на головний екран.|Встановити|1. Натисніть Поділитися в Safari.|2. Натисніть На початковий екран.",
+  ru: "напр. B1, SR2|выбрано|Снять Выделение|Удалить Койки|Нажмите на койку ниже, чтобы удалить её из списка:|Сохранить Выбранные Койки как Схему|Порядок Нажатием|Нажимайте активные модули в нужном порядке (1-й, 2-й, 3-й...):|Модули, Единицы и Тема|активных модулей|Показать / Изм. ▾|Закрыть ▲|Установить Приложение Офлайн|Добавьте Care Digipad на главный экран.|Установить|1. Нажмите Поделиться в Safari.|2. Нажмите На экран «Домой».",
+  el: "π.χ. B1, SR2|επιλεγμένες|Αποεπιλογή Όλων|Αφαίρεση Κλινών|Πατήστε μια κλίνη παρακάτω για διαγραφή από τη λίστα:|Αποθήκευση Επιλεγμένων Κλινών ως Διάταξη|Σειρά με Πάτημα|Πατήστε τις ενεργές ενότητες με τη σειρά που θέλετε (1η, 2η, 3η...):|Ενότητες, Μονάδες & Θέμα|ενεργές ενότητες|Εμφάνιση / Επεξ. ▾|Κλείσιμο ▲|Εγκατάσταση Εφαρμογής Offline|Προσθέστε το Care Digipad στην αρχική οθόνη.|Εγκατάσταση|1. Πατήστε Κοινοποίηση στο Safari.|2. Πατήστε Προσθήκη στην οθόνη Αφετηρίας.",
+  hi: "जैसे B1, SR2|चयनित|सभी अचयनित करें|बेड हटाएं|सूची से हटाने के लिए नीचे किसी भी बेड पर टैप करें:|चयनित बेड को वार्ड लेआउट के रूप में सहेजें|क्रम में टैप करें|अपने सक्रिय मॉड्यूल को जिस क्रम में चाहते हैं उस क्रम में टैप करें (1, 2, 3...):|मॉड्यूल, इकाइयां और थीम|सक्रिय मॉड्यूल|दिखाएं / बदलें ▾|बंद करें ▲|ऑफ़लाइन उपयोग के लिए ऐप इंस्टॉल करें|Care Digipad को अपनी होम स्क्रीन पर जोड़ें।|इंस्टॉल करें|1. Safari में Share बटन पर टैप करें।|2. Add to Home Screen पर टैप करें।",
+  bn: "যেমন B1, SR2|নির্বাচিত|সব আনটিক করুন|বেড মুছুন|তালিকা থেকে মুছে ফেলতে নিচের যেকোনো বেডে ট্যাপ করুন:|নির্বাচিত বেডগুলো লেআউট হিসেবে সেভ করুন|ক্রমানুসারে ট্যাপ|আপনার সক্রিয় মডিউলগুলো পছন্দের ক্রমানুসারে ট্যাপ করুন (১ম, ২য়, ৩য়...):|মডিউল, একক ও থিম|সক্রিয় মডিউল|দেখান / এডিট ▾|বন্ধ করুন ▲|অফলাইন ব্যবহারের জন্য অ্যাপ ইনস্টল করুন|হোম স্ক্রিনে Care Digipad যোগ করুন।|ইনস্টল|1. Safari-তে Share বাটনে ট্যাপ করুন।|2. Add to Home Screen-এ ট্যাপ করুন।",
+  pa: "ਜਿਵੇਂ B1, SR2|ਚੁਣੇ ਗਏ|ਸਭ ਅਣਟਿੱਕ ਕਰੋ|ਬੈੱਡ ਹਟਾਓ|ਸੂਚੀ ਵਿੱਚੋਂ ਮਿਟਾਉਣ ਲਈ ਹੇਠਾਂ ਕਿਸੇ ਵੀ ਬੈੱਡ ਤੇ ਟੈਪ ਕਰੋ:|ਚੁਣੇ ਗਏ ਬੈੱਡਾਂ ਨੂੰ ਲੇਆਉਟ ਵਜੋਂ ਸੇਵ ਕਰੋ|ਕ੍ਰਮ ਵਿੱਚ ਟੈਪ ਕਰੋ|ਆਪਣੇ ਸਰਗਰਮ ਮੋਡੀਊਲਾਂ ਨੂੰ ਮਨਪਸੰਦ ਕ੍ਰਮ ਵਿੱਚ ਟੈਪ ਕਰੋ (1, 2, 3...):|ਮੋਡੀਊਲ, ਇਕਾਈਆਂ ਅਤੇ ਥੀਮ|ਸਰਗਰਮ ਮੋਡੀਊਲ|ਦਿਖਾਓ / ਬਦਲੋ ▾|ਬੰਦ ਕਰੋ ▲|ਆਫ਼ਲਾਈਨ ਵਰਤੋਂ ਲਈ ਐਪ ਇੰਸਟਾਲ ਕਰੋ|Care Digipad ਨੂੰ ਹੋਮ ਸਕ੍ਰੀਨ ਤੇ ਜੋੜੋ।|ਇੰਸਟਾਲ|1. Safari ਵਿੱਚ Share ਬਟਨ ਤੇ ਟੈਪ ਕਰੋ।|2. Add to Home Screen ਤੇ ਟੈਪ ਕਰੋ।",
+  ur: "مثلاً B1, SR2|منتخب|سب غیر منتخب کریں|بیڈز ہٹائیں|فہرست سے حذف کرنے کے لیے نیچے کسی بھی بیڈ پر ٹیپ کریں:|منتخب بیڈز کو لے آؤٹ کے طور پر محفوظ کریں|ترتیب سے ٹیپ کریں|اپنے فعال ماڈیولز کو مطلوبہ ترتیب میں ٹیپ کریں (1، 2، 3...):|ماڈیولز، اکائیاں اور تھیم|فعال ماڈیولز|دکھائیں / ترمیم ▾|بند کریں ▲|آف لائن استعمال کے لیے ایپ انسٹال کریں|Care Digipad کو ہوم اسکرین پر شامل کریں۔|انسٹال|1. سفاری میں Share بٹن پر ٹیپ کریں۔|2. Add to Home Screen پر ٹیپ کریں۔",
+  ta: "எ.கா. B1, SR2|தேர்ந்தெடுக்கப்பட்டவை|அனைத்தையும் நீக்கு|படுக்கைகளை அகற்று|பட்டியலிலிருந்து நீக்க கீழே உள்ள படுக்கையைத் தட்டவும்:|தேர்ந்தெடுத்த படுக்கைகளை அமைப்பாகச் சேமி|வரிசையாகத் தட்டவும்|செயலில் உள்ள பகுதிகளை விரும்பிய வரிசையில் தட்டவும் (1, 2, 3...):|பகுதிகள், அலகுகள் & தீம்|செயலில் உள்ள பகுதிகள்|காட்டு / திருத்து ▾|மூடு ▲|ஆஃப்லைன் பயன்பாட்டிற்கு செயலியை நிறுவுக|முகப்புத் திரையில் Care Digipad-ஐச் சேர்க்கவும்.|நிறுவு|1. Safari-ல் Share பொத்தானைத் தட்டவும்.|2. Add to Home Screen என்பதைத் தட்டவும்.",
+  ml: "ഉദാ. B1, SR2|തിരഞ്ഞെടുത്തു|എല്ലാം ഒഴിവാക്കുക|ബെഡുകൾ നീക്കുക|ലിസ്റ്റിൽ നിന്ന് നീക്കാൻ താഴെയുള്ള ബെഡിൽ ടാപ്പ് ചെയ്യുക:|തിരഞ്ഞെടുത്ത ബെഡുകൾ ലേഔട്ട് ആയി സേവ് ചെയ്യുക|ക്രമത്തിൽ ടാപ്പ് ചെയ്യുക|സജീവ മൊഡ്യൂളുകൾ നിങ്ങൾക്കാവശ്യമുള്ള ക്രമത്തിൽ ടാപ്പ് ചെയ്യുക (1, 2, 3...):|മൊഡ്യൂളുകൾ, യൂണിറ്റുകൾ & തീം|സജീവ മൊഡ്യൂളുകൾ|കാണിക്കുക / മാറ്റുക ▾|അടയ്ക്കുക ▲|ഓഫ്‌ലൈൻ ഉപയോഗത്തിനായി ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുക|ഹോം സ്ക്രീനിലേക്ക് Care Digipad ചേർക്കുക.|ഇൻസ്റ്റാൾ|1. Safari-ൽ Share ബട്ടൺ ടാപ്പ് ചെയ്യുക.|2. Add to Home Screen ടാപ്പ് ചെയ്യുക.",
+  zh: "例如 B1, SR2|已选择|全部取消|移除床位|点击下方任意床位将其从列表中删除：|将勾选的床位保存为病区布局|按顺序点击|请按您需要的顺序依次点击下方启用的模块 (第1、第2、第3...)：|自定义模块、单位与主题|个模块已启用|显示 / 编辑 ▾|收起 ▲|安装离线版应用|将 Care Digipad 添加到主屏幕以便随时使用。|安装|1. 点击 Safari 底部的“共享”按钮。|2. 向下滚动并点击“添加到主屏幕”。",
+  "zh-tw": "例如 B1, SR2|已選擇|全部取消|移除床位|點選下方任意床位將其從清單中刪除：|將勾選的床位儲存為病房配置|依序點選|請依您需要的順序點選下方啟用的模組 (第1、第2、第3...)：|自訂模組、單位與主題|個模組已啟用|顯示 / 編輯 ▾|收起 ▲|安裝離線版應用程式|將 Care Digipad 加入主畫面以便隨時使用。|安裝|1. 點選 Safari 底部的「分享」按鈕。|2. 向下捲動並點選「加入主畫面」。",
+  ja: "例: B1, SR2|選択中|すべて解除|ベッド削除|リストから削除するベッドをタップしてください：|選択したベッドをレイアウトとして保存|順番にタップ|表示したい順番に有効モジュールをタップしてください (1番目、2番目、3番目...)：|モジュール・単位・テーマ設定|モジュール有効|表示 / 編集 ▾|閉じる ▲|オフライン用アプリをインストール|ホーム画面にCare Digipadを追加します。|追加|1. Safariの共有ボタンをタップします。|2.「ホーム画面に追加」をタップします。",
+  ko: "예: B1, SR2|선택됨|모두 해제|병상 삭제|목록에서 삭제할 병상을 아래에서 탭하세요:|선택한 병상을 레이아웃으로 저장|순서대로 탭|원하는 순서대로 활성 모듈을 탭하세요 (1번째, 2번째, 3번째...):|모듈, 단위 및 테마 설정|개 모듈 활성|보기 / 편집 ▾|닫기 ▲|오프라인 사용을 위해 앱 설치|홈 화면에 Care Digipad를 추가하세요.|설치|1. Safari 하단의 공유 버튼을 탭하세요.|2. '홈 화면에 추가'를 탭하세요.",
+  tl: "hal. B1, SR2|napili|Alisin Lahat ng Tsek|Alisin ang Kama|I-tap ang kama sa ibaba upang burahin sa listahan:|I-save ang mga Napiling Kama bilang Layout|I-tap ayon sa Ayos|I-tap ang mga aktibong module ayon sa pagkakasunod na gusto mo (1st, 2nd, 3rd...):|Mga Module, Yunit at Tema|aktibong module|Ipakita / I-edit ▾|Isara ▲|I-install ang App para sa Offline|Idagdag ang Care Digipad sa iyong home screen.|I-install|1. I-tap ang Share button sa Safari.|2. I-tap ang Add to Home Screen.",
+  id: "mis. B1, SR2|dipilih|Hapus Semua Centang|Hapus Bed|Ketuk bed di bawah untuk menghapusnya dari daftar:|Simpan Bed Terpilih sebagai Denah|Ketuk Berurutan|Ketuk modul aktif sesuai urutan yang Anda inginkan (1, 2, 3...):|Modul, Satuan & Tema|modul aktif|Tampilkan / Edit ▾|Tutup ▲|Instal Aplikasi untuk Penggunaan Offline|Tambahkan Care Digipad ke layar utama Anda.|Instal|1. Ketuk tombol Bagikan di Safari.|2. Ketuk Tambahkan ke Layar Utama.",
+  vi: "VD: B1, SR2|đã chọn|Bỏ Chọn Tất Cả|Xóa Giường|Chạm vào giường bên dưới để xóa khỏi danh sách:|Lưu Các Giường Đã Chọn Làm Sơ Đồ|Chạm Theo Thứ Tự|Chạm vào các phân hệ đang bật theo thứ tự bạn muốn (1, 2, 3...):|Phân Hệ, Đơn Vị & Giao Diện|phân hệ đang bật|Hiện / Sửa ▾|Đóng ▲|Cài Đặt Ứng Dụng Ngoại Tuyến|Thêm Care Digipad vào màn hình chính.|Cài đặt|1. Chạm nút Chia sẻ trong Safari.|2. Chạm Thêm vào MH chính.",
+  ar: "مثال: B1, SR2|محددة|إلغاء تحديد الكل|حذف أسرة|اضغط على أي سرير أدناه لحذفه من قائمتك:|حفظ الأسرة المحددة كتخطيط جناح|الترتيب باللمس|اضغط على الوحدات النشطة بالترتيب الذي تريده (1، 2، 3...):|الوحدات، القياسات والسمة|وحدات نشطة|عرض / تعديل ▾|إغلاق ▲|تثبيت التطبيق للعمل بدون إنترنت|أضف Care Digipad إلى شاشتك الرئيسية.|تثبيت|1. اضغط على زر المشاركة في Safari.|2. اضغط على إضافة إلى الشاشة الرئيسية.",
+  tr: "örn. B1, SR2|seçildi|Tümünü Kaldır|Yatakları Sil|Listenizden silmek istediğiniz yatağa dokunun:|Seçili Yatakları Düzen Olarak Kaydet|Sırayla Dokun|Aktif modüllerinize istediğiniz sırayla dokunun (1., 2., 3....):|Modüller, Birimler ve Tema|aktif modül|Göster / Düzenle ▾|Kapat ▲|Çevrimdışı Kullanım İçin Uygulamayı Yükle|Care Digipad'i ana ekranınıza ekleyin.|Yükle|1. Safari'de Paylaş düğmesine dokunun.|2. Ana Ekrana Ekle'ye dokunun.",
+  fa: "مثلاً B1, SR2|انتخاب‌شده|لغو انتخاب همه|حذف تخت‌ها|برای حذف تخت از فهرست روی آن بزنید:|ذخیره تخت‌های انتخاب‌شده به عنوان چیدمان|ترتیب با لمس|ماژول‌های فعال را به ترتیبی که می‌خواهید لمس کنید (۱، ۲، ۳...):|ماژول‌ها، واحدها و پوسته|ماژول فعال|نمایش / ویرایش ▾|بستن ▲|نصب برنامه برای استفاده آفلاین|Care Digipad را به صفحه اصلی خود اضافه کنید.|نصب|1. در Safari روی دکمه Share بزنید.|2. روی Add to Home Screen بزنید.",
+  sw: "mf. B1, SR2|zimechaguliwa|Ondoa Alama Zote|Futa Vitanda|Gusa kitanda hapa chini kukifuta kwenye orodha:|Hifadhi Vitanda Vilivyochaguliwa kama Mpangilio|Gusa kwa Mpangilio|Gusa moduli zako zinazotumika kwa mpangilio unaotaka (1, 2, 3...):|Moduli, Vipimo na Mandhari|moduli актив|Onyesha / Hariri ▾|Funga ▲|Sakinisha Programu kwa Matumizi Bila Mtandao|Ongeza Care Digipad kwenye skrini yako ya nyumbani.|Sakinisha|1. Gusa kitufe cha Share kwenye Safari.|2. Gusa Add to Home Screen."
+};
+
+function mergeExtraTranslations() {
+  if (!window.CDU_LANGS) return;
+  Object.entries(_UI_EXTRA).forEach(([code, str]) => {
+    if (!window.CDU_LANGS[code]) return;
+    const parts = str.split('|');
+    _EXTRA_KEYS.forEach((k, i) => {
+      if (parts[i]) window.CDU_LANGS[code][k] = parts[i].trim();
+    });
+  });
+}
+mergeExtraTranslations();
 
 const RTL_LANGS = ['ar', 'ur', 'fa'];
 const SHIFT_MAX_MS = 14 * 60 * 60 * 1000;
@@ -653,6 +703,7 @@ async function unlockPro() {
 }
 
 function initSetup() {
+  mergeExtraTranslations();
   if (checkShiftExpiry()) return;
   if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().catch(() => {});
@@ -707,29 +758,65 @@ function applyStaticTranslations() {
     editBtn:'edit', hideBtn:'hide', darkLbl:'dark', privTitle:'hiddenTitle', privSub:'hiddenSub',
     lblSetup:'setup', lblSub:'sub', lblDisclaimer:'disclaimer', lblProTitle:'proTitle', lblProSub:'proSub',
     btnUnlock:'unlock', lnkGetPro:'getPro', lblInstallTitle:'installTitle', lblInstallSub:'installSub',
-    btnInstallAction:'installBtn', lblSavedLay:'savedLay', delLayBtn:'del', lblAddBed:'addBed',
-    btnAddBed:'add', lblPrefs:'prefs', lblTheme:'theme', lblShiftHrs:'shiftHrs',
-    btnDayShift:'dayShift', btnNightShift:'nightShift', lblBmUnit:'bmUnit', lblTempUnit:'tempUnit',
-    lblActiveMods:'activeMods', lblModOrderHelp:'modOrderHelp',
-    lblQuickReorderPrompt:'quickReorderPrompt', btnSaveLay:'save', btnShareSetup:'share',
-    btnShareMain:'share', btnEndShift:'endShift', btnClearSel:'untickAll',
-    lblSaveLayTitle:'saveLayTitle', lblToggleSettingsTitle:'toggleSettingsTitle'
+    btnInstallAction:'installBtn', lblIosGuide1:'iosGuide1', lblIosGuide2:'iosGuide2',
+    lblSavedLay:'savedLay', delLayBtn:'del', lblAddBed:'addBed', btnAddBed:'add',
+    lblTheme:'theme', lblShiftHrs:'shiftHrs', txtDayShift:'dayShift', txtNightShift:'nightShift',
+    lblBmUnit:'bmUnit', lblTempUnit:'tempUnit', lblQuickReorderPrompt:'quickReorderPrompt',
+    btnSaveLay:'save', btnShareSetup:'share', btnShareMain:'share', btnEndShift:'endShift',
+    btnClearSel:'untickAll', lblSaveLayTitle:'saveLayTitle', lblToggleSettingsTitle:'toggleSettingsTitle'
   };
   Object.entries(map).forEach(([id, k]) => {
     const el = document.getElementById(id);
     if (el) el.textContent = t(k);
   });
-  const qrBtn = document.getElementById('btnQuickReorder');
-  if (qrBtn) qrBtn.textContent = quickReorderActive ? t('doneOrdering') : t('tapInOrder');
 
-  document.getElementById('proKeyInput').placeholder = t('proPlaceholder');
-  document.getElementById('newLayoutName').placeholder = t('saveLay');
-  document.getElementById('btnDayShift').classList.toggle('selected', curShift === 'day');
-  document.getElementById('btnNightShift').classList.toggle('selected', curShift === 'night');
-  document.getElementById('btnBmMmol').classList.toggle('selected', bmUnit === 'mmol/L');
-  document.getElementById('btnBmMg').classList.toggle('selected', bmUnit === 'mg/dL');
-  document.getElementById('btnTempC').classList.toggle('selected', tempUnit === '°C');
-  document.getElementById('btnTempF').classList.toggle('selected', tempUnit === '°F');
+  // Split activeMods into Title and Helper cleanly in all 30 languages
+  const rawActMods = t('activeMods');
+  const parenIdx = rawActMods.indexOf('(');
+  const actTitleEl = document.getElementById('lblActiveMods');
+  const actHelpEl = document.getElementById('lblModOrderHelp');
+  if (parenIdx > -1) {
+    if (actTitleEl) actTitleEl.textContent = rawActMods.slice(0, parenIdx).trim();
+    if (actHelpEl) actHelpEl.textContent = rawActMods.slice(parenIdx + 1).replace(/\)$/, '').trim();
+  } else {
+    if (actTitleEl) actTitleEl.textContent = rawActMods;
+  }
+
+  const qrBtn = document.getElementById('btnQuickReorder');
+  if (qrBtn) qrBtn.textContent = quickReorderActive ? t('done') : t('tapInOrder');
+
+  const bedInp = document.getElementById('newBedInput');
+  if (bedInp) bedInp.placeholder = t('bedPh');
+  const proInp = document.getElementById('proKeyInput');
+  if (proInp) proInp.placeholder = t('proPlaceholder');
+  const layInp = document.getElementById('newLayoutName');
+  if (layInp) layInp.placeholder = t('saveLay');
+
+  // Shift hours pill buttons + tick boxes
+  const isDay = curShift === 'day';
+  document.getElementById('btnDayShift').classList.toggle('selected', isDay);
+  document.getElementById('btnNightShift').classList.toggle('selected', !isDay);
+  const tickDay = document.getElementById('tickDayShift');
+  const tickNight = document.getElementById('tickNightShift');
+  if (tickDay) tickDay.textContent = isDay ? '✓' : '';
+  if (tickNight) tickNight.textContent = !isDay ? '✓' : '';
+
+  // Glucose & Temp unit pill buttons + tick boxes
+  const isMmol = bmUnit === 'mmol/L';
+  document.getElementById('btnBmMmol').classList.toggle('selected', isMmol);
+  document.getElementById('btnBmMg').classList.toggle('selected', !isMmol);
+  const tickMmol = document.getElementById('tickBmMmol');
+  const tickMg = document.getElementById('tickBmMg');
+  if (tickMmol) tickMmol.textContent = isMmol ? '✓' : '';
+  if (tickMg) tickMg.textContent = !isMmol ? '✓' : '';
+
+  const isC = tempUnit === '°C';
+  document.getElementById('btnTempC').classList.toggle('selected', isC);
+  document.getElementById('btnTempF').classList.toggle('selected', !isC);
+  const tickC = document.getElementById('tickTempC');
+  const tickF = document.getElementById('tickTempF');
+  if (tickC) tickC.textContent = isC ? '✓' : '';
+  if (tickF) tickF.textContent = !isC ? '✓' : '';
 
   const pill = document.getElementById('btnToggleSettingsPill');
   if (pill) pill.textContent = settingsOpen ? t('closeEdit') : t('showEdit');
@@ -737,7 +824,7 @@ function applyStaticTranslations() {
   const sub = document.getElementById('settingsSummarySub');
   if (sub) {
     const activeCnt = getActiveSections().length;
-    sub.textContent = `${activeCnt} modules active • ${bmUnit} • ${tempUnit}`;
+    sub.textContent = `${activeCnt} ${t('modsActiveLbl')} • ${bmUnit} • ${tempUnit}`;
   }
 }
 
@@ -882,7 +969,6 @@ function renderSetupBeds() {
   const actionsWrap = document.getElementById('bedActionLinks');
   const clearBtn = document.getElementById('btnClearSel');
   const editWardBtn = document.getElementById('btnEditWardBeds');
-  const guideBox = document.getElementById('firstTimeGuide');
   const saveBox = document.getElementById('saveLayoutBox');
   const updLayBtn = document.getElementById('btnUpdActiveLay');
   if (!grid) return;
@@ -891,9 +977,6 @@ function renderSetupBeds() {
   alloc = sortBedArray(alloc);
   if (wardBeds.length === 0) bedDeleteMode = false;
 
-  if (guideBox) {
-    guideBox.classList.toggle('hidden', wardBeds.length > 0);
-  }
   if (saveBox) {
     saveBox.classList.toggle('hidden', !isPro || wardBeds.length === 0);
   }
@@ -902,7 +985,7 @@ function renderSetupBeds() {
     const isModified = hasActiveLay && alloc.length > 0 && JSON.stringify(alloc) !== JSON.stringify(sortBedArray(layouts[activeLayoutName]));
     updLayBtn.classList.toggle('hidden', !isModified);
     if (isModified) {
-      updLayBtn.textContent = `✓ ${t('updActiveLay')} "${activeLayoutName}" (${alloc.length})`;
+      updLayBtn.textContent = `✓ ${t('updLayout')} "${activeLayoutName}" (${alloc.length})`;
     }
   }
 
@@ -923,12 +1006,12 @@ function renderSetupBeds() {
     clearBtn.classList.toggle('hidden', bedDeleteMode || alloc.length === 0);
   }
   if (editWardBtn) {
-    editWardBtn.textContent = bedDeleteMode ? t('doneRemovingBtn') : t('removeBedsBtn');
+    editWardBtn.textContent = bedDeleteMode ? t('done') : t('removeBedsBtn');
     editWardBtn.classList.toggle('danger-active', bedDeleteMode);
   }
 
   if (wardBeds.length === 0) {
-    grid.innerHTML = `<div style="grid-column:1/-1; font-size:0.84rem; color:var(--text-sub); padding:8px 0;">${esc(t('noBedsYet'))}</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1; font-size:0.84rem; color:var(--text-sub); padding:6px 0;">${esc(t('noBedsYet'))}</div>`;
   } else if (bedDeleteMode) {
     grid.innerHTML = wardBeds.map((b, idx) =>
       `<div class="bed-item delete-mode" onclick="deleteWardBed(${idx})"><span>${esc(b)}</span><span class="bed-del">✕</span></div>`
@@ -1038,7 +1121,7 @@ function toggleQuickReorder() {
   const btn = document.getElementById('btnQuickReorder');
   if (banner) banner.classList.remove('hidden');
   if (btn) {
-    btn.textContent = t('doneOrdering');
+    btn.textContent = t('done');
     btn.style.background = 'var(--teal)';
     btn.style.color = '#fff';
   }
@@ -1100,11 +1183,11 @@ function renderModList() {
     let rightControlsHtml = '';
     if (quickReorderActive && isActive) {
       const qIdx = quickReorderQueue.indexOf(m.id);
-      rightControlsHtml = `<span style="font-size:0.75rem; font-weight:700; color:var(--teal);">${qIdx > -1 ? `#${qIdx + 1} (Tap to undo)` : `Tap for #${quickReorderQueue.length + 1}`}</span>`;
+      rightControlsHtml = `<span style="font-size:0.78rem; font-weight:800; color:var(--teal);">${qIdx > -1 ? `#${qIdx + 1} ✓` : `#${quickReorderQueue.length + 1}`}</span>`;
     } else if (!quickReorderActive && isActive) {
-      rightControlsHtml = `<div style="display:flex; gap:4px; flex-shrink:0;">
-        <button type="button" class="order-btn" onclick="event.stopPropagation(); moveMod(${idx}, -1)" ${activeIdx === 0 ? 'disabled' : ''}>▲ Up</button>
-        <button type="button" class="order-btn" onclick="event.stopPropagation(); moveMod(${idx}, 1)" ${activeIdx === activeSecs.length - 1 ? 'disabled' : ''}>▼ Down</button>
+      rightControlsHtml = `<div style="display:flex; gap:6px; flex-shrink:0;">
+        <button type="button" class="order-btn" aria-label="Move Up" onclick="event.stopPropagation(); moveMod(${idx}, -1)" ${activeIdx === 0 ? 'disabled' : ''}>▲</button>
+        <button type="button" class="order-btn" aria-label="Move Down" onclick="event.stopPropagation(); moveMod(${idx}, 1)" ${activeIdx === activeSecs.length - 1 ? 'disabled' : ''}>▼</button>
       </div>`;
     }
 
@@ -1233,6 +1316,6 @@ window.addEventListener('DOMContentLoaded', initSetup);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=8').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=9').catch(() => {});
   });
 }
