@@ -263,7 +263,7 @@ function quickAddBedToShift(bedName) {
   const inp = document.getElementById('quickBedInput');
   const val = (bedName || (inp ? inp.value : '')).trim().toUpperCase().slice(0, 4);
   if (!val) return;
-  if (!isPro && alloc.length >= 4 && !alloc.includes(val)) { alert(t('proSub')); return; }
+  if (!isPro && alloc.length >= FREE_BED_LIMIT && !alloc.includes(val)) { alert(t('proSub')); return; }
   if (!wardBeds.includes(val)) wardBeds.push(val);
   if (!alloc.includes(val)) alloc.push(val);
   curBed = val;
@@ -1258,7 +1258,7 @@ function toggleSumDone(bedOrIdx, sec, idx) {
   else if (sec === 'turnPlan') p.turnPlanDone = !p.turnPlanDone;
   else if (sec === 'mhLevel') p.mhLevelDone = !p.mhLevelDone;
   else if (sec === 'admit') p.admit.done = !p.admit.done;
-  else if (Array.isArray(p[sec]) && p[sec][idx]) p.sec ? (p[sec][idx].done = !p[sec][idx].done) : (p[sec][idx].done = !p[sec][idx].done);
+  else if (Array.isArray(p[sec]) && p[sec][idx]) p[sec][idx].done = !p[sec][idx].done;
   saveDB(); renderSummary();
 }
 
@@ -1414,44 +1414,6 @@ function buildModuleSummaryForBed(b, modId) {
   return rows;
 }
 
-function copyHandoverToClipboard() {
-  const activeSecs = getActiveSections();
-  const lines = [];
-  const stripHtml = html => {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    return (tmp.textContent || tmp.innerText || '').trim();
-  };
-  alloc.forEach(b => {
-    const bedLines = [];
-    activeSecs.forEach(s => {
-      const modHtml = buildModuleSummaryForBed(b, s.id);
-      if (!modHtml) return;
-      const wrap = document.createElement('div');
-      wrap.innerHTML = modHtml;
-      wrap.querySelectorAll('button').forEach(btn => btn.remove());
-      const items = Array.from(wrap.children).map(el => stripHtml(el.innerHTML)).filter(Boolean);
-      if (items.length) {
-        bedLines.push(`  [${t(s.id)}]`);
-        items.forEach(it => bedLines.push(`  • ${it}`));
-      }
-    });
-    if (bedLines.length) {
-      lines.push(`=== ${b} ===`);
-      lines.push(...bedLines);
-      lines.push('');
-    }
-  });
-  const text = lines.join('\n').trim();
-  if (!text) {
-    alert(t('nothingLoggedMsg'));
-    return;
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => alert(t('copiedMsg'))).catch(() => {});
-  }
-}
-
 function renderSummary() {
   if (typeof sortBedArray === 'function') alloc = sortBedArray(alloc);
   const area = document.getElementById('contentArea');
@@ -1461,7 +1423,6 @@ function renderSummary() {
     <button type="button" class="tool-btn ${summaryGroup === 'mod' ? 'active' : ''}" onclick="setSumGroup('mod')">${esc(t('byMod'))}</button>
     <button type="button" class="tool-btn ${hideCompleted ? 'active' : ''}" onclick="toggleHideCompleted()">${esc(hideCompleted ? t('showAll') : t('pending'))}</button>
     <button type="button" class="tool-btn ${wakeLockObj ? 'active' : ''}" onclick="toggleWakeLock()">${esc(t('keepOn'))}</button>
-    <button type="button" class="tool-btn" onclick="copyHandoverToClipboard()">📋 ${esc(t('copyHandover'))}</button>
   </div>`;
 
   let anyVisible = false;
@@ -1501,4 +1462,4 @@ function renderSummary() {
 function setSumGroup(g) { summaryGroup = g; renderSummary(); }
 function toggleHideCompleted() { hideCompleted = !hideCompleted; renderSummary(); }
 
-window.CDP_MOD_VER = 7;
+window.CDP_MOD_VER = 8;
