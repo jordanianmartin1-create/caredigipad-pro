@@ -8,10 +8,10 @@
 <meta name="apple-mobile-web-app-title" content="Care Digipad">
 <meta name="theme-color" content="#0f172a">
 <title>Care Digipad</title>
-<link rel="manifest" href="manifest.json?v=8">
-<link rel="icon" type="image/png" href="icon.png?v=8">
-<link rel="apple-touch-icon" href="icon.png?v=8">
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="manifest" href="manifest.json?v=9">
+<link rel="icon" type="image/png" href="icon.png?v=9">
+<link rel="apple-touch-icon" href="icon.png?v=9">
+<link rel="stylesheet" href="style.css?v=9">
 </head>
 <body data-theme="day" data-color="teal">
 
@@ -37,9 +37,9 @@
 
 <div id="setupView" class="container">
   <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px;">
-      <h2 id="lblSetup" style="font-size:1.2rem; margin:0;">Shift Setup</h2>
-      <select id="langSelect" aria-label="Language" style="width:auto; min-width:140px; padding:6px 26px 6px 10px; font-weight:700; font-size:1rem;" onchange="setLang(this.value)">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px;">
+      <h2 id="lblSetup" style="font-size:1.22rem; margin:0;">Shift Setup</h2>
+      <select id="langSelect" aria-label="Language" style="width:auto; min-width:142px; padding:6px 28px 6px 10px; font-weight:700; font-size:1rem;" onchange="setLang(this.value)">
         <option value="en">English</option>
         <option value="es">Español</option>
         <option value="fr">Français</option>
@@ -72,8 +72,8 @@
         <option value="sw">Kiswahili</option>
       </select>
     </div>
-    <p id="lblSub" style="font-size:0.84rem; color:var(--text-sub); margin:0 0 6px 0;">100% offline digital shift notepad. Data never leaves your device.</p>
-    <p id="lblDisclaimer" style="font-size:0.74rem; color:var(--text-sub); margin:0; opacity:0.85;">Personal shift scratchpad only. Does not provide clinical advice, diagnosis or decision support.</p>
+    <p id="lblSub" style="font-size:0.84rem; color:var(--text-sub); margin:0 0 6px 0; line-height:1.4;">100% offline digital shift notepad. Data never leaves your device.</p>
+    <p id="lblDisclaimer" style="font-size:0.74rem; color:var(--text-sub); margin:0; opacity:0.85; line-height:1.35;">Personal shift scratchpad only. Does not provide clinical advice, diagnosis or decision support.</p>
   </div>
 
   <div id="installBanner" class="card install-card hidden">
@@ -88,9 +88,8 @@
       </div>
     </div>
     <div id="iosInstallGuide" class="ios-guide hidden">
-      <div><strong>iPhone / iPad Install:</strong></div>
-      <div>1. Tap the <strong>Share</strong> button at the bottom of Safari.</div>
-      <div>2. Scroll down and tap <strong>Add to Home Screen</strong>.</div>
+      <div id="lblIosGuide1">1. Tap the Share button in Safari.</div>
+      <div id="lblIosGuide2">2. Scroll down and tap Add to Home Screen.</div>
     </div>
   </div>
 
@@ -109,9 +108,15 @@
       <span class="step-badge">1</span>
       <span id="lblShiftHrs" class="step-title">Shift Hours</span>
     </div>
-    <div style="display:flex; gap:8px; margin-bottom:14px;">
-      <button type="button" id="btnDayShift" class="mini-btn" style="padding:10px 8px; font-size:0.86rem;" onclick="setShift('day')">Day (07:00)</button>
-      <button type="button" id="btnNightShift" class="mini-btn" style="padding:10px 8px; font-size:0.86rem;" onclick="setShift('night')">Night (19:00)</button>
+    <div class="shift-choice-grid">
+      <button type="button" id="btnDayShift" class="check-pill-btn" onclick="setShift('day')">
+        <span class="pill-tick" id="tickDayShift">✓</span>
+        <span id="txtDayShift">Day (07:00)</span>
+      </button>
+      <button type="button" id="btnNightShift" class="check-pill-btn" onclick="setShift('night')">
+        <span class="pill-tick" id="tickNightShift"></span>
+        <span id="txtNightShift">Night (19:00)</span>
+      </button>
     </div>
 
     <div class="step-divider"></div>
@@ -129,32 +134,24 @@
       </div>
     </div>
 
-    <div style="display:flex; gap:8px; margin-bottom:10px;">
+    <div style="display:flex; gap:8px; margin-bottom:12px;">
       <input type="text" id="newBedInput" maxlength="4" placeholder="e.g. B1, SR2" style="flex:1; text-transform:uppercase; font-size:1rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomBed();}">
-      <button type="button" id="btnAddBed" class="btn btn-primary btn-sm" onclick="addCustomBed()">+ Add</button>
+      <button type="button" id="btnAddBed" class="btn btn-primary btn-sm" style="padding:0 16px;" onclick="addCustomBed()">+ Add</button>
     </div>
 
-    <div id="firstTimeGuide" class="first-time-box hidden">
-      <div style="font-weight:800; margin-bottom:4px; color:var(--teal);">Quick Start Guide:</div>
-      <div>1. Type your bed numbers or bay codes above (e.g. <strong>B1</strong>, <strong>SR2</strong>) and tap <strong>+ Add</strong>.</div>
-      <div>2. Tap your beds below to tick them for today's shift.</div>
-      <div>3. Tap <strong>Start Shift</strong> at the bottom of the screen.</div>
-    </div>
-
-    <div class="bed-toolbar">
-      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-        <span id="lblBedHelper" style="font-size:0.78rem; font-weight:600; color:var(--text-sub);">Tap beds to tick for today:</span>
+    <div class="bed-section-box">
+      <div id="lblBedHelper" class="bed-helper-txt">Tap a bed below to select or deselect it for today:</div>
+      <div class="bed-toolbar">
         <span id="bedSelCount" class="sel-count-badge">0 selected</span>
+        <div id="bedActionLinks" class="bed-toolbar-actions">
+          <button type="button" id="btnClearSel" class="toolbar-mini-btn" onclick="clearBedSelection()">Untick All</button>
+          <button type="button" id="btnEditWardBeds" class="toolbar-mini-btn" onclick="toggleBedDeleteMode()">Remove Beds</button>
+        </div>
       </div>
-      <div id="bedActionLinks" style="display:flex; align-items:center; gap:10px;">
-        <button type="button" id="btnClearSel" class="btn-link" onclick="clearBedSelection()">Untick All</button>
-        <button type="button" id="btnEditWardBeds" class="btn-link" onclick="toggleBedDeleteMode()">Remove Beds</button>
-      </div>
+      <div id="setupBedGrid" class="bed-grid"></div>
     </div>
 
-    <div id="setupBedGrid" class="bed-grid"></div>
-
-    <div id="saveLayoutBox" class="save-layout-footer hidden">
+    <div id="saveLayoutBox" class="layout-box hidden" style="margin-top:12px; margin-bottom:0;">
       <label id="lblSaveLayTitle" style="margin-bottom:6px;">Save Ticked Beds as a Ward Layout</label>
       <button type="button" id="btnUpdActiveLay" class="btn btn-subtle btn-sm hidden" style="width:100%; margin-bottom:8px; border-color:var(--teal); color:var(--teal); font-weight:800;" onclick="updateActiveLayoutInSetup()"></button>
       <div style="display:flex; gap:8px;">
@@ -166,42 +163,56 @@
 
   <div class="card">
     <div id="btnToggleSettings" class="settings-card-hdr" onclick="toggleSettingsPanel()">
-      <div style="flex:1; min-width:0;">
-        <div id="lblToggleSettingsTitle" class="settings-hdr-title">Customise Modules, Units &amp; Theme</div>
-        <div id="settingsSummarySub" class="settings-hdr-sub">2 modules active • mmol/L • °C</div>
+      <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+        <span class="step-badge">3</span>
+        <div style="flex:1; min-width:0;">
+          <div id="lblToggleSettingsTitle" class="settings-hdr-title">Preferences &amp; Units</div>
+          <div id="settingsSummarySub" class="settings-hdr-sub">2/12 • mmol/L • °C</div>
+        </div>
       </div>
-      <span id="btnToggleSettingsPill" class="settings-pill">Show / Edit ▾</span>
+      <span id="btnToggleSettingsPill" class="settings-pill">Edit ▾</span>
     </div>
 
-    <div id="settingsBody" class="hidden" style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border);">
-      <h3 id="lblPrefs" style="font-size:0.92rem; margin-bottom:10px;">Preferences &amp; Units</h3>
-      <div class="row">
-        <div>
-          <label id="lblTheme">Theme</label>
-          <select id="themeSelect" style="font-size:1rem;" onchange="setTheme(this.value)"></select>
-        </div>
+    <div id="settingsBody" class="hidden" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+      <div style="margin-bottom:12px;">
+        <label id="lblTheme">Theme</label>
+        <select id="themeSelect" style="font-size:1rem;" onchange="setTheme(this.value)"></select>
       </div>
-      <div class="row">
-        <div>
-          <label id="lblBmUnit">Glucose Unit</label>
-          <div style="display:flex; gap:6px;">
-            <button type="button" id="btnBmMmol" class="mini-btn" onclick="setBmUnit('mmol/L')">mmol/L</button>
-            <button type="button" id="btnBmMg" class="mini-btn" onclick="setBmUnit('mg/dL')">mg/dL</button>
+
+      <div class="units-stack">
+        <div class="unit-group-box">
+          <label id="lblBmUnit" style="margin-bottom:6px;">Glucose Unit</label>
+          <div class="shift-choice-grid">
+            <button type="button" id="btnBmMmol" class="check-pill-btn" onclick="setBmUnit('mmol/L')">
+              <span class="pill-tick" id="tickBmMmol">✓</span>
+              <span>mmol/L</span>
+            </button>
+            <button type="button" id="btnBmMg" class="check-pill-btn" onclick="setBmUnit('mg/dL')">
+              <span class="pill-tick" id="tickBmMg"></span>
+              <span>mg/dL</span>
+            </button>
           </div>
         </div>
-        <div>
-          <label id="lblTempUnit">Temp Unit</label>
-          <div style="display:flex; gap:6px;">
-            <button type="button" id="btnTempC" class="mini-btn" onclick="setTempUnit('°C')">°C</button>
-            <button type="button" id="btnTempF" class="mini-btn" onclick="setTempUnit('°F')">°F</button>
+
+        <div class="unit-group-box">
+          <label id="lblTempUnit" style="margin-bottom:6px;">Temp Unit</label>
+          <div class="shift-choice-grid">
+            <button type="button" id="btnTempC" class="check-pill-btn" onclick="setTempUnit('°C')">
+              <span class="pill-tick" id="tickTempC">✓</span>
+              <span>°C</span>
+            </button>
+            <button type="button" id="btnTempF" class="check-pill-btn" onclick="setTempUnit('°F')">
+              <span class="pill-tick" id="tickTempF"></span>
+              <span>°F</span>
+            </button>
           </div>
         </div>
       </div>
 
       <div class="mod-sec-hdr">
         <div style="flex:1; min-width:0;">
-          <div id="lblActiveMods" style="font-weight:800; font-size:0.9rem; color:var(--text);">Shift Modules &amp; Tab Order</div>
-          <div id="lblModOrderHelp" style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">Tick modules to show on shift. Use Up / Down or Tap in Order to set their left-to-right tab sequence.</div>
+          <div id="lblActiveMods" style="font-weight:800; font-size:0.9rem; color:var(--text);">Active Modules</div>
+          <div id="lblModOrderHelp" style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">Tick to show • Tap ▲ ▼ to reorder</div>
         </div>
         <button type="button" id="btnQuickReorder" class="btn btn-subtle btn-sm" style="flex-shrink:0; border-color:var(--teal); color:var(--teal);" onclick="toggleQuickReorder()">Tap in Order</button>
       </div>
@@ -230,13 +241,13 @@
   </div>
 </div>
 
-<script src="lang.js?v=8" onerror="window.CDU_LANGS = {}"></script>
-<script src="core.js?v=8"></script>
-<script src="modules.js?v=8"></script>
+<script src="lang.js?v=9" onerror="window.CDU_LANGS = {}"></script>
+<script src="core.js?v=9"></script>
+<script src="modules.js?v=9"></script>
 <script>
 window.addEventListener('load', function() {
-  if (window.CDP_MOD_VER !== 8 && !sessionStorage.getItem('cdp_v8_reload')) {
-    sessionStorage.setItem('cdp_v8_reload', '1');
+  if (window.CDP_MOD_VER !== 9 && !sessionStorage.getItem('cdp_v9_reload')) {
+    sessionStorage.setItem('cdp_v9_reload', '1');
     window.location.reload();
   }
 });
