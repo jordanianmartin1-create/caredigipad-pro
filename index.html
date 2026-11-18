@@ -8,10 +8,10 @@
 <meta name="apple-mobile-web-app-title" content="Care Digipad">
 <meta name="theme-color" content="#0f172a">
 <title>Care Digipad</title>
-<link rel="manifest" href="manifest.json?v=9">
-<link rel="icon" type="image/png" href="icon.png?v=9">
-<link rel="apple-touch-icon" href="icon.png?v=9">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="manifest" href="manifest.json?v=10">
+<link rel="icon" type="image/png" href="icon.png?v=10">
+<link rel="apple-touch-icon" href="icon.png?v=10">
+<link rel="stylesheet" href="style.css?v=10">
 </head>
 <body data-theme="day" data-color="teal">
 
@@ -39,7 +39,7 @@
   <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px;">
       <h2 id="lblSetup" style="font-size:1.22rem; margin:0;">Shift Setup</h2>
-      <select id="langSelect" aria-label="Language" style="width:auto; min-width:142px; padding:6px 28px 6px 10px; font-weight:700; font-size:1rem;" onchange="setLang(this.value)">
+      <select id="langSelect" class="lang-select" aria-label="Language" onchange="setLang(this.value)">
         <option value="en">English</option>
         <option value="es">Español</option>
         <option value="fr">Français</option>
@@ -241,13 +241,13 @@
   </div>
 </div>
 
-<script src="lang.js?v=9" onerror="window.CDU_LANGS = {}"></script>
-<script src="core.js?v=9"></script>
-<script src="modules.js?v=9"></script>
+<script src="lang.js?v=10" onerror="window.CDU_LANGS = {}"></script>
+<script src="core.js?v=10"></script>
+<script src="modules.js?v=10"></script>
 <script>
 window.addEventListener('load', function() {
-  if (window.CDP_MOD_VER !== 9 && !sessionStorage.getItem('cdp_v9_reload')) {
-    sessionStorage.setItem('cdp_v9_reload', '1');
+  if (window.CDP_MOD_VER !== 10 && !sessionStorage.getItem('cdp_v10_reload')) {
+    sessionStorage.setItem('cdp_v10_reload', '1');
     window.location.reload();
   }
 });
