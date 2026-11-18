@@ -1,19 +1,21 @@
-const CACHE_NAME = 'caredigipad-v10';
+const CACHE_NAME = 'caredigipad-v11';
 const ASSETS = [
   './',
   './index.html',
-  './style.css?v=10',
-  './lang.js?v=10',
-  './core.js?v=10',
-  './modules.js?v=10',
-  './manifest.json?v=10',
-  './icon.png?v=10'
+  './style.css?v=11',
+  './lang.js?v=11',
+  './core.js?v=11',
+  './modules.js?v=11',
+  './manifest.json?v=11',
+  './icon.png?v=11'
 ];
 
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).catch(() => {})
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.allSettled(ASSETS.map(url => cache.add(url)))
+    )
   );
 });
 
@@ -34,7 +36,7 @@ self.addEventListener('fetch', event => {
     caches.match(event.request).then(exactCached => {
       const cachedPromise = exactCached
         ? Promise.resolve(exactCached)
-        : caches.match(event.request, { ignoreSearch: true }).then( looseCached => {
+        : caches.match(event.request, { ignoreSearch: true }).then(looseCached => {
             if (looseCached) return looseCached;
             if (event.request.mode === 'navigate') return caches.match('./index.html');
             return undefined;
