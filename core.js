@@ -20,6 +20,12 @@ const EN_DICT = {
   thBerry: "Plum & Berry",
   thSlate: "Midnight Slate",
   thCoral: "Warm Coral",
+  thNavy: "Cobalt Navy",
+  thIndigo: "Royal Indigo",
+  thCyan: "Ocean Cyan",
+  thMoss: "Forest Moss",
+  thRose: "Rose Pink",
+  thEspresso: "Warm Espresso",
   shiftHrs: "Shift Hours",
   dayShift: "Day (07:00)",
   nightShift: "Night (19:00)",
@@ -55,6 +61,7 @@ const EN_DICT = {
   bedPlural: "Beds",
   share: "Share Care Digipad with a Colleague",
   endShift: "End Shift / Clear Data",
+  endShiftConfirm: "End shift and clear all data?",
   edit: "Edit",
   hide: "Hide",
   dark: "Dark",
@@ -142,6 +149,7 @@ const EN_DICT = {
   flNet: "Balance",
   flTotal: "Total",
   flClr: "Clear",
+  flQuickAdd: "Quick Add",
   wetPad: "Wet Pad",
   srcPu: "Urine (PU)",
   srcCath: "Catheter",
@@ -313,39 +321,40 @@ const _EXTRA_KEYS = [
   'installTitle','installSub','installBtn','iosGuide1','iosGuide2',
   'customMlPh','bedOccupied','linkCopied','keyInvalid','keyOffline',
   'moveUp','moveDown','markAllDone','undoAll','shiftChangeFluidConfirm',
-  'minShort','hrShort','rrShort','bpShort','pulseShort','spo2Short','o2Short','acvpuShort','overdueTasks'
+  'minShort','hrShort','rrShort','bpShort','pulseShort','spo2Short','o2Short','acvpuShort','overdueTasks',
+  'thNavy','thIndigo','thCyan','thMoss','thRose','thEspresso','flQuickAdd','endShiftConfirm'
 ];
 
 const _UI_EXTRA = {
-  es: "ej. B1, SR2|seleccionadas|Desmarcar Todo|Eliminar Camas|Toque una cama abajo para eliminarla de su lista:|Guardar Camas Marcadas como Diseño|Ordenar al Tocar|Toque sus módulos activos en el orden deseado (1º, 2º, 3º...):|Módulos, Unidades y Tema|módulos activos|Mostrar / Editar ▾|Cerrar ▲|Instalar App para Uso sin Conexión|Añada Care Digipad a su pantalla de inicio para acceso rápido.|Instalar|1. Toque el botón Compartir en Safari.|2. Toque Añadir a pantalla de inicio.|ml personalizado|La cama ya está en uso.|Enlace copiado al portapapeles|Clave de licencia no válida o ya activada.|Conéctese a internet un segundo para verificar su clave.|Subir|Bajar|Marcar Todo Hecho|Deshacer Todo|Ya hay líquidos registrados. ¿Cambiar horario y actualizar las horas de líquidos?|m|h|FR|PA|FC|SpO2|O2|ACVPU|Tareas Vencidas",
-  fr: "ex. B1, SR2|sélectionnés|Tout Décocher|Supprimer Lits|Touchez un lit ci-dessous pour le supprimer de votre liste :|Enregistrer les Lits Cochés comme Plan|Trier au Toucher|Touchez vos modules actifs dans l'ordre souhaité (1er, 2e, 3e...) :|Modules, Unités et Thème|modules actifs|Afficher / Modifier ▾|Fermer ▲|Installer l'App Hors Ligne|Ajoutez Care Digipad à votre écran d'accueil.|Installer|1. Touchez le bouton Partager dans Safari.|2. Touchez Sur l'écran d'accueil.|ml personnalisé|Ce lit est déjà utilisé.|Lien copié dans le presse-papiers|Clé de licence invalide ou déjà activée.|Connectez-vous brièvement à internet pour vérifier votre clé.|Monter|Descendre|Tout Marquer Fait|Tout Annuler|Des bilans hydriques sont déjà saisis. Changer les horaires et mettre à jour les heures ?|min|h|FR|TA|FC|SpO2|O2|ACVPU|Tâches en Retard",
-  de: "z.B. B1, SR2|ausgewählt|Alle Abwählen|Betten Entfernen|Tippen Sie unten auf ein Bett, um es aus der Liste zu löschen:|Ausgewählte Betten als Layout Speichern|Per Tippen Sortieren|Tippen Sie Ihre aktiven Module in der gewünschten Reihenfolge an (1., 2., 3....):|Module, Einheiten & Farbschema|Module aktiv|Anzeigen / Bearb. ▾|Schließen ▲|App für Offline-Nutzung Installieren|Care Digipad zum Startbildschirm hinzufügen.|Installieren|1. Tippen Sie in Safari auf Teilen.|2. Tippen Sie auf Zum Home-Bildschirm.|Eigene ml|Bett ist bereits belegt.|Link in die Zwischenablage kopiert|Ungültiger oder bereits aktivierter Lizenzschlüssel.|Kurz mit dem Internet verbinden, um den Schlüssel zu prüfen.|Nach oben|Nach unten|Alle Erledigt|Alle Rückgängig|Bilanzwerte sind bereits erfasst. Schichtzeiten ändern und Uhrzeiten anpassen?|Min.|Std.|AF|RR|HF|SpO2|O2|ACVPU|Überfällige Aufgaben",
-  pt: "ex. B1, SR2|selecionadas|Desmarcar Tudo|Remover Camas|Toque numa cama abaixo para a eliminar da lista:|Guardar Camas Selecionadas como Layout|Ordenar ao Tocar|Toque nos módulos ativos na ordem desejada (1º, 2º, 3º...):|Módulos, Unidades e Tema|módulos ativos|Mostrar / Editar ▾|Fechar ▲|Instalar App para Uso Offline|Adicione o Care Digipad ao ecrã principal.|Instalar|1. Toque no botão Partilhar no Safari.|2. Toque em Adicionar ao Ecrã Principal.|ml personalizado|Esta cama já está em uso.|Ligação copiada para a área de transferência|Chave de licença inválida ou já ativada.|Ligue-se brevemente à internet para verificar a sua chave.|Subir|Descer|Marcar Tudo Feito|Desfazer Tudo|Já existem líquidos registados. Alterar horário e atualizar as horas dos líquidos?|m|h|FR|PA|FC|SpO2|O2|ACVPU|Tarefas Atrasadas",
-  it: "es. B1, SR2|selezionati|Deseleziona Tutto|Rimuovi Letti|Tocca un letto qui sotto per eliminarlo dalla lista:|Salva Letti Selezionati come Reparto|Ordina Toccando|Tocca i moduli attivi nell'ordine desiderato (1º, 2º, 3º...):|Moduli, Unità e Tema|moduli attivi|Mostra / Modifica ▾|Chiudi ▲|Installa App per Uso Offline|Aggiungi Care Digipad alla schermata Home.|Installa|1. Tocca Condividi in Safari.|2. Tocca Aggiungi alla schermata Home.|ml personalizzati|Il letto è già in uso.|Link copiato negli appunti|Chiave di licenza non valida o già attivata.|Connettiti brevemente a internet per verificare la chiave.|Sposta Su|Sposta Giù|Segna Tutto Fatto|Annulla Tutto|Ci sono già voci nel bilancio idrico. Cambiare orario e aggiornare le ore?|m|h|FR|PA|FC|SpO2|O2|ACVPU|Attività in Ritardo",
-  nl: "bijv. B1, SR2|geselecteerd|Alles Deselecteren|Bedden Verwijderen|Tik hieronder op een bed om het uit uw lijst te verwijderen:|Geselecteerde Bedden Opslaan als Indeling|Tik op Volgorde|Tik uw actieve modules aan in de gewenste volgorde (1e, 2e, 3e...):|Modules, Eenheden & Thema|modules actief|Tonen / Wijzigen ▾|Sluiten ▲|App Installeren voor Offline Gebruik|Voeg Care Digipad toe aan uw beginscherm.|Installeren|1. Tik op Deel in Safari.|2. Tik op Zet op beginscherm.|Aangepaste ml|Bed is al in gebruik.|Link gekopieerd naar klembord|Ongeldige of reeds geactiveerde licentiesleutel.|Verbind kort met internet om uw sleutel te verifiëren.|Omhoog|Omlaag|Alles Klaar|Alles Ongedaan|Er is al vocht geregistreerd. Diensttijden wijzigen en de uren bijwerken?|m|u|AH|RR|HR|SpO2|O2|ACVPU|Te Late Taken",
-  sv: "t.ex. B1, SR2|valda|Avmarkera Alla|Ta Bort Sängar|Tryck på en säng nedan för att ta bort den från listan:|Spara Valda Sängar som Layout|Tryck i Ordning|Tryck på dina aktiva moduler i den ordning du vill ha dem (1:a, 2:a, 3:e...):|Moduler, Enheter & Tema|aktiva moduler|Visa / Ändra ▾|Stäng ▲|Installera App för Offlinebruk|Lägg till Care Digipad på hemskärmen.|Installera|1. Tryck på Dela i Safari.|2. Tryck på Lägg till på hemskärmen.|Ange ml|Sängen används redan.|Länk kopierad till urklipp|Ogiltig eller redan aktiverad licensnyckel.|Anslut kort till internet för att verifiera din licensnyckel.|Flytta Upp|Flytta Ner|Markera Alla Klara|Ångra Alla|Vätskeposter finns redan. Ändra passtider och uppdatera klockslagen?|m|t|AF|BT|HF|SpO2|O2|ACVPU|Försenade Uppgifter",
-  pl: "np. B1, SR2|wybrano|Odznacz Wszystko|Usuń Łóżka|Dotknij łóżka poniżej, aby usunąć je z listy:|Zapisz Zaznaczone Łóżka jako Układ|Kolejność Dotykiem|Dotknij aktywnych modułów w wybranej kolejności (1., 2., 3....):|Moduły, Jednostki i Motyw|aktywnych modułów|Pokaż / Edytuj ▾|Zamknij ▲|Zainstaluj Aplikację Offline|Dodaj Care Digipad do ekranu głównego.|Zainstaluj|1. Dotknij Udostępnij w Safari.|2. Dotknij Dodaj do ekranu początkowego.|Własne ml|Łóżko jest już zajęte.|Link skopiowany do schowka|Nieprawidłowy lub już aktywowany klucz licencyjny.|Połącz się na chwilę z internetem, aby zweryfikować klucz.|W górę|W dół|Oznacz Wszystkie|Cofnij Wszystkie|Wprowadzono już bilans płynów. Zmienić godziny dyżuru i zaktualizować etykiety godzin?|m|g|RR|BP|HR|SpO2|O2|ACVPU|Zaległe Zadania",
-  ro: "ex. B1, SR2|selectate|Deselectează Tot|Elimină Paturi|Atingeți un pat mai jos pentru a-l șterge din listă:|Salvează Paturile Bifate ca Aspect|Ordonează prin Atingere|Atingeți modulele active în ordinea dorită (1, 2, 3...):|Module, Unități și Temă|module active|Arată / Editează ▾|Închide ▲|Instalează Aplicația Offline|Adăugați Care Digipad pe ecranul principal.|Instalează|1. Atingeți Partajare în Safari.|2. Atingeți Adăugați la ecranul principal.|ml personalizat|Patul este deja utilizat.|Link copiat în clipboard|Cheie de licență nevalidă sau deja activată.|Conectați-vă scurt la internet pentru a verifica cheia.|Mută Sus|Mută Jos|Marchează Tot Gata|Anulează Tot|Există deja date în bilanțul hidric. Schimbați programul și actualizați orele?|m|h|FR|TA|AV|SpO2|O2|ACVPU|Sarcini Întârziate",
-  uk: "напр. B1, SR2|обрано|Зняти Позначки|Видалити Ліжка|Натисніть на ліжко нижче, щоб видалити його зі списку:|Зберегти Обрані Ліжка як Схему|Порядок Дотиком|Торкайтеся активних модулів у потрібному порядку (1-й, 2-й, 3-й...):|Модулі, Одиниці та Тема|активних модулів|Показати / Редаг. ▾|Закрити ▲|Встановити Додаток Офлайн|Додайте Care Digipad на головний екран.|Встановити|1. Натисніть Поділитися в Safari.|2. Натисніть На початковий екран.|Власні мл|Ліжко вже використовується.|Посилання скопійовано|Недійсний або вже активований ключ ліцензії.|Підключіться до інтернету на секунду для перевірки ключа.|Вгору|Вниз|Позначити Все|Скасувати Все|Вже є записи гідробалансу. Змінити години зміни та оновити часові мітки?|хв|год|ЧД|АТ|ЧСС|SpO2|O2|ACVPU|Прострочені Завдання",
-  ru: "напр. B1, SR2|выбрано|Снять Выделение|Удалить Койки|Нажмите на койку ниже, чтобы удалить её из списка:|Сохранить Выбранные Койки как Схему|Порядок Нажатием|Нажимайте активные модули в нужном порядке (1-й, 2-й, 3-й...):|Модули, Единицы и Тема|активных модулей|Показать / Изм. ▾|Закрыть ▲|Установить Приложение Офлайн|Добавьте Care Digipad на главный экран.|Установить|1. Нажмите Поделиться в Safari.|2. Нажмите На экран «Домой».|Свои мл|Койка уже занята.|Ссылка скопирована в буфер обмена|Недействительный или уже активированный ключ лицензии.|Подключитесь к интернету на секунду для проверки ключа.|Вверх|Вниз|Отметить Все|Отменить Все|Уже есть записи гидробаланса. Изменить часы смены и обновить метки времени?|мин|ч|ЧДД|АД|ЧСС|SpO2|O2|ACVPU|Просроченные Задачи",
-  el: "π.χ. B1, SR2|επιλεγμένες|Αποεπιλογή Όλων|Αφαίρεση Κλινών|Πατήστε μια κλίνη παρακάτω για διαγραφή από τη λίστα:|Αποθήκευση Επιλεγμένων Κλινών ως Διάταξη|Σειρά με Πάτημα|Πατήστε τις ενεργές ενότητες με τη σειρά που θέλετε (1η, 2η, 3η...):|Ενότητες, Μονάδες & Θέμα|ενεργές ενότητες|Εμφάνιση / Επεξ. ▾|Κλείσιμο ▲|Εγκατάσταση Εφαρμογής Offline|Προσθέστε το Care Digipad στην αρχική οθόνη.|Εγκατάσταση|1. Πατήστε Κοινοποίηση στο Safari.|2. Πατήστε Προσθήκη στην οθόνη Αφετηρίας.|Προσαρμοσμένα ml|Η κλίνη χρησιμοποιείται ήδη.|Ο σύνδεσμος αντιγράφηκε|Μη έγκυρος ή ήδη ενεργοποιημένος κωδικός άδειας.|Συνδεθείτε για λίγο στο διαδίκτυο για επαλήθευση του κωδικού.|Πάνω|Κάτω|Όλα Ολοκληρωμένα|Αναίρεση Όλων|Υπάρχουν ήδη καταχωρήσεις υγρών. Αλλαγή ωραρίου και ενημέρωση των ωρών;|λ|ώ|RR|ΑΠ|HR|SpO2|O2|ACVPU|Εκπρόθεσμες Εργασίες",
-  hi: "जैसे B1, SR2|चयनित|सभी अचयनित करें|बेड हटाएं|सूची से हटाने के लिए नीचे किसी भी बेड पर टैप करें:|चयनित बेड को वार्ड लेआउट के रूप में सहेजें|क्रम में टैप करें|अपने सक्रिय मॉड्यूल को जिस क्रम में चाहते हैं उस क्रम में टैप करें (1, 2, 3...):|मॉड्यूल, इकाइयां और थीम|सक्रिय मॉड्यूल|दिखाएं / बदलें ▾|बंद करें ▲|ऑफ़लाइन उपयोग के लिए ऐप इंस्टॉल करें|Care Digipad को अपनी होम स्क्रीन पर जोड़ें।|इंस्टॉल करें|1. Safari में Share बटन पर टैप करें।|2. Add to Home Screen पर टैप करें।|कस्टम ml|यह बेड पहले से उपयोग में है।|लिंक क्लिपबोर्ड पर कॉपी हो गया|अमान्य या पहले से सक्रिय लाइसेंस कुंजी।|अपनी लाइसेंस कुंजी सत्यापित करने के लिए इंटरनेट से जुड़ें।|ऊपर ले जाएं|नीचे ले जाएं|सभी पूर्ण करें|सभी पूर्ववत करें|तरल पदार्थ पहले से दर्ज हैं। क्या शिफ्ट समय बदलें और समय लेबल अपडेट करें?|मि.|घं.|RR|BP|HR|SpO2|O2|ACVPU|समय समाप्त कार्य",
-  bn: "যেমন B1, SR2|নির্বাচিত|সব আনটিক করুন|বেড মুছুন|তালিকা থেকে মুছে ফেলতে নিচের যেকোনো বেডে ট্যাপ করুন:|নির্বাচিত বেডগুলো লেআউট হিসেবে সেভ করুন|ক্রমানুসারে ট্যাপ|আপনার সক্রিয় মডিউলগুলো পছন্দের ক্রমানুসারে ট্যাপ করুন (১ম, ২য়, ৩য়...):|মডিউল, একক ও থিম|সক্রিয় মডিউল|দেখান / এডিট ▾|বন্ধ করুন ▲|অফলাইন ব্যবহারের জন্য অ্যাপ ইনস্টল করুন|হোম স্ক্রিনে Care Digipad যোগ করুন।|ইনস্টল|1. Safari-তে Share বাটনে ট্যাপ করুন।|2. Add to Home Screen-এ ট্যাপ করুন।|কাস্টম ml|এই বেডটি ইতিমধ্যে ব্যবহৃত হচ্ছে।|লিঙ্ক ক্লিপবোর্ডে কপি হয়েছে|অবৈধ বা ইতিমধ্যে ব্যবহৃত লাইসেন্স কী।|আপনার লাইসেন্স কী যাচাই করতে ইন্টারনেটে সংযুক্ত হন।|উপরে নিন|নিচে নিন|সব সম্পন্ন করুন|সব পূর্বাবস্থায়|তরল তথ্য ইতিমধ্যে লগ করা আছে। শিফট সময় পরিবর্তন করে ঘণ্টার লেবেল আপডেট করবেন?|মি.|ঘ.|RR|BP|HR|SpO2|O2|ACVPU|মেয়াদোত্তীর্ণ কাজ",
-  pa: "ਜਿਵੇਂ B1, SR2|ਚੁਣੇ ਗਏ|ਸਭ ਅਣਟਿੱਕ ਕਰੋ|ਬੈੱਡ ਹਟਾਓ|ਸੂਚੀ ਵਿੱਚੋਂ ਮਿਟਾਉਣ ਲਈ ਹੇਠਾਂ ਕਿਸੇ ਵੀ ਬੈੱਡ ਤੇ ਟੈਪ ਕਰੋ:|ਚੁਣੇ ਗਏ ਬੈੱਡਾਂ ਨੂੰ ਲੇਆਉਟ ਵਜੋਂ ਸੇਵ ਕਰੋ|ਕ੍ਰਮ ਵਿੱਚ ਟੈਪ ਕਰੋ|ਆਪਣੇ ਸਰਗਰਮ ਮੋਡੀਊਲਾਂ ਨੂੰ ਮਨਪਸੰਦ ਕ੍ਰਮ ਵਿੱਚ ਟੈਪ ਕਰੋ (1, 2, 3...):|ਮੋਡੀਊਲ, ਇਕਾਈਆਂ ਅਤੇ ਥੀਮ|ਸਰਗਰਮ ਮੋਡੀਊਲ|ਦਿਖਾਓ / ਬਦਲੋ ▾|ਬੰਦ ਕਰੋ ▲|ਆਫ਼ਲਾਈਨ ਵਰਤੋਂ ਲਈ ਐਪ ਇੰਸਟਾਲ ਕਰੋ|Care Digipad ਨੂੰ ਹੋਮ ਸਕ੍ਰੀਨ ਤੇ ਜੋੜੋ।|ਇੰਸਟਾਲ|1. Safari ਵਿੱਚ Share ਬਟਨ ਤੇ ਟੈਪ ਕਰੋ।|2. Add to Home Screen ਤੇ ਟੈਪ ਕਰੋ।|ਕਸਟਮ ml|ਇਹ ਬੈੱਡ ਪਹਿਲਾਂ ਹੀ ਵਰਤੋਂ ਵਿੱਚ ਹੈ।|ਲਿੰਕ ਕਾਪੀ ਹੋ ਗਿਆ ਹੈ|ਗਲਤ ਜਾਂ ਪਹਿਲਾਂ ਤੋਂ ਵਰਤਿਆ ਲਾਈਸੈਂਸ ਕੀ।|ਲਾਈਸੈਂਸ ਕੀ ਦੀ ਪੁਸ਼ਟੀ ਕਰਨ ਲਈ ਇੰਟਰਨੈੱਟ ਨਾਲ ਜੁੜੋ।|ਉੱਪਰ ਕਰੋ|ਹੇਠਾਂ ਕਰੋ|ਸਭ ਪੂਰੇ ਕਰੋ|ਸਭ ਵਾਪਸ ਕਰੋ|ਤਰਲ ਪਦਾਰਥ ਪਹਿਲਾਂ ਹੀ ਦਰਜ ਹਨ। ਕੀ ਸ਼ਿਫਟ ਦਾ ਸਮਾਂ ਬਦਲ ਕੇ ਘੰਟਿਆਂ ਦੇ ਲੇਬਲ ਅੱਪਡੇਟ ਕਰਨੇ ਹਨ?|ਮਿੰ|ਘੰ|RR|BP|HR|SpO2|O2|ACVPU|ਬਕਾਇਆ ਕੰਮ",
-  ur: "مثلاً B1, SR2|منتخب|سب غیر منتخب کریں|بیڈز ہٹائیں|فہرست سے حذف کرنے کے لیے نیچے کسی بھی بیڈ پر ٹیپ کریں:|منتخب بیڈز کو لے آؤٹ کے طور پر محفوظ کریں|ترتیب سے ٹیپ کریں|اپنے فعال ماڈیولز کو مطلوبہ ترتیب میں ٹیپ کریں (1، 2، 3...):|ماڈیولز، اکائیاں اور تھیم|فعال ماڈیولز|دکھائیں / ترمیم ▾|بند کریں ▲|آف لائن استعمال کے لیے ایپ انسٹال کریں|Care Digipad کو ہوم اسکرین پر شامل کریں۔|انسٹال|1. سفاری میں Share بٹن پر ٹیپ کریں۔|2. Add to Home Screen پر ٹیپ کریں۔|مخصوص ml|یہ بیڈ پہلے سے زیر استعمال ہے۔|لنک کلپ بورڈ پر کاپی ہو گیا|غلط یا پہلے سے فعال لائسنس کی۔|اپنی لائسنس کی کی تصدیق کے لیے انٹرنیٹ سے جڑیں۔|اوپر لے جائیں|نیچے لے جائیں|سب مکمل کریں|سب واپس کریں|مائعات پہلے سے درج ہیں۔ کیا شفٹ کے اوقات بدل کر گھنٹوں کے لیبل اپ ڈیٹ کریں؟|منٹ|گھنٹہ|RR|BP|HR|SpO2|O2|ACVPU|تاخیر شدہ کام",
-  ta: "எ.கா. B1, SR2|தேர்ந்தெடுக்கப்பட்டவை|அனைத்தையும் நீக்கு|படுக்கைகளை அகற்று|பட்டியலிலிருந்து நீக்க கீழே உள்ள படுக்கையைத் தட்டவும்:|தேர்ந்தெடுத்த படுக்கைகளை அமைப்பாகச் சேமி|வரிசையாகத் தட்டவும்|செயலில் உள்ள பகுதிகளை விரும்பிய வரிசையில் தட்டவும் (1, 2, 3...):|பகுதிகள், அலகுகள் & தீம்|செயலில் உள்ள பகுதிகள்|காட்டு / திருத்து ▾|மூடு ▲|ஆஃப்லைன் பயன்பாட்டிற்கு செயலியை நிறுவுக|முகப்புத் திரையில் Care Digipad-ஐச் சேர்க்கவும்.|நிறுவு|1. Safari-ல் Share பொத்தானைத் தட்டவும்.|2. Add to Home Screen என்பதைத் தட்டவும்.|தனிப்பயன் ml|இந்தப் படுக்கை ஏற்கனவே பயன்பாட்டில் உள்ளது.|இணைப்பு நகலெடுக்கப்பட்டது|தவறான அல்லது ஏற்கனவே பயன்படுத்தப்பட்ட உரிமக் குறியீடு.|உரிமக் குறியீட்டைச் சரிபார்க்க இணையத்துடன் இணைக்கவும்.|மேலே நகர்த்து|கீழே நகர்த்து|அனைத்தும் முடிந்தது|அனைத்தும் மீட்டமை|திரவப் பதிவுகள் ஏற்கனவே உள்ளன. ஷிப்ட் நேரத்தை மாற்றி மணி நேரங்களைப் புதுப்பிக்கவா?|நி.|ம.|RR|BP|HR|SpO2|O2|ACVPU|தாமதமான பணிகள்",
-  ml: "ഉദാ. B1, SR2|തിരഞ്ഞെടുത്തു|എല്ലാം ഒഴിവാക്കുക|ബെഡുകൾ നീക്കുക|ലിസ്റ്റിൽ നിന്ന് നീക്കാൻ താഴെയുള്ള ബെഡിൽ ടാപ്പ് ചെയ്യുക:|തിരഞ്ഞെടുത്ത ബെഡുകൾ ലേഔട്ട് ആയി സേവ് ചെയ്യുക|ക്രമത്തിൽ ടാപ്പ് ചെയ്യുക|സജീവ മൊഡ്യൂളുകൾ നിങ്ങൾക്കാവശ്യമുള്ള ക്രമത്തിൽ ടാപ്പ് ചെയ്യുക (1, 2, 3...):|മൊഡ്യൂളുകൾ, യൂണിറ്റുകൾ & തീം|സജീവ മൊഡ്യൂളുകൾ|കാണിക്കുക / മാറ്റുക ▾|അടയ്ക്കുക ▲|ഓഫ്‌ലൈൻ ഉപയോഗത്തിനായി ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുക|ഹോം സ്ക്രീനിലേക്ക് Care Digipad ചേർക്കുക.|ഇൻസ്റ്റാൾ|1. Safari-ൽ Share ബട്ടൺ ടാപ്പ് ചെയ്യുക.|2. Add to Home Screen ടാപ്പ് ചെയ്യുക.|കസ്റ്റം ml|ഈ ബെഡ് നിലവിൽ ഉപയോഗത്തിലാണ്.|ലിങ്ക് ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി|അസാധുവായ അല്ലെങ്കിൽ ഇതിനകം ഉപയോഗിച്ച ലൈസൻസ് കീ.|ലൈസൻസ് കീ പരിശോധിക്കാൻ ഇന്റർനെറ്റുമായി ബന്ധിപ്പിക്കുക.|മുകളിലേക്ക്|താഴേക്ക്|എല്ലാം പൂർത്തിയാക്കുക|എല്ലാം പൂർവ്വസ്ഥിതിയിലാക്കുക|ദ്രാവക വിവരങ്ങൾ ഇതിനകം രേഖപ്പെടുത്തിയിട്ടുണ്ട്. ഷിഫ്റ്റ് സമയം മാറ്റി മണിക്കൂർ ലേബലുകൾ അപ്‌ഡേറ്റ് ചെയ്യണോ?|മി.|മ.|RR|BP|HR|SpO2|O2|ACVPU|സമയം കഴിഞ്ഞ ജോലികൾ",
-  zh: "例如 B1, SR2|已选择|全部取消|移除床位|点击下方任意床位将其从列表中删除：|将勾选的床位保存为病区布局|按顺序点击|请按您需要的顺序依次点击下方启用的模块 (第1、第2、第3...)：|自定义模块、单位与主题|个模块已启用|显示 / 编辑 ▾|收起 ▲|安装离线版应用|将 Care Digipad 添加到主屏幕以便随时使用。|安装|1. 点击 Safari 底部的“共享”按钮。|2. 向下滚动并点击“添加到主屏幕”。|自定义 ml|该床位已在使用中。|链接已复制到剪贴板|许可证密钥无效或已被激活。|请短暂连接网络以验证您的许可证密钥。|上移|下移|全部标记完成|全部撤销|已记录出入量数据。是否更改班次并更新小时标签？|分|时|呼吸|血压|心率|SpO2|O2|ACVPU|逾期任务",
-  "zh-tw": "例如 B1, SR2|已選擇|全部取消|移除床位|點選下方任意床位將其從清單中刪除：|將勾選的床位儲存為病房配置|依序點選|請依您需要的順序點選下方啟用的模組 (第1、第2、第3...)：|自訂模組、單位與主題|個模組已啟用|顯示 / 編輯 ▾|收起 ▲|安裝離線版應用程式|將 Care Digipad 加入主畫面以便隨時使用。|安裝|1. 點選 Safari 底部的「分享」按鈕。|2. 向下捲動並點選「加入主畫面」。|自訂 ml|該床位已在使用中。|連結已複製到剪貼簿|授權金鑰無效或已被啟用。|請短暫連線網路以驗證您的授權金鑰。|上移|下移|全部標記完成|全部復原|已記錄輸出入量資料。是否更改班次並更新小時標籤？|分|時|呼吸|血壓|心率|SpO2|O2|ACVPU|逾期任務",
-  ja: "例: B1, SR2|選択中|すべて解除|ベッド削除|リストから削除するベッドをタップしてください：|選択したベッドをレイアウトとして保存|順番にタップ|表示したい順番に有効モジュールをタップしてください (1番目、2番目、3番目...)：|モジュール・単位・テーマ設定|モジュール有効|表示 / 編集 ▾|閉じる ▲|オフライン用アプリをインストール|ホーム画面にCare Digipadを追加します。|追加|1. Safariの共有ボタンをタップします。|2.「ホーム画面に追加」をタップします。|カスタム ml|このベッドは既に使用中です。|リンクをコピーしました|無効または既に使用されているライセンスキーです。|キーを確認するため一時的にインターネットに接続してください。|上へ移動|下へ移動|すべて完了|すべて取消|水分出納がすでに記録されています。シフト時間を変更して時刻ラベルを更新しますか？|分|時間|呼吸|血圧|脈拍|SpO2|O2|ACVPU|期限切れタスク",
-  ko: "예: B1, SR2|선택됨|모두 해제|병상 삭제|목록에서 삭제할 병상을 아래에서 탭하세요:|선택한 병상을 레이아웃으로 저장|순서대로 탭|원하는 순서대로 활성 모듈을 탭하세요 (1번째, 2번째, 3번째...):|모듈, 단위 및 테마 설정|개 모듈 활성|보기 / 편집 ▾|닫기 ▲|오프라인 사용을 위해 앱 설치|홈 화면에 Care Digipad를 추가하세요.|설치|1. Safari 하단의 공유 버튼을 탭하세요.|2. '홈 화면에 추가'를 탭하세요.|직접 입력 (ml)|이미 사용 중인 병상입니다.|링크가 클립보드에 복사되었습니다|유효하지 않거나 이미 활성화된 라이선스 키입니다.|라이선스 키 확인을 위해 잠시 인터넷에 연결해 주세요.|위로 이동|아래로 이동|모두 완료|모두 취소|수분 기록이 이미 있습니다. 근무 시간대를 변경하고 시간 라벨을 업데이트할까요?|분|시간|호흡|혈압|맥박|SpO2|O2|ACVPU|기한 경과 업무",
-  tl: "hal. B1, SR2|napili|Alisin Lahat ng Tsek|Alisin ang Kama|I-tap ang kama sa ibaba upang burahin sa listahan:|I-save ang mga Napiling Kama bilang Layout|I-tap ayon sa Ayos|I-tap ang mga aktibong module ayon sa pagkakasunod na gusto mo (1st, 2nd, 3rd...):|Mga Module, Yunit at Tema|aktibong module|Ipakita / I-edit ▾|Isara ▲|I-install ang App para sa Offline|Idagdag ang Care Digipad sa iyong home screen.|I-install|1. I-tap ang Share button sa Safari.|2. I-tap ang Add to Home Screen.|Custom ml|Ginagamit na ang kamang ito.|Nakopya ang link sa clipboard|Hindi wasto o nagamit na ang licence key.|Kumonekta saglit sa internet upang i-verify ang iyong licence key.|Itaas|Ibaba|Markahang Tapos Lahat|I-undo Lahat|May mga naitalang fluid na. Palitan ang oras ng shift at i-update ang mga oras?|m|h|RR|BP|HR|SpO2|O2|ACVPU|Lampas sa Oras na Gawain",
-  id: "mis. B1, SR2|dipilih|Hapus Semua Centang|Hapus Bed|Ketuk bed di bawah untuk menghapusnya dari daftar:|Simpan Bed Terpilih sebagai Denah|Ketuk Berurutan|Ketuk modul aktif sesuai urutan yang Anda inginkan (1, 2, 3...):|Modul, Satuan & Tema|modul aktif|Tampilkan / Edit ▾|Tutup ▲|Instal Aplikasi untuk Penggunaan Offline|Tambahkan Care Digipad ke layar utama Anda.|Instal|1. Ketuk tombol Bagikan di Safari.|2. Ketuk Tambahkan ke Layar Utama.|ml kustom|Bed ini sudah digunakan.|Tautan disalin ke papan klip|Kunci lisensi tidak valid atau sudah diaktifkan.|Hubungkan sebentar ke internet untuk memverifikasi kunci lisensi.|Naik|Turun|Tandai Semua Selesai|Batalkan Semua|Data cairan sudah tercatat. Ubah jam shift dan perbarui label jam?|m|j|RR|TD|HR|SpO2|O2|ACVPU|Tugas Terlambat",
-  vi: "VD: B1, SR2|đã chọn|Bỏ Chọn Tất Cả|Xóa Giường|Chạm vào giường bên dưới để xóa khỏi danh sách:|Lưu Các Giường Đã Chọn Làm Sơ Đồ|Chạm Theo Thứ Tự|Chạm vào các phân hệ đang bật theo thứ tự bạn muốn (1, 2, 3...):|Phân Hệ, Đơn Vị & Giao Diện|phân hệ đang bật|Hiện / Sửa ▾|Đóng ▲|Cài Đặt Ứng Dụng Ngoại Tuyến|Thêm Care Digipad vào màn hình chính.|Cài đặt|1. Chạm nút Chia sẻ trong Safari.|2. Chạm Thêm vào MH chính.|Nhập ml|Giường này đang được sử dụng.|Đã sao chép liên kết|Mã bản quyền không hợp lệ hoặc đã được kích hoạt.|Vui lòng kết nối mạng trong giây lát để xác thực mã bản quyền.|Lên trên|Xuống dưới|Đánh Dấu Xong Tất Cả|Hoàn Tác Tất Cả|Đã có dữ liệu dịch vào/ra. Đổi giờ ca trực và cập nhật nhãn giờ?|p|g|RR|HA|HR|SpO2|O2|ACVPU|Công Việc Quá Hạn",
-  ar: "مثال: B1, SR2|محددة|إلغاء تحديد الكل|حذف أسرة|اضغط على أي سرير أدناه لحذفه من قائمتك:|حفظ الأسرة المحددة كتخطيط جناح|الترتيب باللمس|اضغط على الوحدات النشطة بالترتيب الذي تريده (1، 2، 3...):|الوحدات، القياسات والسمة|وحدات نشطة|عرض / تعديل ▾|إغلاق ▲|تثبيت التطبيق للعمل بدون إنترنت|أضف Care Digipad إلى شاشتك الرئيسية.|تثبيت|1. اضغط على زر المشاركة في Safari.|2. اضغط على إضافة إلى الشاشة الرئيسية.|مل مخصص|هذا السرير قيد الاستخدام بالفعل.|تم نسخ الرابط إلى الحافظة|مفتاح الترخيص غير صالح أو مفعل مسبقاً.|اتصل بالإنترنت لثوانٍ للتحقق من مفتاح الترخيص.|نقل لأعلى|نقل لأسفل|تحديد الكل كمكتمل|تراجع عن الكل|توجد سجلات سوائل مسجلة بالفعل. هل تريد تغيير ساعات المناوبة وتحديث الأوقات؟|د|س|RR|BP|HR|SpO2|O2|ACVPU|مهام متأخرة",
-  tr: "örn. B1, SR2|seçildi|Tümünü Kaldır|Yatakları Sil|Listenizden silmek istediğiniz yatağa dokunun:|Seçili Yatakları Düzen Olarak Kaydet|Sırayla Dokun|Aktif modüllerinize istediğiniz sırayla dokunun (1., 2., 3....):|Modüller, Birimler ve Tema|aktif modül|Göster / Düzenle ▾|Kapat ▲|Çevrimdışı Kullanım İçin Uygulamayı Yükle|Care Digipad'i ana ekranınıza ekleyin.|Yükle|1. Safari'de Paylaş düğmesine dokunun.|2. Ana Ekrana Ekle'ye dokunun.|Özel ml|Bu yatak zaten kullanımda.|Bağlantı panoya kopyalandı|Geçersiz veya zaten etkinleştirilmiş lisans anahtarı.|Lisans anahtarınızı doğrulamak için kısaca internete bağlanın.|Yukarı Taşı|Aşağı Taşı|Tümünü Tamamla|Tümünü Geri Al|Sıvı kayıtları zaten girilmiş. Nöbet saatlerini değiştirip saat etiketlerini güncellemek istiyor musunuz?|dk|sa|RR|KB|HR|SpO2|O2|ACVPU|Gecikmiş Görevler",
-  fa: "مثلاً B1, SR2|انتخاب‌شده|لغو انتخاب همه|حذف تخت‌ها|برای حذف تخت از فهرست روی آن بزنید:|ذخیره تخت‌های انتخاب‌شده به عنوان چیدمان|ترتیب با لمس|ماژول‌های فعال را به ترتیبی که می‌خواهید لمس کنید (۱، ۲، ۳...):|ماژول‌ها، واحدها و پوسته|ماژول فعال|نمایش / ویرایش ▾|بستن ▲|نصب برنامه برای استفاده آفلاین|Care Digipad را به صفحه اصلی خود اضافه کنید.|نصب|1. در Safari روی دکمه Share بزنید.|2. روی Add to Home Screen بزنید.|میلی‌لیتر دلخواه|این تخت در حال حاضر استفاده می‌شود.|لینک در کلیپ‌بورد کپی شد|کلید مجوز نامعتبر است یا قبلاً فعال شده است.|برای تأیید کلید مجوز خود لحظه‌ای به اینترنت متصل شوید.|انتقال به بالا|انتقال به پایین|تکمیل همه|لغو همه|موارد مایعات قبلاً ثبت شده است. ساعات شیفت تغییر کند و برچسب ساعت‌ها به‌روز شود؟|دقیقه|ساعت|RR|BP|HR|SpO2|O2|ACVPU|وظایف عقب‌افتاده",
-  sw: "mf. B1, SR2|zimechaguliwa|Ondoa Alama Zote|Futa Vitanda|Gusa kitanda hapa chini kukifuta kwenye orodha:|Hifadhi Vitanda Vilivyochaguliwa kama Mpangilio|Gusa kwa Mpangilio|Gusa moduli zako zinazotumika kwa mpangilio unaotaka (1, 2, 3...):|Moduli, Vipimo na Mandhari|moduli zinazotumika|Onyesha / Hariri ▾|Funga ▲|Sakinisha Programu kwa Matumizi Bila Mtandao|Ongeza Care Digipad kwenye skrini yako ya nyumbani.|Sakinisha|1. Gusa kitufe cha Share kwenye Safari.|2. Gusa Add to Home Screen.|Weka ml|Kitanda hiki tayari kinatumika.|Kiungo kimenakiliwa|Ufunguo wa leseni si sahihi au tayari umetumika.|Unganisha kwenye mtandao kwa muda mfupi ili kuthibitisha ufunguo.|Sogeza Juu|Sogeza Chini|Kamilisha Zote|Tendua Zote|Kumbukumbu za vimiminika tayari zipo. Badilisha saa za zamu na kusasisha lebo za saa?|dak|saa|RR|BP|HR|SpO2|O2|ACVPU|Majukumu Yaliyochelewa"
+  es: "ej. B1, SR2|seleccionadas|Desmarcar Todo|Eliminar Camas|Toque una cama abajo para eliminarla de su lista:|Guardar Camas Marcadas como Diseño|Ordenar al Tocar|Toque sus módulos activos en el orden deseado (1º, 2º, 3º...):|Módulos, Unidades y Tema|módulos activos|Mostrar / Editar ▾|Cerrar ▲|Instalar App para Uso sin Conexión|Añada Care Digipad a su pantalla de inicio para acceso rápido.|Instalar|1. Toque el botón Compartir en Safari.|2. Toque Añadir a pantalla de inicio.|ml personalizado|La cama ya está en uso.|Enlace copiado al portapapeles|Clave de licencia no válida o ya activada.|Conéctese a internet un segundo para verificar su clave.|Subir|Bajar|Marcar Todo Hecho|Deshacer Todo|Ya hay líquidos registrados. ¿Cambiar horario y actualizar las horas de líquidos?|m|h|FR|PA|FC|SpO2|O2|ACVPU|Tareas Vencidas|Azul Cobalto|Índigo Real|Cian Océano|Verde Musgo|Rosa Intenso|Espresso Cálido|Añadir Rápido|¿Finalizar turno y borrar todos los datos?",
+  fr: "ex. B1, SR2|sélectionnés|Tout Décocher|Supprimer Lits|Touchez un lit ci-dessous pour le supprimer de votre liste :|Enregistrer les Lits Cochés comme Plan|Trier au Toucher|Touchez vos modules actifs dans l'ordre souhaité (1er, 2e, 3e...) :|Modules, Unités et Thème|modules actifs|Afficher / Modifier ▾|Fermer ▲|Installer l'App Hors Ligne|Ajoutez Care Digipad à votre écran d'accueil.|Installer|1. Touchez le bouton Partager dans Safari.|2. Touchez Sur l'écran d'accueil.|ml personnalisé|Ce lit est déjà utilisé.|Lien copié dans le presse-papiers|Clé de licence invalide ou déjà activée.|Connectez-vous brièvement à internet pour vérifier votre clé.|Monter|Descendre|Tout Marquer Fait|Tout Annuler|Des bilans hydriques sont déjà saisis. Changer les horaires et mettre à jour les heures ?|min|h|FR|TA|FC|SpO2|O2|ACVPU|Tâches en Retard|Bleu Cobalt|Indigo Royal|Cyan Océan|Vert Mousse|Rose Vif|Expresso Chaud|Ajout Rapide|Terminer la garde et effacer toutes les données ?",
+  de: "z.B. B1, SR2|ausgewählt|Alle Abwählen|Betten Entfernen|Tippen Sie unten auf ein Bett, um es aus der Liste zu löschen:|Ausgewählte Betten als Layout Speichern|Per Tippen Sortieren|Tippen Sie Ihre aktiven Module in der gewünschten Reihenfolge an (1., 2., 3....):|Module, Einheiten & Farbschema|Module aktiv|Anzeigen / Bearb. ▾|Schließen ▲|App für Offline-Nutzung Installieren|Care Digipad zum Startbildschirm hinzufügen.|Installieren|1. Tippen Sie in Safari auf Teilen.|2. Tippen Sie auf Zum Home-Bildschirm.|Eigene ml|Bett ist bereits belegt.|Link in die Zwischenablage kopiert|Ungültiger oder bereits aktivierter Lizenzschlüssel.|Kurz mit dem Internet verbinden, um den Schlüssel zu prüfen.|Nach oben|Nach unten|Alle Erledigt|Alle Rückgängig|Bilanzwerte sind bereits erfasst. Schichtzeiten ändern und Uhrzeiten anpassen?|Min.|Std.|AF|RR|HF|SpO2|O2|ACVPU|Überfällige Aufgaben|Kobaltblau|Königsindigo|Ozean-Cyan|Moosgrün|Rosenpink|Warmes Espresso|Schnelleingabe|Schicht beenden und alle Daten löschen?",
+  pt: "ex. B1, SR2|selecionadas|Desmarcar Tudo|Remover Camas|Toque numa cama abaixo para a eliminar da lista:|Guardar Camas Selecionadas como Layout|Ordenar ao Tocar|Toque nos módulos ativos na ordem desejada (1º, 2º, 3º...):|Módulos, Unidades e Tema|módulos ativos|Mostrar / Editar ▾|Fechar ▲|Instalar App para Uso Offline|Adicione o Care Digipad ao ecrã principal.|Instalar|1. Toque no botão Partilhar no Safari.|2. Toque em Adicionar ao Ecrã Principal.|ml personalizado|Esta cama já está em uso.|Ligação copiada para a área de transferência|Chave de licença inválida ou já ativada.|Ligue-se brevemente à internet para verificar a sua chave.|Subir|Descer|Marcar Tudo Feito|Desfazer Tudo|Já existem líquidos registados. Alterar horário e atualizar as horas dos líquidos?|m|h|FR|PA|FC|SpO2|O2|ACVPU|Tarefas Atrasadas|Azul Cobalto|Índigo Real|Ciano Oceano|Verde Musgo|Rosa Vivo|Expresso Quente|Adição Rápida|Terminar turno e apagar todos os dados?",
+  it: "es. B1, SR2|selezionati|Deseleziona Tutto|Rimuovi Letti|Tocca un letto qui sotto per eliminarlo dalla lista:|Salva Letti Selezionati come Reparto|Ordina Toccando|Tocca i moduli attivi nell'ordine desiderato (1º, 2º, 3º...):|Moduli, Unità e Tema|moduli attivi|Mostra / Modifica ▾|Chiudi ▲|Installa App per Uso Offline|Aggiungi Care Digipad alla schermata Home.|Installa|1. Tocca Condividi in Safari.|2. Tocca Aggiungi alla schermata Home.|ml personalizzati|Il letto è già in uso.|Link copiato negli appunti|Chiave di licenza non valida o già attivata.|Connettiti brevemente a internet per verificare la chiave.|Sposta Su|Sposta Giù|Segna Tutto Fatto|Annulla Tutto|Ci sono già voci nel bilancio idrico. Cambiare orario e aggiornare le ore?|m|h|FR|PA|FC|SpO2|O2|ACVPU|Attività in Ritardo|Blu Cobalto|Indaco Reale|Ciano Oceano|Verde Muschio|Rosa Acceso|Espresso Caldo|Aggiunta Rapida|Terminare il turno e cancellare tutti i dati?",
+  nl: "bijv. B1, SR2|geselecteerd|Alles Deselecteren|Bedden Verwijderen|Tik hieronder op een bed om het uit uw lijst te verwijderen:|Geselecteerde Bedden Opslaan als Indeling|Tik op Volgorde|Tik uw actieve modules aan in de gewenste volgorde (1e, 2e, 3e...):|Modules, Eenheden & Thema|modules actief|Tonen / Wijzigen ▾|Sluiten ▲|App Installeren voor Offline Gebruik|Voeg Care Digipad toe aan uw beginscherm.|Installeren|1. Tik op Deel in Safari.|2. Tik op Zet op beginscherm.|Aangepaste ml|Bed is al in gebruik.|Link gekopieerd naar klembord|Ongeldige of reeds geactiveerde licentiesleutel.|Verbind kort met internet om uw sleutel te verifiëren.|Omhoog|Omlaag|Alles Klaar|Alles Ongedaan|Er is al vocht geregistreerd. Diensttijden wijzigen en de uren bijwerken?|m|u|AH|RR|HR|SpO2|O2|ACVPU|Te Late Taken|Kobaltblauw|Koningsindigo|Oceaan Cyaan|Mosgroen|Roze|Warm Espresso|Snel Toevoegen|Dienst beëindigen en alle gegevens wissen?",
+  sv: "t.ex. B1, SR2|valda|Avmarkera Alla|Ta Bort Sängar|Tryck på en säng nedan för att ta bort den från listan:|Spara Valda Sängar som Layout|Tryck i Ordning|Tryck på dina aktiva moduler i den ordning du vill ha dem (1:a, 2:a, 3:e...):|Moduler, Enheter & Tema|aktiva moduler|Visa / Ändra ▾|Stäng ▲|Installera App för Offlinebruk|Lägg till Care Digipad på hemskärmen.|Installera|1. Tryck på Dela i Safari.|2. Tryck på Lägg till på hemskärmen.|Ange ml|Sängen används redan.|Länk kopierad till urklipp|Ogiltig eller redan aktiverad licensnyckel.|Anslut kort till internet för att verifiera din licensnyckel.|Flytta Upp|Flytta Ner|Markera Alla Klara|Ångra Alla|Vätskeposter finns redan. Ändra passtider och uppdatera klockslagen?|m|t|AF|BT|HF|SpO2|O2|ACVPU|Försenade Uppgifter|Koboltblå|Kungsindigo|Havscyan|Mossgrön|Rosaröd|Varm Espresso|Snabbval|Avsluta passet och rensa all data?",
+  pl: "np. B1, SR2|wybrano|Odznacz Wszystko|Usuń Łóżka|Dotknij łóżka poniżej, aby usunąć je z listy:|Zapisz Zaznaczone Łóżka jako Układ|Kolejność Dotykiem|Dotknij aktywnych modułów w wybranej kolejności (1., 2., 3....):|Moduły, Jednostki i Motyw|aktywnych modułów|Pokaż / Edytuj ▾|Zamknij ▲|Zainstaluj Aplikację Offline|Dodaj Care Digipad do ekranu głównego.|Zainstaluj|1. Dotknij Udostępnij w Safari.|2. Dotknij Dodaj do ekranu początkowego.|Własne ml|Łóżko jest już zajęte.|Link skopiowany do schowka|Nieprawidłowy lub już aktywowany klucz licencyjny.|Połącz się na chwilę z internetem, aby zweryfikować klucz.|W górę|W dół|Oznacz Wszystkie|Cofnij Wszystkie|Wprowadzono już bilans płynów. Zmienić godziny dyżuru i zaktualizować etykiety godzin?|m|g|RR|BP|HR|SpO2|O2|ACVPU|Zaległe Zadania|Kobaltowy Granat|Królewski Indygo|Morski Cyjan|Leśny Mech|Różany|Ciepłe Espresso|Szybkie Dodawanie|Zakończyć dyżur i wyczyścić wszystkie dane?",
+  ro: "ex. B1, SR2|selectate|Deselectează Tot|Elimină Paturi|Atingeți un pat mai jos pentru a-l șterge din listă:|Salvează Paturile Bifate ca Aspect|Ordonează prin Atingere|Atingeți modulele active în ordinea dorită (1, 2, 3...):|Module, Unități și Temă|module active|Arată / Editează ▾|Închide ▲|Instalează Aplicația Offline|Adăugați Care Digipad pe ecranul principal.|Instalează|1. Atingeți Partajare în Safari.|2. Atingeți Adăugați la ecranul principal.|ml personalizat|Patul este deja utilizat.|Link copiat în clipboard|Cheie de licență nevalidă sau deja activată.|Conectați-vă scurt la internet pentru a verifica cheia.|Mută Sus|Mută Jos|Marchează Tot Gata|Anulează Tot|Există deja date în bilanțul hidric. Schimbați programul și actualizați orele?|m|h|FR|TA|AV|SpO2|O2|ACVPU|Sarcini Întârziate|Albastru Cobalt|Indigo Regal|Cyan Ocean|Verde Mușchi|Roz Intens|Espresso Cald|Adăugare Rapidă|Încheiați tura și ștergeți toate datele?",
+  uk: "напр. B1, SR2|обрано|Зняти Позначки|Видалити Ліжка|Натисніть на ліжко нижче, щоб видалити його зі списку:|Зберегти Обрані Ліжка як Схему|Порядок Дотиком|Торкайтеся активних модулів у потрібному порядку (1-й, 2-й, 3-й...):|Модулі, Одиниці та Тема|активних модулів|Показати / Редаг. ▾|Закрити ▲|Встановити Додаток Офлайн|Додайте Care Digipad на головний екран.|Встановити|1. Натисніть Поділитися в Safari.|2. Натисніть На початковий екран.|Власні мл|Ліжко вже використовується.|Посилання скопійовано|Недійсний або вже активований ключ ліцензії.|Підключіться до інтернету на секунду для перевірки ключа.|Вгору|Вниз|Позначити Все|Скасувати Все|Вже є записи гідробалансу. Змінити години зміни та оновити часові мітки?|хв|год|ЧД|АТ|ЧСС|SpO2|O2|ACVPU|Прострочені Завдання|Кобальтовий Синій|Королівський Індиго|Океанський Ціан|Лісовий Мох|Рожевий|Теплий Еспресо|Швидке Додавання|Завершити зміну та очистити всі дані?",
+  ru: "напр. B1, SR2|выбрано|Снять Выделение|Удалить Койки|Нажмите на койку ниже, чтобы удалить её из списка:|Сохранить Выбранные Койки как Схему|Порядок Нажатием|Нажимайте активные модули в нужном порядке (1-й, 2-й, 3-й...):|Модули, Единицы и Тема|активных модулей|Показать / Изм. ▾|Закрити ▲|Установить Приложение Офлайн|Добавьте Care Digipad на главный экран.|Установить|1. Нажмите Поделиться в Safari.|2. Нажмите На экран «Домой».|Свои мл|Койка уже занята.|Ссылка скопирована в буфер обмена|Недействительный или уже активированный ключ лицензии.|Подключитесь к интернету на секунду для проверки ключа.|Вверх|Вниз|Отметить Все|Отменить Все|Уже есть записи гидробаланса. Изменить часы смены и обновить метки времени?|мин|ч|ЧДД|АД|ЧСС|SpO2|O2|ACVPU|Просроченные Задачи|Кобальтовый Синий|Королевский Индиго|Океанский Циан|Лесной Мох|Розовый|Тёплый Эспрессо|Быстрый Ввод|Завершить смену и очистить все данные?",
+  el: "π.χ. B1, SR2|επιλεγμένες|Αποεπιλογή Όλων|Αφαίρεση Κλινών|Πατήστε μια κλίνη παρακάτω για διαγραφή από τη λίστα:|Αποθήκευση Επιλεγμένων Κλινών ως Διάταξη|Σειρά με Πάτημα|Πατήστε τις ενεργές ενότητες με τη σειρά που θέλετε (1η, 2η, 3η...):|Ενότητες, Μονάδες & Θέμα|ενεργές ενότητες|Εμφάνιση / Επεξ. ▾|Κλείσιμο ▲|Εγκατάσταση Εφαρμογής Offline|Προσθέστε το Care Digipad στην αρχική οθόνη.|Εγκατάσταση|1. Πατήστε Κοινοποίηση στο Safari.|2. Πατήστε Προσθήκη στην οθόνη Αφετηρίας.|Προσαρμοσμένα ml|Η κλίνη χρησιμοποιείται ήδη.|Ο σύνδεσμος αντιγράφηκε|Μη έγκυρος ή ήδη ενεργοποιημένος κωδικός άδειας.|Συνδεθείτε για λίγο στο διαδίκτυο για επαλήθευση του κωδικού.|Πάνω|Κάτω|Όλα Ολοκληρωμένα|Αναίρεση Όλων|Υπάρχουν ήδη καταχωρήσεις υγρών. Αλλαγή ωραρίου και ενημέρωση των ωρών;|λ|ώ|RR|ΑΠ|HR|SpO2|O2|ACVPU|Εκπρόθεσμες Εργασίες|Μπλε Κοβαλτίου|Βασιλικό Ινδικό|Κυανό Ωκεανού|Πράσινο Βρύου|Ροζ Τριαντάφυλλο|Θερμό Εσπρέσο|Γρήγορη Προσθήκη|Τέλος βάρδιας και διαγραφή όλων των δεδομένων;",
+  hi: "जैसे B1, SR2|चयनित|सभी अचयनित करें|बेड हटाएं|सूची से हटाने के लिए नीचे किसी भी बेड पर टैप करें:|चयनित बेड को वार्ड लेआउट के रूप में सहेजें|क्रम में टैप करें|अपने सक्रिय मॉड्यूल को जिस क्रम में चाहते हैं उस क्रम में टैप करें (1, 2, 3...):|मॉड्यूल, इकाइयां और थीम|सक्रिय मॉड्यूल|दिखाएं / बदलें ▾|बंद करें ▲|ऑफ़लाइन उपयोग के लिए ऐप इंस्टॉल करें|Care Digipad को अपनी होम स्क्रीन पर जोड़ें।|इंस्टॉल करें|1. Safari में Share बटन पर टैप करें।|2. Add to Home Screen पर टैप करें।|कस्टम ml|यह बेड पहले से उपयोग में है।|लिंक क्लिपबोर्ड पर कॉपी हो गया|अमान्य या पहले से सक्रिय लाइसेंस कुंजी।|अपनी लाइसेंस कुंजी सत्यापित करने के लिए इंटरनेट से जुड़ें।|ऊपर ले जाएं|नीचे ले जाएं|सभी पूर्ण करें|सभी पूर्ववत करें|तरल पदार्थ पहले से दर्ज हैं। क्या शिफ्ट समय बदलें और समय लेबल अपडेट करें?|मि.|घं.|RR|BP|HR|SpO2|O2|ACVPU|समय समाप्त कार्य|कोबाल्ट नेवी|रॉयल इंडिगो|ओशन सियान|फ़ॉरेस्ट मॉस|रोज़ पिंक|वार्म एस्प्रेसो|त्वरित जोड़|क्या शिफ्ट समाप्त करें और सारा डेटा मिटाएं?",
+  bn: "যেমন B1, SR2|নির্বাচিত|সব আনটিক করুন|বেড মুছুন|তালিকা থেকে মুছে ফেলতে নিচের যেকোনো বেডে ট্যাপ করুন:|নির্বাচিত বেডগুলো লেআউট হিসেবে সেভ করুন|ক্রমানুসারে ট্যাপ|আপনার সক্রিয় মডিউলগুলো পছন্দের ক্রমানুসারে ট্যাপ করুন (১ম, ২য়, ৩য়...):|মডিউল, একক ও থিম|সক্রিয় মডিউল|দেখান / এডিট ▾|বন্ধ করুন ▲|অফলাইন ব্যবহারের জন্য অ্যাপ ইনস্টল করুন|হোম স্ক্রিনে Care Digipad যোগ করুন।|ইনস্টল|1. Safari-তে Share বাটনে ট্যাপ করুন।|2. Add to Home Screen-এ ট্যাপ করুন।|কাস্টম ml|এই বেডটি ইতিমধ্যে ব্যবহৃত হচ্ছে।|লিঙ্ক ক্লিপবোর্ডে কপি হয়েছে|অবৈধ বা ইতিমধ্যে ব্যবহৃত লাইসেন্স কী।|আপনার লাইসেন্স কী যাচাই করতে ইন্টারনেটে সংযুক্ত হন।|উপরে নিন|নিচে নিন|সব সম্পন্ন করুন|সব পূর্বাবস্থায়|তরল তথ্য ইতিমধ্যে লগ করা আছে। শিফট সময় পরিবর্তন করে ঘণ্টার লেবেল আপডেট করবেন?|মি.|ঘ.|RR|BP|HR|SpO2|O2|ACVPU|মেয়াদোত্তীর্ণ কাজ|কোবাল্ট নেভি|রয়্যাল ইন্ডিগো|ওশান সায়ান|ফরেস্ট মস|রোজ পিংক|ওয়ার্ম এস্প্রেসো|দ্রুত যোগ|শিফট শেষ করে সব তথ্য মুছে ফেলবেন?",
+  pa: "ਜਿਵੇਂ B1, SR2|ਚੁਣੇ ਗਏ|ਸਭ ਅਣਟਿੱਕ ਕਰੋ|ਬੈੱਡ ਹਟਾਓ|ਸੂਚੀ ਵਿੱਚੋਂ ਮਿਟਾਉਣ ਲਈ ਹੇਠਾਂ ਕਿਸੇ ਵੀ ਬੈੱਡ ਤੇ ਟੈਪ ਕਰੋ:|ਚੁਣੇ ਗਏ ਬੈੱਡਾਂ ਨੂੰ ਲੇਆਉਟ ਵਜੋਂ ਸੇਵ ਕਰੋ|ਕ੍ਰਮ ਵਿੱਚ ਟੈਪ ਕਰੋ|ਆਪਣੇ ਸਰਗਰਮ ਮੋਡੀਊਲਾਂ ਨੂੰ ਮਨਪਸੰਦ ਕ੍ਰਮ ਵਿੱਚ ਟੈਪ ਕਰੋ (1, 2, 3...):|ਮੋਡੀਊਲ, ਇਕਾਈਆਂ ਅਤੇ ਥੀਮ|ਸਰਗਰਮ ਮੋਡੀਊਲ|ਦਿਖਾਓ / ਬਦਲੋ ▾|ਬੰਦ ਕਰੋ ▲|ਆਫ਼ਲਾਈਨ ਵਰਤੋਂ ਲਈ ਐਪ ਇੰਸਟਾਲ ਕਰੋ|Care Digipad ਨੂੰ ਹੋਮ ਸਕ੍ਰੀਨ ਤੇ ਜੋੜੋ।|ਇੰਸਟਾਲ|1. Safari ਵਿੱਚ Share ਬਟਨ ਤੇ ਟੈਪ ਕਰੋ।|2. Add to Home Screen ਤੇ ਟੈਪ ਕਰੋ।|ਕਸਟਮ ml|ਇਹ ਬੈੱਡ ਪਹਿਲਾਂ ਹੀ ਵਰਤੋਂ ਵਿੱਚ ਹੈ।|ਲਿੰਕ ਕਾਪੀ ਹੋ ਗਿਆ ਹੈ|ਗਲਤ ਜਾਂ ਪਹਿਲਾਂ ਤੋਂ ਵਰਤਿਆ ਲਾਈਸੈਂਸ ਕੀ।|ਲਾਈਸੈਂਸ ਕੀ ਦੀ ਪੁਸ਼ਟੀ ਕਰਨ ਲਈ ਇੰਟਰਨੈੱਟ ਨਾਲ ਜੁੜੋ।|ਉੱਪਰ ਕਰੋ|ਹੇਠਾਂ ਕਰੋ|ਸਭ ਪੂਰੇ ਕਰੋ|ਸਭ ਵਾਪਸ ਕਰੋ|ਤਰਲ ਪਦਾਰਥ ਪਹਿਲਾਂ ਹੀ ਦਰਜ ਹਨ। ਕੀ ਸ਼ਿਫਟ ਦਾ ਸਮਾਂ ਬਦਲ ਕੇ ਘੰਟਿਆਂ ਦੇ ਲੇਬਲ ਅੱਪਡੇਟ ਕਰਨੇ ਹਨ?|ਮਿੰ|ਘੰ|RR|BP|HR|SpO2|O2|ACVPU|ਬਕਾਇਆ ਕੰਮ|ਕੋਬਾਲਟ ਨੇਵੀ|ਰਾਇਲ ਇੰਡੀਗੋ|ਓਸ਼ਨ ਸਿਆਨ|ਫੌਰੈਸਟ ਮੌਸ|ਰੋਜ਼ ਪਿੰਕ|ਵਾਰਮ ਐਸਪ੍ਰੈਸੋ|ਤੁਰੰਤ ਜੋੜੋ|ਕੀ ਸ਼ਿਫਟ ਖਤਮ ਕਰਕੇ ਸਾਰਾ ਡੇਟਾ ਮਿਟਾਉਣਾ ਹੈ?",
+  ur: "مثلاً B1, SR2|منتخب|سب غیر منتخب کریں|بیڈز ہٹائیں|فہرست سے حذف کرنے کے لیے نیچے کسی بھی بیڈ پر ٹیپ کریں:|منتخب بیڈز کو لے آؤٹ کے طور پر محفوظ کریں|ترتیب سے ٹیپ کریں|اپنے فعال ماڈیولز کو مطلوبہ ترتیب میں ٹیپ کریں (1، 2، 3...):|ماڈیولز، اکائیاں اور تھیم|فعال ماڈیولز|دکھائیں / ترمیم ▾|بند کریں ▲|آف لائن استعمال کے لیے ایپ انسٹال کریں|Care Digipad کو ہوم اسکرین پر شامل کریں۔|انسٹال|1. سفاری میں Share بٹن پر ٹیپ کریں۔|2. Add to Home Screen پر ٹیپ کریں۔|مخصوص ml|یہ بیڈ پہلے سے زیر استعمال ہے۔|لنک کلپ بورڈ پر کاپی ہو گیا|غلط یا پہلے سے فعال لائسنس کی۔|اپنی لائسنس کی کی تصدیق کے لیے انٹرنیٹ سے جڑیں۔|اوپر لے جائیں|نیچے لے جائیں|سب مکمل کریں|سب واپس کریں|مائعات پہلے سے درج ہیں۔ کیا شفٹ کے اوقات بدل کر گھنٹوں کے لیبل اپ ڈیٹ کریں؟|منٹ|گھنٹہ|RR|BP|HR|SpO2|O2|ACVPU|تاخیر شدہ کام|کوبالٹ نیوی|رائل انڈیگو|اوشن سیان|فارسٹ ماس|روز پنک|وارم ایسپریسو|فوری اندراج|کیا شفٹ ختم کر کے تمام ڈیٹا صاف کر دیں؟",
+  ta: "எ.கா. B1, SR2|தேர்ந்தெடுக்கப்பட்டவை|அனைத்தையும் நீக்கு|படுக்கைகளை அகற்று|பட்டியலிலிருந்து நீக்க கீழே உள்ள படுக்கையைத் தட்டவும்:|தேர்ந்தெடுத்த படுக்கைகளை அமைப்பாகச் சேமி|வரிசையாகத் தட்டவும்|செயலில் உள்ள பகுதிகளை விரும்பிய வரிசையில் தட்டவும் (1, 2, 3...):|பகுதிகள், அலகுகள் & தீம்|செயலில் உள்ள பகுதிகள்|காட்டு / திருத்து ▾|மூடு ▲|ஆஃப்லைன் பயன்பாட்டிற்கு செயலியை நிறுவுக|முகப்புத் திரையில் Care Digipad-ஐச் சேர்க்கவும்.|நிறுவு|1. Safari-ல் Share பொத்தானைத் தட்டவும்.|2. Add to Home Screen என்பதைத் தட்டவும்.|தனிப்பயன் ml|இந்தப் படுக்கை ஏற்கனவே பயன்பாட்டில் உள்ளது.|இணைப்பு நகலெடுக்கப்பட்டது|தவறான அல்லது ஏற்கனவே பயன்படுத்தப்பட்ட உரிமக் குறியீடு.|உரிமக் குறியீட்டைச் சரிபார்க்க இணையத்துடன் இணைக்கவும்.|மேலே நகர்த்து|கீழே நகர்த்து|அனைத்தும் முடிந்தது|அனைத்தும் மீட்டமை|திரவப் பதிவுகள் ஏற்கனவே உள்ளன. ஷிப்ட் நேரத்தை மாற்றி மணி நேரங்களைப் புதுப்பிக்கவா?|நி.|ம.|RR|BP|HR|SpO2|O2|ACVPU|தாமதமான பணிகள்|கோபால்ட் நீலம்|ராயல் இண்டிகோ|கடல் சியான்|காட்டுப் பச்சை|ரோஜா இளஞ்சிவப்பு|வார்ம் எஸ்பிரெசோ|விரைவு சேர்ப்பு|ஷிப்டை முடித்து அனைத்து தரவையும் அழிக்கவா?",
+  ml: "ഉദാ. B1, SR2|തിരഞ്ഞെടുത്തു|എല്ലാം ഒഴിവാക്കുക|ബെഡുകൾ നീക്കുക|ലിസ്റ്റിൽ നിന്ന് നീക്കാൻ താഴെയുള്ള ബെഡിൽ ടാപ്പ് ചെയ്യുക:|തിരഞ്ഞെടുത്ത ബെഡുകൾ ലേഔട്ട് ആയി സേവ് ചെയ്യുക|ക്രമത്തിൽ ടാപ്പ് ചെയ്യുക|സജീവ മൊഡ്യൂളുകൾ നിങ്ങൾക്കാവശ്യമുള്ള ക്രമത്തിൽ ടാപ്പ് ചെയ്യുക (1, 2, 3...):|മൊഡ്യൂളുകൾ, യൂണിറ്റുകൾ & തീം|സജീവ മൊഡ്യൂളുകൾ|കാണിക്കുക / മാറ്റുക ▾|അടയ്ക്കുക ▲|ഓഫ്‌ലൈൻ ഉപയോഗത്തിനായി ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുക|ഹോം സ്ക്രീനിലേക്ക് Care Digipad ചേർക്കുക.|ഇൻസ്റ്റാൾ|1. Safari-ൽ Share ബട്ടൺ ടാപ്പ് ചെയ്യുക.|2. Add to Home Screen ടാപ്പ് ചെയ്യുക.|കസ്റ്റം ml|ഈ ബെഡ് നിലവിൽ ഉപയോഗത്തിലാണ്.|ലിങ്ക് ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി|അസാധുവായ അല്ലെങ്കിൽ ഇതിനകം ഉപയോഗിച്ച ലൈസൻസ് കീ.|ലൈസൻസ് കീ പരിശോധിക്കാൻ ഇന്റർനെറ്റുമായി ബന്ധിപ്പിക്കുക.|മുകളിലേക്ക്|താഴേക്ക്|എല്ലാം പൂർത്തിയാക്കുക|എല്ലാം പൂർവ്വസ്ഥിതിയിലാക്കുക|ദ്രാവക വിവരങ്ങൾ ഇതിനകം രേഖപ്പെടുത്തിയിട്ടുണ്ട്. ഷിഫ്റ്റ് സമയം മാറ്റി മണിക്കൂർ ലേബലുകൾ അപ്‌ഡേറ്റ് ചെയ്യണോ?|മി.|മ.|RR|BP|HR|SpO2|O2|ACVPU|സമയം കഴിഞ്ഞ ജോലികൾ|കൊബാൾട്ട് നേവി|റോയൽ ഇൻഡിഗോ|ഓഷൻ സയാൻ|ഫോറസ്റ്റ് മോസ്|റോസ് പിങ്ക്|വാം എസ്പ്രെസ്സോ|വേഗത്തിൽ ചേർക്കുക|ഷിഫ്റ്റ് അവസാനിപ്പിച്ച് എല്ലാ ഡാറ്റയും മായ്ക്കണോ?",
+  zh: "例如 B1, SR2|已选择|全部取消|移除床位|点击下方任意床位将其从列表中删除：|将勾选的床位保存为病区布局|按顺序点击|请按您需要的顺序依次点击下方启用的模块 (第1、第2、第3...)：|自定义模块、单位与主题|个模块已启用|显示 / 编辑 ▾|收起 ▲|安装离线版应用|将 Care Digipad 添加到主屏幕以便随时使用。|安装|1. 点击 Safari 底部的“共享”按钮。|2. 向下滚动并点击“添加到主屏幕”。|自定义 ml|该床位已在使用中。|链接已复制到剪贴板|许可证密钥无效或已被激活。|请短暂连接网络以验证您的许可证密钥。|上移|下移|全部标记完成|全部撤销|已记录出入量数据。是否更改班次并更新小时标签？|分|时|呼吸|血压|心率|SpO2|O2|ACVPU|逾期任务|钴蓝深海|皇家靛蓝|海洋青蓝|森林苔绿|玫瑰粉红|暖棕咖啡|快捷输入|确定结束班次并清除所有数据吗？",
+  "zh-tw": "例如 B1, SR2|已選擇|全部取消|移除床位|點選下方任意床位將其從清單中刪除：|將勾選的床位儲存為病房配置|依序點選|請依您需要的順序點選下方啟用的模組 (第1、第2、第3...)：|自訂模組、單位與主題|個模組已啟用|顯示 / 編輯 ▾|收起 ▲|安裝離線版應用程式|將 Care Digipad 加入主畫面以便隨時使用。|安裝|1. 點選 Safari 底部的「分享」按鈕。|2. 向下捲動並點選「加入主畫面」。|自訂 ml|該床位已在使用中。|連結已複製到剪貼簿|授權金鑰無效或已被啟用。|請短暫連線網路以驗證您的授權金鑰。|上移|下移|全部標記完成|全部復原|已記錄輸出入量資料。是否更改班次並更新小時標籤？|分|時|呼吸|血壓|心率|SpO2|O2|ACVPU|逾期任務|鈷藍深海|皇家靛藍|海洋青藍|森林苔綠|玫瑰粉紅|暖棕咖啡|快速輸入|確定結束班次並清除所有資料嗎？",
+  ja: "例: B1, SR2|選択中|すべて解除|ベッド削除|リストから削除するベッドをタップしてください：|選択したベッドをレイアウトとして保存|順番にタップ|表示したい順番に有効モジュールをタップしてください (1番目、2番目、3番目...)：|モジュール・単位・テーマ設定|モジュール有効|表示 / 編集 ▾|閉じる ▲|オフライン用アプリをインストール|ホーム画面にCare Digipadを追加します。|追加|1. Safariの共有ボタンをタップします。|2.「ホーム画面に追加」をタップします。|カスタム ml|このベッドは既に使用中です。|リンクをコピーしました|無効または既に使用されているライセンスキーです。|キーを確認するため一時的にインターネットに接続してください。|上へ移動|下へ移動|すべて完了|すべて取消|水分出納がすでに記録されています。シフト時間を変更して時刻ラベルを更新しますか？|分|時間|呼吸|血圧|脈拍|SpO2|O2|ACVPU|期限切れタスク|コバルトネイビー|ロイヤルインディゴ|オーシャンシアン|フォレストモス|ローズピンク|ウォームエスプレッソ|クイック入力|シフトを終了してすべてのデータを消去しますか？",
+  ko: "예: B1, SR2|선택됨|모두 해제|병상 삭제|목록에서 삭제할 병상을 아래에서 탭하세요:|선택한 병상을 레이아웃으로 저장|순서대로 탭|원하는 순서대로 활성 모듈을 탭하세요 (1번째, 2번째, 3번째...):|모듈, 단위 및 테마 설정|개 모듈 활성|보기 / 편집 ▾|닫기 ▲|오프라인 사용을 위해 앱 설치|홈 화면에 Care Digipad를 추가하세요.|설치|1. Safari 하단의 공유 버튼을 탭하세요.|2. '홈 화면에 추가'를 탭하세요.|직접 입력 (ml)|이미 사용 중인 병상입니다.|링크가 클립보드에 복사되었습니다|유효하지 않거나 이미 활성화된 라이선스 키입니다.|라이선스 키 확인을 위해 잠시 인터넷에 연결해 주세요.|위로 이동|아래로 이동|모두 완료|모두 취소|수분 기록이 이미 있습니다. 근무 시간대를 변경하고 시간 라벨을 업데이트할까요?|분|시간|호흡|혈압|맥박|SpO2|O2|ACVPU|기한 경과 업무|코발트 네이비|로열 인디고|오션 시안|포레스트 모스|로즈 핑크|웜 에스프레소|빠른 입력|근무를 종료하고 모든 데이터를 삭제하시겠습니까?",
+  tl: "hal. B1, SR2|napili|Alisin Lahat ng Tsek|Alisin ang Kama|I-tap ang kama sa ibaba upang burahin sa listahan:|I-save ang mga Napiling Kama bilang Layout|I-tap ayon sa Ayos|I-tap ang mga aktibong module ayon sa pagkakasunod na gusto mo (1st, 2nd, 3rd...):|Mga Module, Yunit at Tema|aktibong module|Ipakita / I-edit ▾|Isara ▲|I-install ang App para sa Offline|Idagdag ang Care Digipad sa iyong home screen.|I-install|1. I-tap ang Share button sa Safari.|2. I-tap ang Add to Home Screen.|Custom ml|Ginagamit na ang kamang ito.|Nakopya ang link sa clipboard|Hindi wasto o nagamit na ang licence key.|Kumonekta saglit sa internet upang i-verify ang iyong licence key.|Itaas|Ibaba|Markahang Tapos Lahat|I-undo Lahat|May mga naitalang fluid na. Palitan ang oras ng shift at i-update ang mga oras?|m|h|RR|BP|HR|SpO2|O2|ACVPU|Lampas sa Oras na Gawain|Cobalt Navy|Royal Indigo|Ocean Cyan|Forest Moss|Rose Pink|Warm Espresso|Mabilis na Dagdag|Tapusin ang shift at burahin lahat ng data?",
+  id: "mis. B1, SR2|dipilih|Hapus Semua Centang|Hapus Bed|Ketuk bed di bawah untuk menghapusnya dari daftar:|Simpan Bed Terpilih sebagai Denah|Ketuk Berurutan|Ketuk modul aktif sesuai urutan yang Anda inginkan (1, 2, 3...):|Modul, Satuan & Tema|modul aktif|Tampilkan / Edit ▾|Tutup ▲|Instal Aplikasi untuk Penggunaan Offline|Tambahkan Care Digipad ke layar utama Anda.|Instal|1. Ketuk tombol Bagikan di Safari.|2. Ketuk Tambahkan ke Layar Utama.|ml kustom|Bed ini sudah digunakan.|Tautan disalin ke papan klip|Kunci lisensi tidak valid atau sudah diaktifkan.|Hubungkan sebentar ke internet untuk memverifikasi kunci lisensi.|Naik|Turun|Tandai Semua Selesai|Batalkan Semua|Data cairan sudah tercatat. Ubah jam shift dan perbarui label jam?|m|j|RR|TD|HR|SpO2|O2|ACVPU|Tugas Terlambat|Biru Kobalt|Indigo Kerajaan|Sian Samudra|Hijau Lumut|Merah Muda Mawar|Espresso Hangat|Tambah Cepat|Akhiri shift dan hapus semua data?",
+  vi: "VD: B1, SR2|đã chọn|Bỏ Chọn Tất Cả|Xóa Giường|Chạm vào giường bên dưới để xóa khỏi danh sách:|Lưu Các Giường Đã Chọn Làm Sơ Đồ|Chạm Theo Thứ Tự|Chạm vào các phân hệ đang bật theo thứ tự bạn muốn (1, 2, 3...):|Phân Hệ, Đơn Vị & Giao Diện|phân hệ đang bật|Hiện / Sửa ▾|Đóng ▲|Cài Đặt Ứng Dụng Ngoại Tuyến|Thêm Care Digipad vào màn hình chính.|Cài đặt|1. Chạm nút Chia sẻ trong Safari.|2. Chạm Thêm vào MH chính.|Nhập ml|Giường này đang được sử dụng.|Đã sao chép liên kết|Mã bản quyền không hợp lệ hoặc đã được kích hoạt.|Vui lòng kết nối mạng trong giây lát để xác thực mã bản quyền.|Lên trên|Xuống dưới|Đánh Dấu Xong Tất Cả|Hoàn Tác Tất Cả|Đã có dữ liệu dịch vào/ra. Đổi giờ ca trực và cập nhật nhãn giờ?|p|g|RR|HA|HR|SpO2|O2|ACVPU|Công Việc Quá Hạn|Xanh Coban|Chàm Hoàng Gia|Xanh Đại Dương|Xanh Rêu|Hồng Hoa Hồng|Nâu Espresso|Thêm Nhanh|Kết thúc ca trực và xóa toàn bộ dữ liệu?",
+  ar: "مثال: B1, SR2|محددة|إلغاء تحديد الكل|حذف أسرة|اضغط على أي سرير أدناه لحذفه من قائمتك:|حفظ الأسرة المحددة كتخطيط جناح|الترتيب باللمس|اضغط على الوحدات النشطة بالترتيب الذي تريده (1، 2، 3...):|الوحدات، القياسات والسمة|وحدات نشطة|عرض / تعديل ▾|إغلاق ▲|تثبيت التطبيق للعمل بدون إنترنت|أضف Care Digipad إلى شاشتك الرئيسية.|تثبيت|1. اضغط على زر المشاركة في Safari.|2. اضغط على إضافة إلى الشاشة الرئيسية.|مل مخصص|هذا السرير قيد الاستخدام بالفعل.|تم نسخ الرابط إلى الحافظة|مفتاح الترخيص غير صالح أو مفعل مسبقاً.|اتصل بالإنترنت لثوانٍ للتحقق من مفتاح الترخيص.|نقل لأعلى|نقل لأسفل|تحديد الكل كمكتمل|تراجع عن الكل|توجد سجلات سوائل مسجلة بالفعل. هل تريد تغيير ساعات المناوبة وتحديث الأوقات؟|د|س|RR|BP|HR|SpO2|O2|ACVPU|مهام متأخرة|أزرق كوبالت|نيلي ملكي|سماوي محيطي|أخضر طحلبي|وردي زاهي|إسبريسو دافئ|إضافة سريعة|هل تريد إنهاء المناوبة ومسح جميع البيانات؟",
+  tr: "örn. B1, SR2|seçildi|Tümünü Kaldır|Yatakları Sil|Listenizden silmek istediğiniz yatağa dokunun:|Seçili Yatakları Düzen Olarak Kaydet|Sırayla Dokun|Aktif modüllerinize istediğiniz sırayla dokunun (1., 2., 3....):|Modüller, Birimler ve Tema|aktif modül|Göster / Düzenle ▾|Kapat ▲|Çevrimdışı Kullanım İçin Uygulamayı Yükle|Care Digipad'i ana ekranınıza ekleyin.|Yükle|1. Safari'de Paylaş düğmesine dokunun.|2. Ana Ekrana Ekle'ye dokunun.|Özel ml|Bu yatak zaten kullanımda.|Bağlantı panoya kopyalandı|Geçersiz veya zaten etkinleştirilmiş lisans anahtarı.|Lisans anahtarınızı doğrulamak için kısaca internete bağlanın.|Yukarı Taşı|Aşağı Taşı|Tümünü Tamamla|Tümünü Geri Al|Sıvı kayıtları zaten girilmiş. Nöbet saatlerini değiştirip saat etiketlerini güncellemek istiyor musunuz?|dk|sa|RR|KB|HR|SpO2|O2|ACVPU|Gecikmiş Görevler|Kobalt Lacivert|Kraliyet İndigo|Okyanus Camgöbeği|Orman Yosunu|Gül Pembesi|Sıcak Espresso|Hızlı Ekle|Nöbeti bitirip tüm verileri temizlemek istiyor musunuz?",
+  fa: "مثلاً B1, SR2|انتخاب‌شده|لغو انتخاب همه|حذف تخت‌ها|برای حذف تخت از فهرست روی آن بزنید:|ذخیره تخت‌های انتخاب‌شده به عنوان چیدمان|ترتیب با لمس|ماژول‌های فعال را به ترتیبی که می‌خواهید لمس کنید (۱، ۲، ۳...):|ماژول‌ها، واحدها و پوسته|ماژول فعال|نمایش / ویرایش ▾|بستن ▲|نصب برنامه برای استفاده آفلاین|Care Digipad را به صفحه اصلی خود اضافه کنید.|نصب|1. در Safari روی دکمه Share بزنید.|2. روی Add to Home Screen بزنید.|میلی‌لیتر دلخواه|این تخت در حال حاضر استفاده می‌شود.|لینک در کلیپ‌بورد کپی شد|کلید مجوز نامعتبر است یا قبلاً فعال شده است.|برای تأیید کلید مجوز خود لحظه‌ای به اینترنت متصل شوید.|انتقال به بالا|انتقال به پایین|تکمیل همه|لغو همه|موارد مایعات قبلاً ثبت شده است. ساعات شیفت تغییر کند و برچسب ساعت‌ها به‌روز شود؟|دقیقه|ساعت|RR|BP|HR|SpO2|O2|ACVPU|وظایف عقب‌افتاده|سرمه‌ای کبالت|نیلی سلطنتی|فیروزه‌ای اقیانوسی|سبز خزه‌ای|صورتی رز|اسپرسوی گرم|افزودن سریع|آیا شیفت پایان یابد و تمام اطلاعات پاک شود؟",
+  sw: "mf. B1, SR2|zimechaguliwa|Ondoa Alama Zote|Futa Vitanda|Gusa kitanda hapa chini kukifuta kwenye orodha:|Hifadhi Vitanda Vilivyochaguliwa kama Mpangilio|Gusa kwa Mpangilio|Gusa moduli zako zinazotumika kwa mpangilio unaotaka (1, 2, 3...):|Moduli, Vipimo na Mandhari|moduli zinazotumika|Onyesha / Hariri ▾|Funga ▲|Sakinisha Programu kwa Matumizi Bila Mtandao|Ongeza Care Digipad kwenye skrini yako ya nyumbani.|Sakinisha|1. Gusa kitufe cha Share kwenye Safari.|2. Gusa Add to Home Screen.|Weka ml|Kitanda hiki tayari kinatumika.|Kiungo kimenakiliwa|Ufunguo wa leseni si sahihi au tayari umetumika.|Unganisha kwenye mtandao kwa muda mfupi ili kuthibitisha ufunguo.|Sogeza Juu|Sogeza Chini|Kamilisha Zote|Tendua Zote|Kumbukumbu za vimiminika tayari zipo. Badilisha saa za zamu na kusasisha lebo za saa?|dak|saa|RR|BP|HR|SpO2|O2|ACVPU|Majukumu Yaliyochelewa|Bluu ya Kobalti|Indigo ya Kifalme|Siani ya Bahari|Kijani cha Msitu|Waridi|Kahawa Joto|Ongeza Haraka|Maliza zamu na ufute data zote?"
 };
 
 function mergeExtraTranslations() {
@@ -365,14 +374,27 @@ const SHIFT_MAX_MS = 14 * 60 * 60 * 1000;
 const FREE_BED_LIMIT = 2;
 const LS_STORE_ID = null; // Set to your numeric Lemon Squeezy Store ID before public launch
 const LS_PRODUCT_ID = null; // Set to your numeric Lemon Squeezy Product ID before public launch
-const THEME_HEX = {
-  teal: '#0f172a',
-  blue: '#0c4a6e',
-  green: '#064e3b',
-  berry: '#3b0764',
-  slate: '#0f172a',
-  coral: '#431407'
-};
+
+const THEME_LIST = [
+  { id: 'teal', key: 'thTeal', accent: '#0d9488', header: '#0f172a' },
+  { id: 'blue', key: 'thBlue', accent: '#0284c7', header: '#0c4a6e' },
+  { id: 'navy', key: 'thNavy', accent: '#2563eb', header: '#172554' },
+  { id: 'indigo', key: 'thIndigo', accent: '#4f46e5', header: '#1e1b4b' },
+  { id: 'cyan', key: 'thCyan', accent: '#0891b2', header: '#083344' },
+  { id: 'green', key: 'thGreen', accent: '#059669', header: '#064e3b' },
+  { id: 'moss', key: 'thMoss', accent: '#4d7c0f', header: '#1a2e05' },
+  { id: 'berry', key: 'thBerry', accent: '#9333ea', header: '#3b0764' },
+  { id: 'rose', key: 'thRose', accent: '#db2777', header: '#500724' },
+  { id: 'coral', key: 'thCoral', accent: '#ea580c', header: '#431407' },
+  { id: 'espresso', key: 'thEspresso', accent: '#78350f', header: '#291509' },
+  { id: 'slate', key: 'thSlate', accent: '#475569', header: '#0f172a' }
+];
+
+const THEME_HEX = THEME_LIST.reduce((acc, th) => {
+  acc[th.id] = th.header;
+  return acc;
+}, {});
+
 const ALL_MODS = [
   {id:'obs', pro:false},
   {id:'fluid', pro:false},
@@ -430,6 +452,7 @@ function sortBedArray(arr) {
 let isPro = safeGetRaw('cdu_pro') === '1';
 let curLang = safeGetRaw('cdu_lang') || 'en';
 let curTheme = safeGetRaw('cdu_theme_color') || 'teal';
+if (!THEME_HEX[curTheme]) curTheme = 'teal';
 let isDark = safeGetRaw('cdu_dark') === '1';
 let curShift = safeGetRaw('cdu_shift') || 'day';
 let bmUnit = safeGetRaw('cdu_bm_unit') || 'mmol/L';
@@ -453,12 +476,14 @@ let hideCompleted = false;
 let showManageBed = false;
 let showQuickAddBed = false;
 let settingsOpen = false;
+let editingShift = false;
 let bedDeleteMode = false;
 let quickReorderActive = false;
 let quickReorderQueue = [];
 let expandedCards = {};
 let activeFluidIdx = 0;
 let activeFluidType = 'i';
+let fluidDrawerOpen = true;
 let wakeLockObj = null;
 let wakeLockWanted = false;
 let alertTimerId = null;
@@ -477,7 +502,7 @@ function pushNavState(stateObj) {
 function applyThemeColorMeta() {
   const meta = document.getElementById('metaThemeColor');
   if (!meta) return;
-  const activeColor = isPro ? curTheme : 'teal';
+  const activeColor = isPro && THEME_HEX[curTheme] ? curTheme : 'teal';
   meta.setAttribute('content', THEME_HEX[activeColor] || '#0f172a');
 }
 
@@ -610,6 +635,7 @@ function checkShiftExpiry() {
     showSummary = false;
     showManageBed = false;
     showQuickAddBed = false;
+    editingShift = false;
     cleanupShiftRuntime();
     initSetup();
     return true;
@@ -838,6 +864,14 @@ async function unlockPro() {
 function initSetup() {
   mergeExtraTranslations();
   if (checkShiftExpiry()) return;
+  if (!safeGetRaw('cdu_start')) {
+    editingShift = false;
+    if (db && Object.keys(db).length > 0) {
+      db = {};
+      expandedCards = {};
+      safeRemove('cdu_db');
+    }
+  }
   if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().catch(() => {});
   }
@@ -847,6 +881,7 @@ function initSetup() {
     alloc = alloc.slice(0, FREE_BED_LIMIT);
   }
   alloc = sortBedArray(alloc);
+  if (!THEME_HEX[curTheme]) curTheme = 'teal';
   document.documentElement.lang = curLang;
   document.documentElement.dir = RTL_LANGS.includes(curLang) ? 'rtl' : 'ltr';
   document.body.setAttribute('data-theme', isDark ? 'night' : 'day');
@@ -870,7 +905,7 @@ function initSetup() {
   document.getElementById('proBanner').classList.toggle('hidden', isPro);
   document.getElementById('savedLayoutRow').classList.toggle('hidden', !isPro || Object.keys(layouts).length === 0);
 
-  if (alloc.length > 0 && safeGetRaw('cdu_start')) {
+  if (alloc.length > 0 && safeGetRaw('cdu_start') && !editingShift) {
     document.getElementById('setupView').classList.add('hidden');
     document.getElementById('mainView').classList.remove('hidden');
     document.getElementById('editBtn').classList.remove('hidden');
@@ -919,10 +954,15 @@ function applyStaticTranslations() {
     if (actHelpEl) actHelpEl.textContent = rawActMods.slice(parenIdx + 1).replace(/\)$/, '').trim();
   } else {
     if (actTitleEl) actTitleEl.textContent = rawActMods;
+    if (actHelpEl) actHelpEl.textContent = '';
   }
 
+  const activeCnt = getActiveSections().length;
   const qrBtn = document.getElementById('btnQuickReorder');
-  if (qrBtn) qrBtn.textContent = quickReorderActive ? t('done') : t('tapInOrder');
+  if (qrBtn) {
+    qrBtn.disabled = activeCnt < 2;
+    qrBtn.textContent = quickReorderActive ? t('done') : t('tapInOrder');
+  }
 
   const bedInp = document.getElementById('newBedInput');
   if (bedInp) bedInp.placeholder = t('bedPh');
@@ -960,7 +1000,6 @@ function applyStaticTranslations() {
 
   const sub = document.getElementById('settingsSummarySub');
   if (sub) {
-    const activeCnt = getActiveSections().length;
     sub.textContent = `${activeCnt} ${t('modsActiveLbl')} • ${bmUnit} • ${tempUnit}`;
   }
 }
@@ -973,18 +1012,28 @@ function setLang(l) {
 }
 
 function renderThemeOptions() {
-  const themes = [['teal',t('thTeal')],['blue',t('thBlue')],['green',t('thGreen')],['berry',t('thBerry')],['slate',t('thSlate')],['coral',t('thCoral')]];
-  const sel = document.getElementById('themeSelect');
-  sel.innerHTML = themes.map(([v, l]) => `<option value="${v}" ${curTheme===v?'selected':''}>${esc(l)}${!isPro && v!=='teal' ? ' (Pro)' : ''}</option>`).join('');
-  sel.disabled = !isPro;
+  const grid = document.getElementById('themeGrid');
+  if (!grid) return;
+  const activeColor = isPro && THEME_HEX[curTheme] ? curTheme : 'teal';
+  grid.innerHTML = THEME_LIST.map(th => {
+    const locked = !isPro && th.id !== 'teal';
+    const sel = activeColor === th.id;
+    const swatchBg = `linear-gradient(135deg, ${th.accent} 52%, ${th.header} 52%)`;
+    return `<button type="button" class="theme-tile ${sel ? 'selected' : ''} ${locked ? 'locked' : ''}" ${locked ? 'disabled' : ''} onclick="setTheme('${th.id}')">
+      <span class="theme-swatch" style="background:${swatchBg};"></span>
+      <span class="theme-tile-name">${esc(t(th.key))}</span>
+      ${sel ? `<span class="theme-tick">✓</span>` : (locked ? `<span class="pro-badge">PRO</span>` : '')}
+    </button>`;
+  }).join('');
 }
 
 function setTheme(th) {
-  if (!isPro) return;
+  if (!isPro || !THEME_HEX[th]) return;
   curTheme = th;
   safeSet('cdu_theme_color', th);
   document.body.setAttribute('data-color', th);
   applyThemeColorMeta();
+  renderThemeOptions();
 }
 
 function hasAnyLoggedFluids() {
@@ -1259,6 +1308,7 @@ function commitQuickReorderQueue() {
     btn.textContent = t('tapInOrder');
     btn.style.background = 'var(--card)';
     btn.style.color = 'var(--teal)';
+    btn.disabled = getActiveSections().length < 2;
   }
   renderModList();
 }
@@ -1309,6 +1359,12 @@ function renderModList() {
   if (!wrap) return;
   initModConfig();
   const activeSecs = getActiveSections();
+
+  const qrBtn = document.getElementById('btnQuickReorder');
+  if (qrBtn) {
+    qrBtn.disabled = activeSecs.length < 2;
+    qrBtn.textContent = quickReorderActive ? t('done') : t('tapInOrder');
+  }
 
   wrap.innerHTML = modConfig.map((m, idx) => {
     const def = ALL_MODS.find(x => x.id === m.id);
@@ -1387,7 +1443,9 @@ function moveMod(idx, dir) {
 }
 
 function startShift() {
+  if (checkShiftExpiry()) return;
   if (alloc.length === 0) { alert(t('selectAtLeastOne')); return; }
+  editingShift = false;
   bedDeleteMode = false;
   if (quickReorderActive) commitQuickReorderQueue();
   unlockAudioContext();
@@ -1410,6 +1468,7 @@ function startShift() {
 }
 
 function editBeds() {
+  editingShift = true;
   bedDeleteMode = false;
   if (quickReorderActive) commitQuickReorderQueue();
   saveDB();
@@ -1423,7 +1482,7 @@ function editBeds() {
 }
 
 function clearShift() {
-  if (!confirm(t('endShift') + '?')) return;
+  if (!confirm(t('endShiftConfirm'))) return;
   db = {};
   expandedCards = {};
   safeRemove('cdu_db');
@@ -1431,6 +1490,7 @@ function clearShift() {
   showSummary = false;
   showManageBed = false;
   showQuickAddBed = false;
+  editingShift = false;
   cleanupShiftRuntime();
   initSetup();
 }
