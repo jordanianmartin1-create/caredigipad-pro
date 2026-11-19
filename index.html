@@ -8,10 +8,10 @@
 <meta name="apple-mobile-web-app-title" content="Care Digipad">
 <meta id="metaThemeColor" name="theme-color" content="#0f172a">
 <title>Care Digipad</title>
-<link rel="manifest" href="manifest.json?v=12">
-<link rel="icon" type="image/png" href="icon.png?v=12">
-<link rel="apple-touch-icon" href="icon.png?v=12">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="manifest" href="manifest.json?v=13">
+<link rel="icon" type="image/png" href="icon.png?v=13">
+<link rel="apple-touch-icon" href="icon.png?v=13">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body data-theme="day" data-color="teal">
 
@@ -175,8 +175,8 @@
 
     <div id="settingsBody" class="hidden" style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
       <div style="margin-bottom:12px;">
-        <label id="lblTheme">Theme</label>
-        <select id="themeSelect" style="font-size:1rem;" onchange="setTheme(this.value)"></select>
+        <label id="lblTheme" style="margin-bottom:6px;">Theme</label>
+        <div id="themeGrid" class="theme-grid"></div>
       </div>
 
       <div class="units-stack">
@@ -242,13 +242,13 @@
   </div>
 </div>
 
-<script src="lang.js?v=12" onerror="window.CDU_LANGS = {}"></script>
-<script src="core.js?v=12"></script>
-<script src="modules.js?v=12"></script>
+<script src="lang.js?v=13" onerror="window.CDU_LANGS = {}"></script>
+<script src="core.js?v=13"></script>
+<script src="modules.js?v=13"></script>
 <script>
 window.addEventListener('load', function() {
-  if (window.CDP_MOD_VER !== 12 && !sessionStorage.getItem('cdp_v12_reload')) {
-    sessionStorage.setItem('cdp_v12_reload', '1');
+  if (window.CDP_MOD_VER !== 13 && !sessionStorage.getItem('cdp_v13_reload')) {
+    sessionStorage.setItem('cdp_v13_reload', '1');
     window.location.reload();
   }
 });
