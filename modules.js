@@ -1,6 +1,11 @@
 function normDec(val) {
   if (val === null || val === undefined) return '';
-  return String(val).replace(/,/g, '.');
+  let s = String(val).replace(/,/g, '.').replace(/[^0-9.]/g, '');
+  const firstDot = s.indexOf('.');
+  if (firstDot > -1) {
+    s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
+  }
+  return s;
 }
 
 function getEventText(e, phrases) {
@@ -25,6 +30,8 @@ function computeTaskDueTs(dueStr, refMs) {
   const dt = new Date(base.getFullYear(), base.getMonth(), base.getDate(), parts[0], parts[1], 0, 0);
   if (base.getTime() - dt.getTime() > 6 * 60 * 60 * 1000) {
     dt.setDate(dt.getDate() + 1);
+  } else if (dt.getTime() - base.getTime() > 14 * 60 * 60 * 1000) {
+    dt.setDate(dt.getDate() - 1);
   }
   return dt.getTime();
 }
@@ -78,9 +85,10 @@ function renderOverdueBanner() {
     el.innerHTML = '';
     return;
   }
+  const arrow = (typeof RTL_LANGS !== 'undefined' && RTL_LANGS.includes(curLang)) ? '←' : '→';
   el.innerHTML = `<div class="overdue-banner-inner">
     <span>${esc(t('overdueTasks'))}:</span>
-    ${overdueBeds.map(x => `<button type="button" class="overdue-pill" onclick="jumpToBedMod(${x.bIdx}, 'reminders')">${esc(x.b)} →</button>`).join('')}
+    ${overdueBeds.map(x => `<button type="button" class="overdue-pill" onclick="jumpToBedMod(${x.bIdx}, 'reminders')">${esc(x.b)} ${arrow}</button>`).join('')}
   </div>`;
   el.classList.remove('hidden');
 }
@@ -107,7 +115,7 @@ function checkOverdueTasks(triggerSound = true) {
   }
   renderOverdueBanner();
   refreshSubNavCounts();
-  if (showSummary && newlyTriggered) {
+  if (showSummary && (newlyTriggered || !triggerSound)) {
     renderSummary();
   } else if (!showSummary && curSec === 'reminders' && curBed) {
     const p = getPt(curBed);
@@ -165,6 +173,9 @@ function getPt(b) {
   if (!Array.isArray(p.mh)) p.mh = [];
   if (!Array.isArray(p.events)) p.events = [];
   if (!Array.isArray(p.reminders)) p.reminders = [];
+  p.reminders.forEach(r => {
+    if (r && typeof r.sumDone !== 'boolean') r.sumDone = false;
+  });
   if (!p.admit || typeof p.admit !== 'object') p.admit = { w: '', h: '', wb: false, items: {}, custom: [], other: '', done: false };
   if (!p.admit.items || typeof p.admit.items !== 'object') p.admit.items = {};
   if (!Array.isArray(p.admit.custom)) p.admit.custom = [];
@@ -196,6 +207,10 @@ function isBpFilled(x) {
 function isFluidRowFilled(f) {
   if (!f) return false;
   return (Number(f.i) || 0) > 0 || (Number(f.o) || 0) > 0 || (Number(f.wet) || 0) > 0 || !!f.src;
+}
+
+function isBowelFilled(x) {
+  return !!(x && (x.a || x.ty || x.m));
 }
 
 function kvPill(label, valHtml) {
@@ -232,7 +247,7 @@ function modEntryCount(b, modId) {
     case 'bm': return p.bm.filter(x => x.v && String(x.v).trim() !== '').length;
     case 'bp': return p.bp.filter(isBpFilled).length;
     case 'fluid': return p.fluids.reduce((acc, f) => acc + (isFluidRowFilled(f) ? 1 : 0), 0);
-    case 'bowel': return p.bowel.filter(x => !!x.a).length;
+    case 'bowel': return p.bowel.filter(isBowelFilled).length;
     case 'amy': return Object.values(p.skin).filter(Boolean).length + p.skinCustom.filter(c => c.site && c.cond).length + (p.skinCare.length > 0 ? 1 : 0) + p.dressings.filter(d => d.l && d.l.trim() !== '').length;
     case 'food': return [p.diet.b, p.diet.l, p.diet.d].filter(Boolean).length + p.diet.supps.length + (p.diet.supp && p.diet.supp.trim() ? 1 : 0) + (p.diet.flags.length > 0 ? 1 : 0);
     case 'turn': return p.turns.filter(tr => !!tr.p).length + ((p.turnFreq || p.turnChecks.length > 0) ? 1 : 0);
@@ -248,6 +263,17 @@ function modEntryCount(b, modId) {
     case 'admit': return (p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length > 0 || p.admit.custom.length > 0 || (p.admit.other && p.admit.other.trim() !== '')) ? 1 : 0;
     default: return 0;
   }
+}
+
+function getTotalPendingCount() {
+  const activeSecs = getActiveSections();
+  let total = 0;
+  alloc.forEach(b => {
+    activeSecs.forEach(s => {
+      total += countPendingForBedMod(b, s.id);
+    });
+  });
+  return total;
 }
 
 function hasAnyBedData(b) {
@@ -310,6 +336,19 @@ function setExpIdx(sec, idx) {
   renderSection();
 }
 
+function buildBedTabsHtml() {
+  const pendingCnt = getTotalPendingCount();
+  const pendingBadge = pendingCnt > 0 ? `<span class="sum-pending-badge">${pendingCnt}</span>` : '';
+  let bedHtml = `<button type="button" class="tab-btn ${showSummary ? 'active-summary' : ''}" onclick="toggleSummary(true)">${esc(t('summary'))}${pendingBadge}</button>`;
+  alloc.forEach((b, bIdx) => {
+    const isAct = !showSummary && curBed === b;
+    const alertDot = hasOverdueTask(b) ? `<span class="alert-dot"></span>` : '';
+    bedHtml += `<button type="button" class="tab-btn ${isAct ? 'active-bed' : ''}" onclick="selectBedIdx(${bIdx})">${esc(b)}${alertDot}</button>`;
+  });
+  bedHtml += `<button type="button" class="tab-btn-add" onclick="toggleQuickAddBed()">+</button>`;
+  return bedHtml;
+}
+
 function renderUI() {
   if (checkShiftExpiry()) return;
   if (typeof sortBedArray === 'function') alloc = sortBedArray(alloc);
@@ -317,14 +356,7 @@ function renderUI() {
   const subNav = document.getElementById('subNav');
   const activeSecs = getActiveSections();
 
-  let bedHtml = `<button type="button" class="tab-btn ${showSummary ? 'active-summary' : ''}" onclick="toggleSummary(true)">${esc(t('summary'))}</button>`;
-  alloc.forEach((b, bIdx) => {
-    const isAct = !showSummary && curBed === b;
-    const alertDot = hasOverdueTask(b) ? `<span class="alert-dot"></span>` : '';
-    bedHtml += `<button type="button" class="tab-btn ${isAct ? 'active-bed' : ''}" onclick="selectBedIdx(${bIdx})">${esc(b)}${alertDot}</button>`;
-  });
-  bedHtml += `<button type="button" class="tab-btn-add" onclick="toggleQuickAddBed()">+</button>`;
-  bedTabs.innerHTML = bedHtml;
+  bedTabs.innerHTML = buildBedTabsHtml();
 
   if (showSummary) {
     subNav.classList.add('hidden');
@@ -364,14 +396,7 @@ function refreshSubNavCounts() {
   const subNav = document.getElementById('subNav');
   const bedTabs = document.getElementById('bedTabs');
   if (bedTabs) {
-    let bedHtml = `<button type="button" class="tab-btn ${showSummary ? 'active-summary' : ''}" onclick="toggleSummary(true)">${esc(t('summary'))}</button>`;
-    alloc.forEach((b, bIdx) => {
-      const isAct = !showSummary && curBed === b;
-      const alertDot = hasOverdueTask(b) ? `<span class="alert-dot"></span>` : '';
-      bedHtml += `<button type="button" class="tab-btn ${isAct ? 'active-bed' : ''}" onclick="selectBedIdx(${bIdx})">${esc(b)}${alertDot}</button>`;
-    });
-    bedHtml += `<button type="button" class="tab-btn-add" onclick="toggleQuickAddBed()">+</button>`;
-    bedTabs.innerHTML = bedHtml;
+    bedTabs.innerHTML = buildBedTabsHtml();
   }
   if (!subNav || showSummary) return;
   const activeSecs = getActiveSections();
@@ -468,8 +493,15 @@ function renameCurrentBed() {
 function transferCurrentBed() {
   const dest = (prompt(t('transferPrompt')) || '').trim().toUpperCase().slice(0, 4);
   if (!dest || dest === curBed) return;
-  const destOccupied = alloc.includes(dest) || hasAnyBedData(dest);
+  const destInAlloc = alloc.includes(dest);
+  const destHasData = hasAnyBedData(dest);
+  const destOccupied = destInAlloc || destHasData;
+
   if (destOccupied) {
+    if (!destInAlloc && destHasData && !isPro && alloc.length >= FREE_BED_LIMIT) {
+      alert(t('proSub'));
+      return;
+    }
     const swapMsg = `${dest} ${t('swapConfirm')}`;
     if (!confirm(swapMsg)) return;
     const temp = db[dest];
@@ -480,10 +512,14 @@ function transferCurrentBed() {
       delete db[curBed];
     }
     swapExpandedForBeds(curBed, dest);
-    if (!alloc.includes(dest)) {
-      const cIdx = alloc.indexOf(curBed);
-      if (cIdx > -1) alloc[cIdx] = dest;
-      else alloc.push(dest);
+    if (!destInAlloc) {
+      if (destHasData) {
+        alloc.push(dest);
+      } else {
+        const cIdx = alloc.indexOf(curBed);
+        if (cIdx > -1) alloc[cIdx] = dest;
+        else alloc.push(dest);
+      }
     }
   } else {
     db[dest] = db[curBed];
@@ -515,12 +551,24 @@ function removeCurrentBedFromShift() {
   clearExpandedForBed(curBed);
   alloc = alloc.filter(b => b !== curBed);
   showManageBed = false;
-  saveDB();
   if (alloc.length === 0) {
-    if (typeof safeRemove === 'function') safeRemove('cdu_start');
-    else localStorage.removeItem('cdu_start');
+    db = {};
+    expandedCards = {};
+    showSummary = false;
+    showQuickAddBed = false;
+    editingShift = false;
+    saveDB();
+    if (typeof safeRemove === 'function') {
+      safeRemove('cdu_db');
+      safeRemove('cdu_start');
+    } else {
+      localStorage.removeItem('cdu_db');
+      localStorage.removeItem('cdu_start');
+    }
+    if (typeof cleanupShiftRuntime === 'function') cleanupShiftRuntime();
     initSetup();
   } else {
+    saveDB();
     curBed = alloc[0];
     renderUI();
   }
@@ -571,6 +619,14 @@ function splitBpParts(entry, sysKey, diaKey, legacyKey) {
     dia = (parts[1] && parts[1] !== '-') ? parts[1] : '';
   }
   return [sys, dia];
+}
+
+function toggleFluidDrawer() {
+  fluidDrawerOpen = !fluidDrawerOpen;
+  const body = document.getElementById('flDrawerBody');
+  const btn = document.getElementById('flDrawerBtn');
+  if (body) body.classList.toggle('hidden', !fluidDrawerOpen);
+  if (btn) btn.textContent = `${t('flQuickAdd')} ${fluidDrawerOpen ? '▲' : '▾'}`;
 }
 
 function renderSection() {
@@ -772,27 +828,30 @@ function renderSection() {
     const actHr = p.fluids[activeFluidIdx] ? p.fluids[activeFluidIdx].t : '';
 
     bodyHtml = `<div id="fluidStickyCard" class="card fluid-sticky-card ${activeFluidType === 'o' ? 'out-active' : ''}">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.82rem; font-weight:700; color:var(--text-sub); flex-wrap:wrap; gap:6px;">
-        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+      <div class="fl-sticky-top">
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:0.82rem; font-weight:700; color:var(--text-sub);">
           <span id="flHdrStatus">${esc(t('time'))}: <strong class="ltr-num" style="color:var(--teal);">${esc(actHr)}</strong></span>
           <button type="button" id="flModeInBtn" class="fl-mode-pill ${activeFluidType === 'i' ? 'active-in' : ''}" onclick="setFluidMode('i')">${esc(t('flIn'))}</button>
           <button type="button" id="flModeOutBtn" class="fl-mode-pill ${activeFluidType === 'o' ? 'active-out' : ''}" onclick="setFluidMode('o')">${esc(t('flOut'))}</button>
         </div>
-        <span id="flHdrTotal"><strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b class="ltr-num">${totI}ml</b> | ${esc(t('flOut'))} <b class="ltr-num">${totO}ml</b> | <b class="ltr-num">${net > 0 ? '+' + net : net}ml</b></span>
+        <button type="button" id="flDrawerBtn" class="fl-drawer-toggle" onclick="toggleFluidDrawer()">${esc(t('flQuickAdd'))} ${fluidDrawerOpen ? '▲' : '▾'}</button>
       </div>
-      <div class="fluid-btn-grid" style="margin-bottom:8px;">
-        ${[50, 100, 150, 200, 250, 500].map(v => `<button type="button" data-vol="${v}" class="quick-fluid-btn ${activeFluidType === 'o' ? 'out-mode' : ''}" onclick="addQuickFluid(${v})"><span class="ltr-num">+${v}ml</span> ${esc(activeFluidType === 'i' ? t('flIn') : t('flOut'))}</button>`).join('')}
-      </div>
-      <div style="display:flex; gap:6px; margin-bottom:8px;">
-        <input type="number" id="customFluidMl" inputmode="numeric" placeholder="${esc(t('customMlPh'))}" style="flex:1; font-size:1rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomFluid();}">
-        <button type="button" id="btnAddCustomFl" class="btn btn-primary btn-sm" style="${activeFluidType === 'o' ? 'background:var(--amber);' : ''}" onclick="addCustomFluid()">${esc(t('add'))} (${esc(activeFluidType === 'i' ? t('flIn') : t('flOut'))})</button>
-      </div>
-      <div class="chip-row" id="flSrcChips" style="margin-bottom:0;">
-        ${['srcPu','srcCath','srcBowel','srcVomit'].map(sc => {
-          const curSrc = p.fluids[activeFluidIdx] ? p.fluids[activeFluidIdx].src : '';
-          return `<span class="chip ${curSrc === sc ? 'active-amber' : ''}" data-src="${sc}" onclick="setFluidSource('${sc}')">${esc(t(sc))}</span>`;
-        }).join('')}
-        <span class="chip" onclick="addWetPad()"><span class="ltr-num">+1</span>&nbsp;${esc(t('wetPad'))}</span>
+      <div id="flHdrTotal" class="fl-total-bar"><strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b class="ltr-num">${totI}ml</b> | ${esc(t('flOut'))} <b class="ltr-num">${totO}ml</b> | <b class="ltr-num">${net > 0 ? '+' + net : net}ml</b></div>
+      <div id="flDrawerBody" class="fl-drawer-body ${fluidDrawerOpen ? '' : 'hidden'}">
+        <div class="fluid-btn-grid" style="margin-bottom:8px;">
+          ${[50, 100, 150, 200, 250, 500].map(v => `<button type="button" data-vol="${v}" class="quick-fluid-btn ${activeFluidType === 'o' ? 'out-mode' : ''}" onclick="addQuickFluid(${v})"><span class="ltr-num">+${v}ml</span> ${esc(activeFluidType === 'i' ? t('flIn') : t('flOut'))}</button>`).join('')}
+        </div>
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <input type="number" id="customFluidMl" inputmode="numeric" placeholder="${esc(t('customMlPh'))}" style="flex:1; font-size:1rem;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomFluid();}">
+          <button type="button" id="btnAddCustomFl" class="btn btn-primary btn-sm" style="${activeFluidType === 'o' ? 'background:var(--amber);' : ''}" onclick="addCustomFluid()">${esc(t('add'))} (${esc(activeFluidType === 'i' ? t('flIn') : t('flOut'))})</button>
+        </div>
+        <div class="chip-row" id="flSrcChips" style="margin-bottom:0;">
+          ${['srcPu','srcCath','srcBowel','srcVomit'].map(sc => {
+            const curSrc = p.fluids[activeFluidIdx] ? p.fluids[activeFluidIdx].src : '';
+            return `<span class="chip ${curSrc === sc ? 'active-amber' : ''}" data-src="${sc}" onclick="setFluidSource('${sc}')">${esc(t(sc))}</span>`;
+          }).join('')}
+          <span class="chip" onclick="addWetPad()"><span class="ltr-num">+1</span>&nbsp;${esc(t('wetPad'))}</span>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -803,22 +862,25 @@ function renderSection() {
         <div style="flex:0 0 42px;"></div>
       </div>
       <div id="fluidRows">
-        ${p.fluids.map((f, idx) => `<div class="hour-row">
-          <div id="flHr_${idx}" class="hour-badge ltr-num ${activeFluidIdx === idx ? 'active-hr' : ''}" onclick="selectFluidHour(${idx})">${esc(f.t)}</div>
-          <div style="flex:1; min-width:0;">
-            <input id="flIn_${idx}" type="number" inputmode="numeric" class="${activeFluidIdx === idx && activeFluidType === 'i' ? 'fl-target-in' : ''}" value="${f.i || ''}" onfocus="setFluidTarget(${idx}, 'i')" oninput="updFluid(${idx}, 'i', this.value)">
-          </div>
-          <div style="flex:1; min-width:0;">
-            <input id="flOut_${idx}" type="number" inputmode="numeric" class="${activeFluidIdx === idx && activeFluidType === 'o' ? 'fl-target-out' : ''}" value="${f.o || ''}" onfocus="setFluidTarget(${idx}, 'o')" oninput="updFluid(${idx}, 'o', this.value)">
-            ${(f.src || f.wet) ? `<div style="font-size:0.7rem; color:var(--amber); font-weight:700; margin-top:2px; display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-              ${f.src ? `<span>${esc(trCode(f.src))}</span>` : ''}
-              ${f.wet ? `<span onclick="decWetPad(${idx})" style="cursor:pointer; text-decoration:underline;">${esc(t('wetPad'))} <span class="ltr-num">x${f.wet}</span> (✕)</span>` : ''}
-            </div>` : ''}
-          </div>
-          <div style="flex:0 0 42px; text-align:end;">
-            <button type="button" class="btn-subtle btn-sm" style="padding:6px 8px; font-size:0.74rem;" onclick="clrFluidRow(${idx})">✕</button>
-          </div>
-        </div>`).join('')}
+        ${p.fluids.map((f, idx) => {
+          const rowFilled = isFluidRowFilled(f);
+          return `<div class="hour-row">
+            <div id="flHr_${idx}" class="hour-badge ltr-num ${activeFluidIdx === idx ? 'active-hr' : ''}" onclick="selectFluidHour(${idx})">${esc(f.t)}</div>
+            <div style="flex:1; min-width:0;">
+              <input id="flIn_${idx}" type="number" inputmode="numeric" class="${activeFluidIdx === idx && activeFluidType === 'i' ? 'fl-target-in' : ''}" value="${f.i || ''}" onfocus="setFluidTarget(${idx}, 'i')" oninput="updFluid(${idx}, 'i', this.value)">
+            </div>
+            <div style="flex:1; min-width:0;">
+              <input id="flOut_${idx}" type="number" inputmode="numeric" class="${activeFluidIdx === idx && activeFluidType === 'o' ? 'fl-target-out' : ''}" value="${f.o || ''}" onfocus="setFluidTarget(${idx}, 'o')" oninput="updFluid(${idx}, 'o', this.value)">
+              ${(f.src || f.wet) ? `<div style="font-size:0.7rem; color:var(--amber); font-weight:700; margin-top:2px; display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                ${f.src ? `<span>${esc(trCode(f.src))}</span>` : ''}
+                ${f.wet ? `<span onclick="decWetPad(${idx})" style="cursor:pointer; text-decoration:underline;">${esc(t('wetPad'))} <span class="ltr-num">x${f.wet}</span> (✕)</span>` : ''}
+              </div>` : ''}
+            </div>
+            <div style="flex:0 0 42px; text-align:end;">
+              <button type="button" id="flClr_${idx}" class="btn-subtle btn-sm" style="padding:6px 8px; font-size:0.74rem;" ${rowFilled ? '' : 'disabled'} onclick="clrFluidRow(${idx})">✕</button>
+            </div>
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
   }
@@ -829,10 +891,10 @@ function renderSection() {
     const methOpts = ['mToilet','mCommode','mBedpan','mPad'];
     const expIdx = getExpIdx('bowel', p.bowel.length);
     bodyHtml = p.bowel.map((b, i) => {
-      if (i !== expIdx && b.a) {
+      if (i !== expIdx && isBowelFilled(b)) {
         const sumTxt = b.a === 'bno'
           ? kvPill('', esc(t('bnoFull')))
-          : `${kvPill(t('amt'), esc(trCode(b.a)))}${b.ty ? kvPill('', esc(trCode(b.ty))) : ''}${b.m ? kvPill('', esc(trCode(b.m))) : ''}`;
+          : `${b.a ? kvPill(t('amt'), esc(trCode(b.a))) : ''}${b.ty ? kvPill('', esc(trCode(b.ty))) : ''}${b.m ? kvPill('', esc(trCode(b.m))) : ''}`;
         return `<div class="card entry-card" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="setExpIdx('bowel', ${i})">
           <div style="line-height:1.8;">${timePill(b.t)}${sumTxt} <span style="color:var(--teal); font-weight:700; font-size:0.78rem; margin-inline-start:4px;">✎</span></div>
           <button type="button" class="del-btn" onclick="event.stopPropagation(); delItem('bowel', ${i})">✕</button>
@@ -1177,25 +1239,23 @@ function renderSection() {
       const tkTxt = getTaskText(r, taskList);
       const overdue = isTaskOverdue(r);
       if (i !== expIdx && tkTxt.trim()) {
-        return `<div id="taskCard_${i}" class="card entry-card ${overdue ? 'task-alert' : ''}" style="display:flex; justify-content:space-between; align-items:center;">
-          <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.92rem; color:var(--text); cursor:pointer; flex:1;" onclick="event.stopPropagation()">
-            <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleTaskDone(${i})">
+        return `<div id="taskCard_${i}" class="card entry-card ${overdue ? 'task-alert' : ''}" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleTaskDone(${i})">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; flex:1; min-width:0; cursor:pointer;" onclick="setExpIdx('reminders', ${i})">
             <span id="taskBadge_${i}" class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? esc(t('overdue')) : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
-            <span style="${r.done ? 'text-decoration:line-through; opacity:0.55;' : 'font-weight:700;'}" onclick="event.preventDefault(); setExpIdx('reminders', ${i})">${esc(tkTxt)} <span style="color:var(--teal); font-size:0.78rem;">✎</span></span>
-          </label>
+            <span style="${r.done ? 'text-decoration:line-through; opacity:0.55;' : 'font-weight:700;'}">${esc(tkTxt)} <span style="color:var(--teal); font-size:0.78rem;">✎</span></span>
+          </div>
           <button type="button" class="del-btn" onclick="delItem('reminders', ${i})">✕</button>
         </div>`;
       }
       return `<div id="taskCard_${i}" class="card entry-card ${overdue ? 'task-alert' : ''}">
         <div class="entry-hdr">
-          <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.9rem; color:var(--text); cursor:pointer;">
+          <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
             <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleTaskDone(${i})">
-            <span id="taskBadge_${i}" class="task-badge ${overdue ? 'overdue' : ''}">${r.done ? esc(t('done')) : (overdue ? esc(t('overdue')) : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
-          </label>
-          <div style="display:flex; align-items:center; gap:4px;">
-            <button type="button" class="btn-subtle btn-sm" style="padding:2px 8px; font-size:0.74rem;" onclick="setExpIdx('reminders', ${i})">▲</button>
-            <button type="button" class="del-btn" onclick="delItem('reminders', ${i})">✕</button>
+            <span id="taskBadge_${i}" class="task-badge ${overdue ? 'overdue' : ''}" style="cursor:pointer;" onclick="setExpIdx('reminders', ${i})">${r.done ? esc(t('done')) : (overdue ? esc(t('overdue')) : esc(t('due')) + ' ' + esc(r.due || '--:--'))}</span>
+            <span class="entry-num" style="cursor:pointer;" onclick="setExpIdx('reminders', ${i})">▲</span>
           </div>
+          <button type="button" class="del-btn" onclick="delItem('reminders', ${i})">✕</button>
         </div>
         <div class="chip-row" style="margin-bottom:8px;">
           ${offsets.map(([mins, lbl]) => `<span class="chip" onclick="setTaskOffset(${i}, ${mins})"><span class="ltr-num">${esc(lbl)}</span></span>`).join('')}
@@ -1294,7 +1354,7 @@ function toggleBmFlag(idx, code) {
   if (!Array.isArray(p.bm[idx].f)) p.bm[idx].f = [];
   const pos = p.bm[idx].f.indexOf(code);
   if (pos > -1) p.bm[idx].f.splice(pos, 1); else p.bm[idx].f.push(code);
-  p.bm[idx].done = false; saveDB(); renderSection();
+  p.bm[idx].done = false; saveDB(); renderSection(); refreshSubNavCounts();
 }
 
 function createBpEntry() {
@@ -1303,7 +1363,7 @@ function createBpEntry() {
   expandedCards[curBed + '_bp'] = p.bp.length - 1;
   saveDB(); renderUI();
 }
-function updBpField(idx, k, val) { const p = getPt(curBed); if (!p.bp[idx]) return; p.bp[idx][k] = val; p.bp[idx].done = false; saveDB(); }
+function updBpField(idx, k, val) { const p = getPt(curBed); if (!p.bp[idx]) return; p.bp[idx][k] = val; p.bp[idx].done = false; saveDB(); refreshSubNavCounts(); }
 function updBpPair(idx, posKey, part, val) {
   const p = getPt(curBed); if (!p.bp[idx]) return;
   const x = p.bp[idx]; const [curSys, curDia] = splitBpParts(x, posKey + 'Sys', posKey + 'Dia', posKey);
@@ -1368,6 +1428,8 @@ function updFluid(idx, type, val) {
   p.fluids.forEach(f => { totI += (Number(f.i) || 0); totO += (Number(f.o) || 0); });
   const net = totI - totO, totEl = document.getElementById('flHdrTotal');
   if (totEl) totEl.innerHTML = `<strong>${esc(t('flTotal'))}:</strong> ${esc(t('flIn'))} <b class="ltr-num">${totI}ml</b> | ${esc(t('flOut'))} <b class="ltr-num">${totO}ml</b> | <b class="ltr-num">${net > 0 ? '+' + net : net}ml</b>`;
+  const clrBtn = document.getElementById('flClr_' + idx);
+  if (clrBtn) clrBtn.disabled = !isFluidRowFilled(p.fluids[idx]);
   refreshSubNavCounts();
 }
 
@@ -1427,9 +1489,9 @@ function decWetPad(idx) {
 }
 
 function clrFluidRow(idx) {
-  if (!confirm(t('delConfirm'))) return;
   const p = getPt(curBed);
-  if (!p.fluids[idx]) return;
+  if (!p.fluids[idx] || !isFluidRowFilled(p.fluids[idx])) return;
+  if (!confirm(t('delConfirm'))) return;
   p.fluids[idx] = { t: p.fluids[idx].t, i: 0, o: 0, src: '', wet: 0, done: false };
   saveDB();
   renderSection();
@@ -1475,7 +1537,7 @@ function createDressingEntry() {
 }
 function setDrCardSite(idx, siteIdx) { const p = getPt(curBed), drSites = getLangList('drSites'); if (!p.dressings[idx] || !drSites[siteIdx]) return; p.dressings[idx].l = (p.dressings[idx].l === drSites[siteIdx]) ? '' : drSites[siteIdx]; p.dressings[idx].done = false; saveDB(); renderUI(); }
 function updDressingField(idx, k, val, rerender) { const p = getPt(curBed); if (!p.dressings[idx]) return; p.dressings[idx][k] = val; p.dressings[idx].done = false; saveDB(); refreshSubNavCounts(); if (rerender) renderSection(); }
-function toggleDressingStatus(idx, stCode) { const p = getPt(curBed); if (!p.dressings[idx]) return; p.dressings[idx].st = (p.dressings[idx].st === stCode) ? '' : stCode; p.dressings[idx].done = false; saveDB(); renderSection(); }
+function toggleDressingStatus(idx, stCode) { const p = getPt(curBed); if (!p.dressings[idx]) return; p.dressings[idx].st = (p.dressings[idx].st === stCode) ? '' : stCode; p.dressings[idx].done = false; saveDB(); renderSection(); refreshSubNavCounts(); }
 function delDressing(idx) {
   if (!confirm(t('delConfirm'))) return;
   const p = getPt(curBed);
@@ -1534,14 +1596,14 @@ function updEventField(idx, k, val) { const p = getPt(curBed); if (!p.events[idx
 function quickAddTaskPreset(tIdx) {
   const p = getPt(curBed), taskList = getLangList('tasks'), nowMs = Date.now(), dt = new Date(nowMs + 30 * 60 * 1000);
   const due = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-  p.reminders.push({ due, createdTs: nowMs, dueTs: dt.getTime(), txt: taskList[tIdx] || '', tIdx, done: false, alerted: false });
+  p.reminders.push({ due, createdTs: nowMs, dueTs: dt.getTime(), txt: taskList[tIdx] || '', tIdx, done: false, sumDone: false, alerted: false });
   expandedCards[curBed + '_reminders'] = p.reminders.length - 1;
   saveDB(); renderUI();
 }
 function createTaskEntry() {
   const p = getPt(curBed), nowMs = Date.now(), dt = new Date(nowMs + 30 * 60 * 1000);
   const due = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-  p.reminders.push({ due, createdTs: nowMs, dueTs: dt.getTime(), txt: '', done: false, alerted: false });
+  p.reminders.push({ due, createdTs: nowMs, dueTs: dt.getTime(), txt: '', done: false, sumDone: false, alerted: false });
   expandedCards[curBed + '_reminders'] = p.reminders.length - 1;
   saveDB(); renderUI();
 }
@@ -1549,14 +1611,14 @@ function setTaskOffset(idx, mins) {
   const p = getPt(curBed); if (!p.reminders[idx]) return;
   const targetMs = Date.now() + mins * 60 * 1000, dt = new Date(targetMs);
   p.reminders[idx].due = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-  p.reminders[idx].createdTs = Date.now(); p.reminders[idx].dueTs = targetMs; p.reminders[idx].alerted = false;
+  p.reminders[idx].createdTs = Date.now(); p.reminders[idx].dueTs = targetMs; p.reminders[idx].alerted = false; p.reminders[idx].sumDone = false;
   saveDB(); renderUI();
 }
 function updTaskDue(idx, dueStr) {
   const p = getPt(curBed); if (!p.reminders[idx]) return;
   const r = p.reminders[idx];
   const nowMs = Date.now();
-  r.due = dueStr; r.createdTs = nowMs; r.dueTs = computeTaskDueTs(dueStr, nowMs); r.alerted = false;
+  r.due = dueStr; r.createdTs = nowMs; r.dueTs = computeTaskDueTs(dueStr, nowMs); r.alerted = false; r.sumDone = false;
   saveDB();
   const overdue = isTaskOverdue(r);
   const cardEl = document.getElementById('taskCard_' + idx);
@@ -1574,6 +1636,7 @@ function updTaskText(idx, val) {
   const r = p.reminders[idx];
   r.txt = val;
   r.customEdited = true;
+  r.sumDone = false;
   saveDB();
   const overdue = isTaskOverdue(r);
   const cardEl = document.getElementById('taskCard_' + idx);
@@ -1589,6 +1652,7 @@ function updTaskText(idx, val) {
 function toggleTaskDone(idx) {
   const p = getPt(curBed); if (!p.reminders[idx]) return;
   p.reminders[idx].done = !p.reminders[idx].done;
+  p.reminders[idx].sumDone = false;
   saveDB(); renderUI();
 }
 
@@ -1602,7 +1666,7 @@ function toggleAdmitStdItem(idx) {
 function setAdmitStdLoc(key, lc) {
   const p = getPt(curBed);
   p.admit.items[key] = (p.admit.items[key] === lc) ? '' : lc;
-  p.admit.done = false; saveDB(); renderSection();
+  p.admit.done = false; saveDB(); renderSection(); refreshSubNavCounts();
 }
 function addAdmitCustomItem() {
   const inp = document.getElementById('admitCustomInput');
@@ -1616,7 +1680,7 @@ function addAdmitCustomItem() {
 function setAdmitCustomLoc(cIdx, lc) {
   const p = getPt(curBed); if (!p.admit.custom[cIdx]) return;
   p.admit.custom[cIdx].loc = (p.admit.custom[cIdx].loc === lc) ? '' : lc;
-  p.admit.done = false; saveDB(); renderSection();
+  p.admit.done = false; saveDB(); renderSection(); refreshSubNavCounts();
 }
 function delAdmitCustomItem(cIdx) {
   if (!confirm(t('delConfirm'))) return;
@@ -1666,6 +1730,7 @@ function toggleSumDone(bedOrIdx, sec, idx) {
   else if (sec === 'turnPlan') p.turnPlanDone = !p.turnPlanDone;
   else if (sec === 'mhLevel') p.mhLevelDone = !p.mhLevelDone;
   else if (sec === 'admit') p.admit.done = !p.admit.done;
+  else if (sec === 'reminders' && p.reminders[idx]) p.reminders[idx].sumDone = !p.reminders[idx].sumDone;
   else if (Array.isArray(p[sec]) && p[sec][idx]) p[sec][idx].done = !p[sec][idx].done;
   saveDB();
   renderOverdueBanner();
@@ -1692,7 +1757,7 @@ function countPendingForBedMod(b, modId) {
     case 'bm': return p.bm.filter(x => x.v && String(x.v).trim() !== '' && !x.done).length;
     case 'bp': return p.bp.filter(x => isBpFilled(x) && !x.done).length;
     case 'fluid': return p.fluids.filter(f => isFluidRowFilled(f) && !f.done).length;
-    case 'bowel': return p.bowel.filter(x => !!x.a && !x.done).length;
+    case 'bowel': return p.bowel.filter(x => isBowelFilled(x) && !x.done).length;
     case 'amy': {
       const hasSkin = Object.values(p.skin).some(Boolean) || p.skinCustom.some(c => c.site && c.cond) || p.skinCare.length > 0;
       return (hasSkin && !p.skinDone ? 1 : 0) + p.dressings.filter(d => d.l && d.l.trim() !== '' && !d.done).length;
@@ -1706,9 +1771,7 @@ function countPendingForBedMod(b, modId) {
       return (hasPlan && !p.turnPlanDone ? 1 : 0) + p.turns.filter(tr => !!tr.p && !tr.done).length;
     }
     case 'mh': {
-      const filledMh = p.mh.filter(m => m.m || m.r || m.rat || m.n);
-      if (filledMh.length > 0) return filledMh.filter(m => !m.done).length;
-      return (p.mhLevel && !p.mhLevelDone) ? 1 : 0;
+      return (p.mhLevel && !p.mhLevelDone ? 1 : 0) + p.mh.filter(m => (m.m || m.r || m.rat || m.n) && !m.done).length;
     }
     case 'events': {
       const phrases = getLangList('phrases');
@@ -1716,7 +1779,7 @@ function countPendingForBedMod(b, modId) {
     }
     case 'reminders': {
       const taskList = getLangList('tasks');
-      return p.reminders.filter(r => getTaskText(r, taskList).trim() !== '' && !r.done).length;
+      return p.reminders.filter(r => getTaskText(r, taskList).trim() !== '' && !r.sumDone).length;
     }
     case 'admit': {
       const hasAdmit = !!(p.admit.w || p.admit.h || p.admit.wb || Object.keys(p.admit.items).length || p.admit.custom.length || (p.admit.other && p.admit.other.trim()));
@@ -1731,7 +1794,7 @@ function setModDoneForBed(p, modId, targetState) {
   else if (modId === 'bm') p.bm.forEach(x => { if (x.v && String(x.v).trim() !== '') x.done = targetState; });
   else if (modId === 'bp') p.bp.forEach(x => { if (isBpFilled(x)) x.done = targetState; });
   else if (modId === 'fluid') p.fluids.forEach(f => { if (isFluidRowFilled(f)) f.done = targetState; });
-  else if (modId === 'bowel') p.bowel.forEach(x => { if (x.a) x.done = targetState; });
+  else if (modId === 'bowel') p.bowel.forEach(x => { if (isBowelFilled(x)) x.done = targetState; });
   else if (modId === 'amy') {
     p.skinDone = targetState;
     p.dressings.forEach(d => { if (d.l && d.l.trim() !== '') d.done = targetState; });
@@ -1751,7 +1814,7 @@ function setModDoneForBed(p, modId, targetState) {
   }
   else if (modId === 'reminders') {
     const taskList = getLangList('tasks');
-    p.reminders.forEach(r => { if (getTaskText(r, taskList).trim() !== '') r.done = targetState; });
+    p.reminders.forEach(r => { if (getTaskText(r, taskList).trim() !== '') r.sumDone = targetState; });
   }
   else if (modId === 'admit') p.admit.done = targetState;
 }
@@ -1826,10 +1889,10 @@ function buildModuleSummaryForBed(b, modId) {
     }
   } else if (modId === 'bowel') {
     p.bowel.forEach((x, i) => {
-      if (!x.a) return;
+      if (!isBowelFilled(x)) return;
       const pills = x.a === 'bno'
         ? kvPill('', esc(t('bnoFull')))
-        : `${kvPill(t('amt'), esc(trCode(x.a)))}${x.ty ? kvPill('', esc(trCode(x.ty))) : ''}${x.m ? kvPill('', esc(trCode(x.m))) : ''}`;
+        : `${x.a ? kvPill(t('amt'), esc(trCode(x.a))) : ''}${x.ty ? kvPill('', esc(trCode(x.ty))) : ''}${x.m ? kvPill('', esc(trCode(x.m))) : ''}`;
       rows += sumRowWrap(`${timePill(x.t)}${pills}`, bIdx, 'bowel', i, !!x.done);
     });
   } else if (modId === 'amy') {
@@ -1865,17 +1928,15 @@ function buildModuleSummaryForBed(b, modId) {
     }
     p.turns.forEach((tr, i) => { if (tr.p) rows += sumRowWrap(`${timePill(tr.t)}${kvPill(t('posLbl'), esc(trCode(tr.p)))}`, bIdx, 'turns', i, !!tr.done); });
   } else if (modId === 'mh') {
-    const hasFilledMh = p.mh.some(m => m.m || m.r || m.rat || m.n);
-    if (p.mhLevel && !hasFilledMh) {
+    if (p.mhLevel) {
       rows += sumRowWrap(kvPill(t('obsLevel'), esc(trCode(p.mhLevel))), bIdx, 'mhLevel', 0, !!p.mhLevelDone);
     }
     p.mh.forEach((m, i) => {
       if (!m.m && !m.r && !m.rat && !m.n) return;
       const mhPills = [
         timePill(m.t),
-        p.mhLevel ? kvPill(t('obsLevel'), esc(trCode(p.mhLevel))) : '',
         m.m ? kvPill(t('mood'), esc(trCode(m.m))) : '',
-        m.r ? kvPill(t('rest'), esc(trCode(m.r))) : '',
+        m.r ? kvPill('', esc(trCode(m.r))) : '',
         m.rat ? kvPill('', esc(trCode(m.rat))) : '',
         m.n ? kvPill('', esc(m.n)) : ''
       ].join('');
@@ -1891,7 +1952,10 @@ function buildModuleSummaryForBed(b, modId) {
       const tkTxt = getTaskText(r, taskList);
       if (!tkTxt.trim()) return;
       const overdue = isTaskOverdue(r);
-      rows += sumRowWrap(`${timePill(r.due)}${kvPill(t('reminders'), esc(tkTxt))}${overdue ? ` <span class="task-badge overdue">${esc(t('overdue'))}</span>` : ''}`, bIdx, 'reminders', i, !!r.done);
+      const statusHtml = r.done
+        ? kvPill('', `✓ ${esc(t('done'))}`)
+        : (overdue ? ` <span class="task-badge overdue">${esc(t('overdue'))}</span>` : '');
+      rows += sumRowWrap(`${timePill(r.due)}${kvPill(t('reminders'), esc(tkTxt))}${statusHtml}`, bIdx, 'reminders', i, !!r.sumDone);
     });
   } else if (modId === 'admit') {
     const aParts = [];
@@ -1916,21 +1980,17 @@ function renderSummary() {
   if (typeof sortBedArray === 'function') alloc = sortBedArray(alloc);
   const area = document.getElementById('contentArea');
   const activeSecs = getActiveSections();
-  let pendingTotal = 0;
-  alloc.forEach(b => {
-    activeSecs.forEach(s => {
-      pendingTotal += countPendingForBedMod(b, s.id);
-    });
-  });
+  const pendingTotal = getTotalPendingCount();
   const pendingLbl = hideCompleted
     ? t('showAll')
     : `${t('pending')}${pendingTotal > 0 ? ' (' + pendingTotal + ')' : ''}`;
+  const hasWakeLock = typeof navigator !== 'undefined' && 'wakeLock' in navigator;
 
   let html = `<div class="summary-toolbar">
     <button type="button" class="tool-btn ${summaryGroup === 'bed' ? 'active' : ''}" onclick="setSumGroup('bed')">${esc(t('byBed'))}</button>
     <button type="button" class="tool-btn ${summaryGroup === 'mod' ? 'active' : ''}" onclick="setSumGroup('mod')">${esc(t('byMod'))}</button>
     <button type="button" class="tool-btn ${hideCompleted ? 'active' : ''}" onclick="toggleHideCompleted()">${esc(pendingLbl)}</button>
-    <button type="button" class="tool-btn ${wakeLockObj ? 'active' : ''}" onclick="toggleWakeLock()">${esc(t('keepOn'))}</button>
+    ${hasWakeLock ? `<button type="button" class="tool-btn ${wakeLockObj ? 'active' : ''}" onclick="toggleWakeLock()">${esc(t('keepOn'))}</button>` : ''}
   </div>`;
 
   let anyVisible = false;
@@ -1971,4 +2031,4 @@ function renderSummary() {
 function setSumGroup(g) { summaryGroup = g; renderSummary(); }
 function toggleHideCompleted() { hideCompleted = !hideCompleted; renderSummary(); }
 
-window.CDP_MOD_VER = 12;
+window.CDP_MOD_VER = 13;
