@@ -1,21 +1,26 @@
-const CACHE_NAME = 'caredigipad-v12';
-const ASSETS = [
+const CACHE_NAME = 'caredigipad-v13';
+const CORE_ASSETS = [
   './',
   './index.html',
-  './style.css?v=12',
-  './lang.js?v=12',
-  './core.js?v=12',
-  './modules.js?v=12',
-  './manifest.json?v=12',
-  './icon.png?v=12'
+  './style.css?v=13',
+  './lang.js?v=13',
+  './core.js?v=13',
+  './modules.js?v=13'
+];
+const OPTIONAL_ASSETS = [
+  './manifest.json?v=13',
+  './icon.png?v=13'
 ];
 
 self.addEventListener('install', event => {
-  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache =>
-      Promise.allSettled(ASSETS.map(url => cache.add(url)))
-    )
+    caches.open(CACHE_NAME)
+      .then(cache =>
+        cache.addAll(CORE_ASSETS).then(() =>
+          Promise.allSettled(OPTIONAL_ASSETS.map(url => cache.add(url)))
+        )
+      )
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -49,20 +54,25 @@ self.addEventListener('fetch', event => {
 
   event.respondWith(
     caches.match(event.request).then(exactCached => {
-      const cachedPromise = exactCached
-        ? Promise.resolve(exactCached)
-        : caches.match(event.request, { ignoreSearch: true });
-
-      return cachedPromise.then(cached => {
-        const networkFetch = fetch(event.request).then(response => {
+      if (exactCached) {
+        fetch(event.request).then(response => {
           if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           }
-          return response;
-        }).catch(() => cached);
-        return cached || networkFetch;
-      });
+        }).catch(() => {});
+        return exactCached;
+      }
+
+      return fetch(event.request).then(response => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() =>
+        caches.match(event.request, { ignoreSearch: true })
+      );
     })
   );
 });
