@@ -222,6 +222,18 @@ function timePill(tStr) {
   return `<span class="sum-time ltr-num">${esc(tStr || '--:--')}</span>`;
 }
 
+function formatFluidPills(totI, totO, totWet, srcs) {
+  const net = totI - totO;
+  const srcTxt = srcs && srcs.length > 0 ? ` (${srcs.map(sc => esc(trCode(sc))).join(', ')})` : '';
+  const parts = [
+    kvPill(t('flIn'), `<span class="ltr-num">${totI}ml</span>`),
+    kvPill(t('flOut'), `<span class="ltr-num">${totO}ml</span>${srcTxt}`),
+    kvPill(t('flNet'), `<span class="ltr-num">${net > 0 ? '+' + net : net}ml</span>`)
+  ];
+  if (totWet > 0) parts.push(kvPill(t('wetPad'), `<span class="ltr-num">x${totWet}</span>`));
+  return parts.join('');
+}
+
 function formatObsLine(o) {
   const acvpuList = getLangList('acvpu');
   const parts = [];
@@ -1730,6 +1742,11 @@ function toggleSumDone(bedOrIdx, sec, idx) {
   else if (sec === 'turnPlan') p.turnPlanDone = !p.turnPlanDone;
   else if (sec === 'mhLevel') p.mhLevelDone = !p.mhLevelDone;
   else if (sec === 'admit') p.admit.done = !p.admit.done;
+  else if (sec === 'fluidAll') {
+    const filled = p.fluids.filter(isFluidRowFilled);
+    const allDone = filled.length > 0 && filled.every(f => !!f.done);
+    filled.forEach(f => { f.done = !allDone; });
+  }
   else if (sec === 'reminders' && p.reminders[idx]) p.reminders[idx].sumDone = !p.reminders[idx].sumDone;
   else if (Array.isArray(p[sec]) && p[sec][idx]) p[sec][idx].done = !p[sec][idx].done;
   saveDB();
@@ -1756,7 +1773,7 @@ function countPendingForBedMod(b, modId) {
     case 'obs': return p.obs.filter(o => isObsFilled(o) && !o.done).length;
     case 'bm': return p.bm.filter(x => x.v && String(x.v).trim() !== '' && !x.done).length;
     case 'bp': return p.bp.filter(x => isBpFilled(x) && !x.done).length;
-    case 'fluid': return p.fluids.filter(f => isFluidRowFilled(f) && !f.done).length;
+    case 'fluid': return p.fluids.some(f => isFluidRowFilled(f) && !f.done) ? 1 : 0;
     case 'bowel': return p.bowel.filter(x => isBowelFilled(x) && !x.done).length;
     case 'amy': {
       const hasSkin = Object.values(p.skin).some(Boolean) || p.skinCustom.some(c => c.site && c.cond) || p.skinCare.length > 0;
@@ -1869,23 +1886,39 @@ function buildModuleSummaryForBed(b, modId) {
       rows += sumRowWrap(`${timePill(x.t)}${bpParts.join('')}`, bIdx, 'bp', i, !!x.done);
     });
   } else if (modId === 'fluid') {
-    let totI = 0, totO = 0, hasFluidActivity = false;
-    p.fluids.forEach((f, i) => {
-      const fi = Number(f.i) || 0, fo = Number(f.o) || 0, fw = Number(f.wet) || 0;
-      totI += fi; totO += fo;
-      if (isFluidRowFilled(f)) {
-        hasFluidActivity = true;
-        const segs = [];
-        if (fi > 0) segs.push(kvPill(t('flIn'), `<span class="ltr-num">${fi}ml</span>`));
-        if (fo > 0) segs.push(kvPill(t('flOut'), `<span class="ltr-num">${fo}ml</span>${f.src ? ' (' + esc(trCode(f.src)) + ')' : ''}`));
-        else if (f.src) segs.push(kvPill(t('flOut'), esc(trCode(f.src))));
-        if (fw > 0) segs.push(kvPill(t('wetPad'), `<span class="ltr-num">x${fw}</span>`));
-        rows += sumRowWrap(`${timePill(f.t)}${segs.join('')}`, bIdx, 'fluids', i, !!f.done);
+    const filled = p.fluids.filter(isFluidRowFilled);
+    if (filled.length > 0) {
+      let totI = 0, totO = 0, totWet = 0;
+      const allSrcs = [];
+      let pendI = 0, pendO = 0, pendWet = 0;
+      const pendSrcs = [];
+      const pendRows = [];
+      let doneCount = 0;
+
+      filled.forEach(f => {
+        const fi = Number(f.i) || 0, fo = Number(f.o) || 0, fw = Number(f.wet) || 0;
+        totI += fi; totO += fo; totWet += fw;
+        if (f.src && !allSrcs.includes(f.src)) allSrcs.push(f.src);
+        if (f.done) {
+          doneCount++;
+        } else {
+          pendRows.push(f);
+          pendI += fi; pendO += fo; pendWet += fw;
+          if (f.src && !pendSrcs.includes(f.src)) pendSrcs.push(f.src);
+        }
+      });
+
+      const allDone = pendRows.length === 0;
+      const fullRange = filled.length === 1 ? filled[0].t : `${filled[0].t}–${filled[filled.length - 1].t}`;
+
+      if (doneCount > 0 && pendRows.length > 0) {
+        const pendRange = pendRows.length === 1 ? pendRows[0].t : `${pendRows[0].t}–${pendRows[pendRows.length - 1].t}`;
+        const batchLine = `${timePill(pendRange)}${formatFluidPills(pendI, pendO, pendWet, pendSrcs)}`;
+        const shiftTotalLine = `<div style="margin-top:4px; opacity:0.7; font-size:0.84rem;"><strong style="font-size:0.74rem; text-transform:uppercase; color:var(--text-sub); margin-inline-end:4px;">${esc(t('flTotal'))}:</strong>${formatFluidPills(totI, totO, totWet, allSrcs)}</div>`;
+        rows += sumRowWrap(batchLine + shiftTotalLine, bIdx, 'fluidAll', 0, false);
+      } else {
+        rows += sumRowWrap(`${timePill(fullRange)}${formatFluidPills(totI, totO, totWet, allSrcs)}`, bIdx, 'fluidAll', 0, allDone);
       }
-    });
-    if (rows || (hasFluidActivity && !hideCompleted)) {
-      const net = totI - totO;
-      rows += `<div style="padding-top:8px;">${kvPill(t('flIn'), `<span class="ltr-num">${totI}ml</span>`)}${kvPill(t('flOut'), `<span class="ltr-num">${totO}ml</span>`)}${kvPill(t('flNet'), `<span class="ltr-num">${net > 0 ? '+' + net : net}ml</span>`)}</div>`;
     }
   } else if (modId === 'bowel') {
     p.bowel.forEach((x, i) => {
@@ -2031,4 +2064,4 @@ function renderSummary() {
 function setSumGroup(g) { summaryGroup = g; renderSummary(); }
 function toggleHideCompleted() { hideCompleted = !hideCompleted; renderSummary(); }
 
-window.CDP_MOD_VER = 13;
+window.CDP_MOD_VER = 14;
