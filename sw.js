@@ -1,15 +1,15 @@
-const CACHE_NAME = 'caredigipad-v13';
+const CACHE_NAME = 'caredigipad-v14';
 const CORE_ASSETS = [
   './',
   './index.html',
-  './style.css?v=13',
-  './lang.js?v=13',
-  './core.js?v=13',
-  './modules.js?v=13'
+  './style.css?v=14',
+  './lang.js?v=14',
+  './core.js?v=14',
+  './modules.js?v=14'
 ];
 const OPTIONAL_ASSETS = [
-  './manifest.json?v=13',
-  './icon.png?v=13'
+  './manifest.json?v=14',
+  './icon.png?v=14'
 ];
 
 self.addEventListener('install', event => {
